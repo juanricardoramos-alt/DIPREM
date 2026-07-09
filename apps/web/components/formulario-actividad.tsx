@@ -34,6 +34,7 @@ export function FormularioActividad({
   tipoInicial = "llamada",
   cuentaFija,
   oportunidadFija,
+  leadFijo,
   registroRapido = false,
 }: {
   abierto: boolean;
@@ -42,6 +43,8 @@ export function FormularioActividad({
   tipoInicial?: TipoActividad;
   cuentaFija?: { id: string; razon_social: string } | null;
   oportunidadFija?: { id: string; nombre: string; cuenta_id: string } | null;
+  /** gestión sobre un lead (aún sin cuenta): oculta cuenta/oportunidad */
+  leadFijo?: { id: string; nombre: string } | null;
   /** true = flujo "registrar gestión ya realizada" (marca completada al guardar) */
   registroRapido?: boolean;
 }) {
@@ -58,12 +61,12 @@ export function FormularioActividad({
   const { data: cuentas } = useQuery({
     queryKey: ["cuentas", ""],
     queryFn: () => listarCuentas(supabase),
-    enabled: abierto && !cuentaFija && !oportunidadFija,
+    enabled: abierto && !cuentaFija && !oportunidadFija && !leadFijo,
   });
   const { data: oportunidades } = useQuery({
     queryKey: ["oportunidades", {}],
     queryFn: () => listarOportunidades(supabase),
-    enabled: abierto && !oportunidadFija,
+    enabled: abierto && !oportunidadFija && !leadFijo,
   });
 
   const oportunidadesDeCuenta = oportunidades?.filter(
@@ -78,6 +81,8 @@ export function FormularioActividad({
         cuenta_id: cuentaFija?.id ?? (cuentaId || null),
         oportunidad_id:
           oportunidadFija?.id ?? ((form.get("oportunidad_id") as string) || null),
+        // undefined (no null) cuando no aplica: el insert no incluye la columna
+        lead_id: leadFijo?.id ?? actividad?.lead_id ?? undefined,
         fecha_programada: form.get("fecha_programada")
           ? new Date(form.get("fecha_programada") as string).toISOString()
           : null,
@@ -111,6 +116,8 @@ export function FormularioActividad({
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
       void queryClient.invalidateQueries({ queryKey: ["seguimientos"] });
       void queryClient.invalidateQueries({ queryKey: ["oportunidades"] });
+      void queryClient.invalidateQueries({ queryKey: ["gestion"] });
+      void queryClient.invalidateQueries({ queryKey: ["leads"] });
       setError(null);
       onCerrar();
     },
@@ -160,6 +167,11 @@ export function FormularioActividad({
           />
         </Campo>
 
+        {leadFijo ? (
+          <Campo etiqueta="Lead">
+            <Entrada value={leadFijo.nombre} disabled />
+          </Campo>
+        ) : (
         <div className="grid grid-cols-2 gap-4">
           <Campo etiqueta={`${es.actividades.cuenta} (${es.comunes.opcional})`}>
             {cuentaFija || oportunidadFija ? (
@@ -196,6 +208,7 @@ export function FormularioActividad({
             )}
           </Campo>
         </div>
+        )}
 
         {!actividad && (
           <label className="flex items-center gap-2 text-sm">

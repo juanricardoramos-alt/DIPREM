@@ -161,6 +161,7 @@ export interface Actividad {
   cuenta_id: string | null;
   oportunidad_id: string | null;
   contacto_id: string | null;
+  lead_id: string | null;
   propietario_id: string;
   fecha_programada: string | null;
   fecha_vencimiento: string | null;
@@ -173,6 +174,7 @@ export interface Actividad {
   cuenta?: { razon_social: string } | null;
   oportunidad?: { nombre: string } | null;
   contacto?: { nombre: string } | null;
+  lead?: { nombre: string } | null;
   propietario?: { nombre: string } | null;
 }
 
@@ -198,4 +200,31 @@ export interface Oportunidad {
   cuenta?: { razon_social: string } | null;
   propietario?: { nombre: string } | null;
   servicio?: { nombre: string } | null;
+}
+
+// ---------------------------------------------------------------------------
+// Mercado nacional (base de proyectos importables — solo admin/gerente)
+// ---------------------------------------------------------------------------
+export type EstadoProyectoMercado = "sin_asignar" | "asignado" | "convertido";
+
+export interface ProyectoMercado {
+  id: string;
+  nombre: string;
+  empresa: string;
+  rubro: string | null;
+  region: string | null;
+  monto_estimado: number | null;
+  moneda: Moneda;
+  contacto_nombre: string | null;
+  contacto_telefono: string | null;
+  contacto_email: string | null;
+  fuente: string | null;
+  estado: EstadoProyectoMercado;
+  asignado_a: string | null;
+  asignado_en: string | null;
+  lead_id: string | null;
+  importado_por: string;
+  creado_en: string;
+  /** join opcional */
+  asignado?: { nombre: string } | null;
 }

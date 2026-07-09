@@ -168,6 +168,16 @@ export async function listarLeads(sb: SupabaseClient, busqueda?: string): Promis
   return (data ?? []) as Lead[];
 }
 
+export async function obtenerLead(sb: SupabaseClient, id: string): Promise<Lead | null> {
+  const { data, error } = await sb
+    .from("leads")
+    .select(SELECT_LEAD)
+    .eq("id", id)
+    .maybeSingle();
+  lanzar(error);
+  return data as Lead | null;
+}
+
 export async function crearLead(
   sb: SupabaseClient,
   datos: DatosLead & { propietario_id: string },

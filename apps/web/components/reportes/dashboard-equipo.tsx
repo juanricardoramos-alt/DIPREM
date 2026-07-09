@@ -19,6 +19,7 @@ import {
 import { listarAvanceMetas, listarPipelineDetalle, listarRanking } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import { Insignia } from "@/components/ui";
+import { AnalisisEjecutivos } from "@/components/reportes/analisis-ejecutivos";
 
 function sumaPorMoneda(filas: { monto: number; moneda: Moneda }[]): string {
   const sumas = new Map<Moneda, number>();
@@ -228,6 +229,9 @@ export function DashboardEquipo() {
           </div>
         </section>
       </div>
+
+      {/* Análisis de gestión por ejecutivo */}
+      <AnalisisEjecutivos />
     </div>
   );
 }

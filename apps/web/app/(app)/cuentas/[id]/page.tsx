@@ -33,6 +33,8 @@ import {
 } from "@/components/ui";
 import { FormularioCuenta } from "@/components/formulario-cuenta";
 import { FormularioOportunidad } from "@/components/formulario-oportunidad";
+import { EnlacesContacto } from "@/components/enlaces-contacto";
+import { AnalisisGestion } from "@/components/analisis-gestion";
 
 export default function PaginaDetalleCuenta({
   params,
@@ -166,10 +168,12 @@ export default function PaginaDetalleCuenta({
                     {contacto.es_principal && <Insignia tono="azul">Principal</Insignia>}
                   </p>
                   <p className="text-sm text-slate-500">{contacto.cargo ?? ""}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {[contacto.telefono, contacto.email]
-                      .filter(Boolean)
-                      .join(" · ") || "—"}
+                  <p className="mt-1 text-sm">
+                    <EnlacesContacto
+                      telefono={contacto.telefono}
+                      email={contacto.email}
+                      compacto
+                    />
                   </p>
                   {contacto.canal_preferido && (
                     <p className="mt-0.5 text-xs text-slate-400">
@@ -237,6 +241,14 @@ export default function PaginaDetalleCuenta({
         </section>
       </div>
 
+      {/* Análisis de gestión de la cuenta */}
+      <div className="mt-10">
+        <AnalisisGestion
+          cuenta={{ id: cuenta.id, razon_social: cuenta.razon_social }}
+          creadoEn={cuenta.creado_en}
+        />
+      </div>
+
       {/* Diálogos */}
       <FormularioCuenta
         abierto={editando}
@@ -284,17 +296,21 @@ export default function PaginaDetalleCuenta({
                 ))}
               </Selector>
             </Campo>
-            <Campo etiqueta={`${es.crm.telefono} (${es.comunes.opcional})`}>
+            <Campo etiqueta={es.crm.telefono}>
               <Entrada
                 name="telefono"
+                type="tel"
+                placeholder="+56 9 1234 5678"
                 defaultValue={contactoForm?.contacto?.telefono ?? ""}
+                required
               />
             </Campo>
-            <Campo etiqueta={`${es.crm.correo} (${es.comunes.opcional})`}>
+            <Campo etiqueta={es.crm.correo}>
               <Entrada
                 name="email"
                 type="email"
                 defaultValue={contactoForm?.contacto?.email ?? ""}
+                required
               />
             </Campo>
           </div>

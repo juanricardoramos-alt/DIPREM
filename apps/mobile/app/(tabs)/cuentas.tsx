@@ -58,6 +58,7 @@ export default function PantallaCuentas() {
   const [nombreLead, setNombreLead] = useState("");
   const [empresaLead, setEmpresaLead] = useState("");
   const [telefonoLead, setTelefonoLead] = useState("");
+  const [correoLead, setCorreoLead] = useState("");
   const [fuente, setFuente] = useState<FuenteLead>("referido");
   const [calificacion, setCalificacion] = useState<CalificacionLead>("tibio");
 
@@ -104,6 +105,7 @@ export default function PantallaCuentas() {
         nombre: nombreLead,
         empresa: empresaLead,
         telefono: telefonoLead,
+        email: correoLead,
         fuente,
         calificacion,
       });
@@ -115,6 +117,7 @@ export default function PantallaCuentas() {
       setNombreLead("");
       setEmpresaLead("");
       setTelefonoLead("");
+      setCorreoLead("");
       setError(null);
     },
     onError: (e: Error) => setError(e.message),
@@ -300,8 +303,13 @@ export default function PantallaCuentas() {
           etiqueta={es.crm.telefono}
           valor={telefonoLead}
           onCambio={setTelefonoLead}
-          opcional
           teclado="phone-pad"
+        />
+        <CampoTexto
+          etiqueta={es.crm.correo}
+          valor={correoLead}
+          onCambio={setCorreoLead}
+          teclado="email-address"
         />
         <CampoOpciones
           etiqueta={es.crm.fuente}

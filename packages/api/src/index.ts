@@ -3,3 +3,5 @@ export * from "./perfil";
 export * from "./crm";
 export * from "./actividades";
 export * from "./metricas";
+export * from "./mercado";
+export * from "./gestion";

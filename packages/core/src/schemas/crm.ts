@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { esTelefonoValido } from "../lib/contacto";
 
 /** Esquemas de formularios CRM (compartidos web/móvil). */
 
@@ -8,6 +9,19 @@ const textoOpcional = z
   .transform((v) => (v === "" ? null : v))
   .nullable()
   .optional();
+
+/** Teléfono obligatorio con código de país (para WhatsApp y llamada directa). */
+const telefonoObligatorio = z
+  .string()
+  .trim()
+  .min(1, "El teléfono es obligatorio")
+  .refine(esTelefonoValido, "Incluye el código de país, ej: +56 9 1234 5678");
+
+const correoObligatorio = z
+  .string()
+  .trim()
+  .min(1, "El correo es obligatorio")
+  .email("Correo inválido");
 
 export const esquemaCuenta = z.object({
   razon_social: z.string().trim().min(1, "La razón social es obligatoria"),
@@ -26,15 +40,8 @@ export type DatosCuenta = z.input<typeof esquemaCuenta>;
 export const esquemaContacto = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio"),
   cargo: textoOpcional,
-  telefono: textoOpcional,
-  email: z
-    .string()
-    .trim()
-    .email("Correo inválido")
-    .or(z.literal(""))
-    .transform((v) => (v === "" ? null : v))
-    .nullable()
-    .optional(),
+  telefono: telefonoObligatorio,
+  email: correoObligatorio,
   canal_preferido: z.enum(["llamada", "email", "whatsapp", "reunion"]).default("email"),
   es_principal: z.boolean().default(false),
 });
@@ -43,15 +50,8 @@ export type DatosContacto = z.input<typeof esquemaContacto>;
 export const esquemaLead = z.object({
   nombre: z.string().trim().min(1, "El nombre del contacto es obligatorio"),
   empresa: textoOpcional,
-  telefono: textoOpcional,
-  email: z
-    .string()
-    .trim()
-    .email("Correo inválido")
-    .or(z.literal(""))
-    .transform((v) => (v === "" ? null : v))
-    .nullable()
-    .optional(),
+  telefono: telefonoObligatorio,
+  email: correoObligatorio,
   fuente: z.enum([
     "referido", "licitacion", "web", "evento", "linkedin", "red_comercial", "otro",
   ]),
@@ -84,6 +84,7 @@ export const esquemaActividad = z.object({
   cuenta_id: z.string().uuid().nullable().optional(),
   oportunidad_id: z.string().uuid().nullable().optional(),
   contacto_id: z.string().uuid().nullable().optional(),
+  lead_id: z.string().uuid().nullable().optional(),
   fecha_programada: textoOpcional,
   fecha_vencimiento: textoOpcional,
   notas: textoOpcional,

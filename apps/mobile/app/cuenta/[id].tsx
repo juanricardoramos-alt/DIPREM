@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ETIQUETAS_ESTADO_CUENTA,
   ETIQUETAS_MODALIDAD,
   ETIQUETAS_VERTICAL,
+  enlaceCorreo,
+  enlaceLlamada,
+  enlaceWhatsApp,
   es,
   esquemaContacto,
   formatearMonto,
@@ -130,8 +133,37 @@ export default function PantallaDetalleCuenta() {
             {contacto.cargo && (
               <Text className="text-sm text-slate-500">{contacto.cargo}</Text>
             )}
-            <Text className="mt-1 text-sm text-slate-600">
-              {[contacto.telefono, contacto.email].filter(Boolean).join(" · ") || "—"}
+            {!contacto.telefono && !contacto.email && (
+              <Text className="mt-1 text-sm text-slate-600">—</Text>
+            )}
+            {/* Teléfono → llamada/WhatsApp · correo → email, con un toque */}
+            <Text className="mt-1 text-sm">
+              {contacto.telefono && (
+                <>
+                  <Text
+                    className="text-emerald-700"
+                    onPress={() => void Linking.openURL(enlaceLlamada(contacto.telefono!))}
+                  >
+                    📞 {es.gestion.llamar}
+                  </Text>
+                  <Text>{"   "}</Text>
+                  <Text
+                    className="text-emerald-700"
+                    onPress={() => void Linking.openURL(enlaceWhatsApp(contacto.telefono!))}
+                  >
+                    💬 {es.gestion.whatsapp}
+                  </Text>
+                  <Text>{"   "}</Text>
+                </>
+              )}
+              {contacto.email && (
+                <Text
+                  className="text-blue-700"
+                  onPress={() => void Linking.openURL(enlaceCorreo(contacto.email!))}
+                >
+                  ✉️ {contacto.email}
+                </Text>
+              )}
             </Text>
           </View>
         ))}
@@ -175,14 +207,12 @@ export default function PantallaDetalleCuenta() {
           etiqueta={es.crm.telefono}
           valor={telefono}
           onCambio={setTelefono}
-          opcional
           teclado="phone-pad"
         />
         <CampoTexto
           etiqueta={es.crm.correo}
           valor={correo}
           onCambio={setCorreo}
-          opcional
           teclado="email-address"
         />
         {error && <Text className="mb-2 text-sm text-red-600">{error}</Text>}

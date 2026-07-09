@@ -31,6 +31,8 @@ export function DialogoCompletar({
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
       void queryClient.invalidateQueries({ queryKey: ["seguimientos"] });
       void queryClient.invalidateQueries({ queryKey: ["oportunidades"] });
+      void queryClient.invalidateQueries({ queryKey: ["gestion"] });
+      void queryClient.invalidateQueries({ queryKey: ["leads"] });
       setError(null);
       onCerrar();
     },

@@ -15,11 +15,12 @@ import {
   type Actividad,
   type TipoActividad,
 } from "@diprem/core";
-import { agendaDelDia, oportunidadesAbiertas } from "@diprem/api";
+import { agendaDelDia, listarLeadsNuevos, oportunidadesAbiertas } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import { Boton, Insignia } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
+import { EnlacesContacto } from "@/components/enlaces-contacto";
 
 const ACCIONES_RAPIDAS: { tipo: TipoActividad; rapido: boolean }[] = [
   { tipo: "llamada", rapido: true },
@@ -35,6 +36,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
     tipo: TipoActividad;
     rapido: boolean;
     oportunidad?: { id: string; nombre: string; cuenta_id: string };
+    lead?: { id: string; nombre: string };
   } | null>(null);
   const [completando, setCompletando] = useState<Actividad | null>(null);
 
@@ -47,6 +49,10 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
   const { data: abiertas } = useQuery({
     queryKey: ["seguimientos"],
     queryFn: () => oportunidadesAbiertas(supabase),
+  });
+  const { data: leadsNuevos } = useQuery({
+    queryKey: ["leads", "nuevos"],
+    queryFn: () => listarLeadsNuevos(supabase),
   });
 
   const seguimientos = ordenarPorUrgencia(abiertas ?? []);
@@ -108,6 +114,57 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           ))}
         </div>
       </div>
+
+      {/* Leads nuevos asignados (proyectos del mercado y otros) */}
+      {(leadsNuevos?.length ?? 0) > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold">
+            🆕 {es.miDia.leadsNuevos} ({leadsNuevos?.length})
+          </h2>
+          <p className="text-sm text-slate-500">{es.miDia.leadsNuevosNota}</p>
+          <div className="mt-3 grid gap-2 lg:grid-cols-2">
+            {leadsNuevos?.map((lead) => (
+              <div
+                key={lead.id}
+                className="rounded-lg border border-blue-200 bg-blue-50/50 p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/leads/${lead.id}`}
+                      className="font-medium hover:text-[var(--color-diprem)] hover:underline"
+                    >
+                      {lead.nombre}
+                    </Link>
+                    {lead.empresa && (
+                      <p className="truncate text-sm text-slate-500">{lead.empresa}</p>
+                    )}
+                    <div className="mt-1.5">
+                      <EnlacesContacto
+                        telefono={lead.telefono}
+                        email={lead.email}
+                        compacto
+                      />
+                    </div>
+                  </div>
+                  <Boton
+                    variante="secundario"
+                    onClick={() =>
+                      setFormulario({
+                        tipo: "llamada",
+                        rapido: true,
+                        lead: { id: lead.id, nombre: lead.nombre },
+                      })
+                    }
+                  >
+                    {es.miDia.registrarGestion}
+                  </Boton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         {/* Agenda de hoy */}
@@ -223,6 +280,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           tipoInicial={formulario.tipo}
           registroRapido={formulario.rapido}
           oportunidadFija={formulario.oportunidad ?? null}
+          leadFijo={formulario.lead ?? null}
           onCerrar={() => setFormulario(null)}
         />
       )}
