@@ -1,26 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ETIQUETAS_CALIFICACION,
   ETIQUETAS_ESTADO_LEAD,
   ETIQUETAS_FUENTE,
-  ETIQUETAS_MODALIDAD,
-  ETIQUETAS_VERTICAL,
   es,
-  esquemaConversionLead,
   esquemaLead,
   type Lead,
 } from "@diprem/core";
-import {
-  actualizarLead,
-  convertirLead,
-  crearLead,
-  listarLeads,
-  listarPilares,
-} from "@diprem/api";
+import { actualizarLead, crearLead, listarLeads } from "@diprem/api";
 import { usePerfil, useSupabase } from "@/lib/hooks";
 import {
   AreaTexto,
@@ -31,6 +22,8 @@ import {
   Insignia,
   Selector,
 } from "@/components/ui";
+import { EnlacesContacto } from "@/components/enlaces-contacto";
+import { DialogoConvertirLead } from "@/components/dialogo-convertir-lead";
 
 const TONO_ESTADO_LEAD = {
   nuevo: "azul",
@@ -42,7 +35,6 @@ const TONO_ESTADO_LEAD = {
 export default function PaginaLeads() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
-  const router = useRouter();
   const { data: perfil } = usePerfil();
 
   const [busqueda, setBusqueda] = useState("");
@@ -53,10 +45,6 @@ export default function PaginaLeads() {
   const { data: leads, isLoading } = useQuery({
     queryKey: ["leads", busqueda],
     queryFn: () => listarLeads(supabase, busqueda),
-  });
-  const { data: pilares } = useQuery({
-    queryKey: ["pilares"],
-    queryFn: () => listarPilares(supabase),
   });
 
   const invalidar = () => {
@@ -96,36 +84,6 @@ export default function PaginaLeads() {
     onSuccess: invalidar,
   });
 
-  const convertir = useMutation({
-    mutationFn: async (form: FormData) => {
-      if (!convirtiendo) throw new Error(es.comunes.errorGenerico);
-      const datos = esquemaConversionLead.parse({
-        razon_social: form.get("razon_social"),
-        nombre_oportunidad: form.get("nombre_oportunidad"),
-        monto: form.get("monto") || 0,
-        vertical: form.get("vertical"),
-        pilar_id: (form.get("pilar_id") as string) || null,
-        modalidad: form.get("modalidad"),
-      });
-      return convertirLead(supabase, {
-        lead_id: convirtiendo.id,
-        razon_social: datos.razon_social,
-        nombre_oportunidad: datos.nombre_oportunidad,
-        monto: Number(datos.monto ?? 0),
-        vertical: datos.vertical,
-        pilar_id: datos.pilar_id ? Number(datos.pilar_id) : null,
-        modalidad: datos.modalidad,
-      });
-    },
-    onSuccess: (resultado) => {
-      invalidar();
-      setConvirtiendo(null);
-      setError(null);
-      router.push(`/cuentas/${resultado.cuenta_id}`);
-    },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
-  });
-
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -149,6 +107,7 @@ export default function PaginaLeads() {
             <tr>
               <th className="px-4 py-3">{es.crm.nombre}</th>
               <th className="px-4 py-3">{es.crm.empresa}</th>
+              <th className="px-4 py-3">{es.crm.contactos}</th>
               <th className="px-4 py-3">{es.crm.fuente}</th>
               <th className="px-4 py-3">{es.crm.calificacion}</th>
               <th className="px-4 py-3">{es.crm.estado}</th>
@@ -158,22 +117,32 @@ export default function PaginaLeads() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                   {es.comunes.cargando}
                 </td>
               </tr>
             )}
             {!isLoading && (leads?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                   {es.crm.sinLeads}
                 </td>
               </tr>
             )}
             {leads?.map((lead) => (
               <tr key={lead.id} className="border-t border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium">{lead.nombre}</td>
+                <td className="px-4 py-3 font-medium">
+                  <Link
+                    href={`/leads/${lead.id}`}
+                    className="hover:text-[var(--color-diprem)] hover:underline"
+                  >
+                    {lead.nombre}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">{lead.empresa ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <EnlacesContacto telefono={lead.telefono} email={lead.email} compacto />
+                </td>
                 <td className="px-4 py-3">{ETIQUETAS_FUENTE[lead.fuente]}</td>
                 <td className="px-4 py-3">{ETIQUETAS_CALIFICACION[lead.calificacion]}</td>
                 <td className="px-4 py-3">
@@ -233,14 +202,21 @@ export default function PaginaLeads() {
             <Campo etiqueta={`${es.crm.empresa} (${es.comunes.opcional})`}>
               <Entrada name="empresa" defaultValue={leadForm?.lead?.empresa ?? ""} />
             </Campo>
-            <Campo etiqueta={`${es.crm.telefono} (${es.comunes.opcional})`}>
-              <Entrada name="telefono" defaultValue={leadForm?.lead?.telefono ?? ""} />
+            <Campo etiqueta={es.crm.telefono}>
+              <Entrada
+                name="telefono"
+                type="tel"
+                placeholder="+56 9 1234 5678"
+                defaultValue={leadForm?.lead?.telefono ?? ""}
+                required
+              />
             </Campo>
-            <Campo etiqueta={`${es.crm.correo} (${es.comunes.opcional})`}>
+            <Campo etiqueta={es.crm.correo}>
               <Entrada
                 name="email"
                 type="email"
                 defaultValue={leadForm?.lead?.email ?? ""}
+                required
               />
             </Campo>
             <Campo etiqueta={es.crm.fuente}>
@@ -283,86 +259,7 @@ export default function PaginaLeads() {
       </Dialogo>
 
       {/* Convertir lead */}
-      <Dialogo
-        abierto={convirtiendo !== null}
-        titulo={es.crm.convertirLead}
-        onCerrar={() => setConvirtiendo(null)}
-      >
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            convertir.mutate(new FormData(e.currentTarget));
-          }}
-        >
-          <Campo etiqueta={es.crm.razonSocial}>
-            <Entrada
-              name="razon_social"
-              defaultValue={convirtiendo?.empresa ?? ""}
-              required
-              autoFocus
-            />
-          </Campo>
-          <Campo etiqueta={`${es.crm.nombreOportunidad} (${es.comunes.opcional})`}>
-            <Entrada
-              name="nombre_oportunidad"
-              placeholder={`Oportunidad — ${convirtiendo?.empresa ?? ""}`}
-            />
-          </Campo>
-          <div className="grid grid-cols-2 gap-4">
-            <Campo etiqueta={es.crm.vertical}>
-              <Selector name="vertical" defaultValue="mineria">
-                {Object.entries(ETIQUETAS_VERTICAL).map(([valor, etiqueta]) => (
-                  <option key={valor} value={valor}>
-                    {etiqueta}
-                  </option>
-                ))}
-              </Selector>
-            </Campo>
-            <Campo etiqueta={`${es.crm.pilar} (${es.comunes.opcional})`}>
-              <Selector name="pilar_id" defaultValue="">
-                <option value="">—</option>
-                {pilares?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    Pilar {p.numero} — {p.nombre}
-                  </option>
-                ))}
-              </Selector>
-            </Campo>
-            <Campo etiqueta={`${es.crm.monto} (${es.comunes.opcional})`}>
-              <Entrada name="monto" type="number" min="0" step="0.01" />
-            </Campo>
-            <Campo etiqueta={es.crm.modalidad}>
-              <Selector name="modalidad" defaultValue="proyecto">
-                {Object.entries(ETIQUETAS_MODALIDAD).map(([valor, etiqueta]) => (
-                  <option key={valor} value={valor}>
-                    {etiqueta}
-                  </option>
-                ))}
-              </Selector>
-            </Campo>
-          </div>
-          <p className="text-xs text-slate-500">
-            Se creará la cuenta, el contacto principal y una oportunidad en la
-            primera etapa del embudo, con la moneda del equipo del ejecutivo.
-          </p>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Boton
-              type="button"
-              variante="secundario"
-              onClick={() => setConvirtiendo(null)}
-            >
-              {es.comunes.cancelar}
-            </Boton>
-            <Boton type="submit" disabled={convertir.isPending}>
-              {convertir.isPending ? es.comunes.guardando : es.crm.convertir}
-            </Boton>
-          </div>
-        </form>
-      </Dialogo>
+      <DialogoConvertirLead lead={convirtiendo} onCerrar={() => setConvirtiendo(null)} />
     </div>
   );
 }

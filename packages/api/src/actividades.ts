@@ -15,6 +15,7 @@ export interface FiltrosActividades {
   estado?: EstadoActividad;
   cuenta_id?: string;
   oportunidad_id?: string;
+  lead_id?: string;
 }
 
 export async function listarActividades(
@@ -30,6 +31,7 @@ export async function listarActividades(
   if (filtros?.estado) query = query.eq("estado", filtros.estado);
   if (filtros?.cuenta_id) query = query.eq("cuenta_id", filtros.cuenta_id);
   if (filtros?.oportunidad_id) query = query.eq("oportunidad_id", filtros.oportunidad_id);
+  if (filtros?.lead_id) query = query.eq("lead_id", filtros.lead_id);
   const { data, error } = await query;
   lanzar(error);
   return (data ?? []) as unknown as Actividad[];

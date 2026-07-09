@@ -102,3 +102,18 @@ datos reales, se eliminan y se crean usuarios reales** (te guío cuando toque).
 **Actualizaciones futuras:** cada vez que subamos código nuevo a la rama, Vercel
 **redespliega solo** — tu URL siempre tendrá la última versión. Si cambia el esquema
 de BD, te pasaré el script SQL nuevo para pegar en el SQL Editor.
+
+---
+
+## Scripts de actualización de BD (proyectos ya creados)
+
+Si tu proyecto Supabase ya existe (corriste `setup_completo.sql` antes), pega en el
+SQL Editor **solo** los scripts que te falten, en orden:
+
+| Script | Qué agrega |
+|---|---|
+| [`actualizacion_fase3.sql`](../supabase/deploy/actualizacion_fase3.sql) | Vistas de metas y dashboards (Fase 3) |
+| [`actualizacion_mercado.sql`](../supabase/deploy/actualizacion_mercado.sql) | Módulo **Mercado** (proyectos importables + asignación), gestión por lead y vistas de análisis de gestión |
+
+Ambos se pueden ejecutar más de una vez sin duplicar datos. Los proyectos nuevos
+no los necesitan: `setup_completo.sql` ya incluye todo.

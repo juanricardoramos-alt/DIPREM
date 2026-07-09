@@ -9,3 +9,6 @@ export * from "./lib/seguimientos";
 export * from "./lib/fechas";
 export * from "./lib/metas";
 export * from "./lib/csv";
+export * from "./lib/contacto";
+export * from "./lib/gestion";
+export * from "./lib/importacion";
