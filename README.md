@@ -9,6 +9,7 @@ Web (Next.js) + móvil (Expo) sobre Supabase, en un monorepo Turborepo.
 | [`CLAUDE.md`](./CLAUDE.md) | Especificación funcional completa (memoria del proyecto) |
 | [`docs/CONTEXTO-DIPREM.md`](./docs/CONTEXTO-DIPREM.md) | Contexto de negocio extraído de los brochures oficiales |
 | [`docs/PLAN-ARQUITECTURA.md`](./docs/PLAN-ARQUITECTURA.md) | Plan técnico aprobado: stack, carpetas, esquema SQL, fases |
+| [`docs/DEPLOY.md`](./docs/DEPLOY.md) | Guía paso a paso para publicar el entorno de prueba (Vercel + Supabase) |
 
 **Estado:** ✅ Fase 2 — "Mi Día": agenda diaria, registro rápido de gestión,
 actividades (llamada/reunión/visita a terreno/correo/WhatsApp/tarea) y
