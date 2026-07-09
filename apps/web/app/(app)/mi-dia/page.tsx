@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { es, rutaInicial } from "@diprem/core";
+import { rutaInicial } from "@diprem/core";
 import { obtenerPerfil } from "@diprem/api";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { PantallaPlaceholder } from "@/components/pantalla-placeholder";
+import { MiDiaCliente } from "@/components/mi-dia-cliente";
 
 export default async function PaginaMiDia() {
   const supabase = await clienteServidor();
@@ -10,10 +10,5 @@ export default async function PaginaMiDia() {
   if (!perfil) redirect("/login");
   if (perfil.rol === "lectura") redirect(rutaInicial(perfil.rol));
 
-  return (
-    <PantallaPlaceholder
-      titulo={`${es.fase0.bienvenida}, ${perfil.nombre.split(" ")[0]} — ${es.nav.miDia}`}
-      descripcion={es.fase0.descripcionMiDia}
-    />
-  );
+  return <MiDiaCliente nombre={perfil.nombre} />;
 }

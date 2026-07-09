@@ -10,8 +10,10 @@ Web (Next.js) + móvil (Expo) sobre Supabase, en un monorepo Turborepo.
 | [`docs/CONTEXTO-DIPREM.md`](./docs/CONTEXTO-DIPREM.md) | Contexto de negocio extraído de los brochures oficiales |
 | [`docs/PLAN-ARQUITECTURA.md`](./docs/PLAN-ARQUITECTURA.md) | Plan técnico aprobado: stack, carpetas, esquema SQL, fases |
 
-**Estado:** ✅ Fase 1 — CRM Core: cuentas, contactos, leads (con conversión),
-oportunidades con Kanban del embudo DIPREM y etapas configurables por admin.
+**Estado:** ✅ Fase 2 — "Mi Día": agenda diaria, registro rápido de gestión,
+actividades (llamada/reunión/visita a terreno/correo/WhatsApp/tarea) y
+seguimientos con alerta de días sin contacto. *(Push pendiente: se integra
+con Expo Notifications más adelante.)*
 
 ---
 

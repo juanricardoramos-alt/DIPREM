@@ -1,10 +1,12 @@
 import type {
   CalificacionLead,
   CanalContacto,
+  EstadoActividad,
   EstadoCuenta,
   EstadoLead,
   FuenteLead,
   ModalidadContrato,
+  TipoActividad,
   VerticalCuenta,
 } from "../types/dominio";
 
@@ -60,4 +62,29 @@ export const ETIQUETAS_CANAL: Record<CanalContacto, string> = {
   email: "Correo",
   whatsapp: "WhatsApp",
   reunion: "Reunión",
+};
+
+/** Idioma DIPREM: la visita es "a terreno" (faena / obra / planta). */
+export const ETIQUETAS_TIPO_ACTIVIDAD: Record<TipoActividad, string> = {
+  llamada: "Llamada",
+  reunion: "Reunión",
+  visita_terreno: "Visita a terreno",
+  email: "Correo",
+  whatsapp: "WhatsApp",
+  tarea: "Tarea",
+};
+
+export const ICONOS_TIPO_ACTIVIDAD: Record<TipoActividad, string> = {
+  llamada: "📞",
+  reunion: "🤝",
+  visita_terreno: "🏗️",
+  email: "✉️",
+  whatsapp: "💬",
+  tarea: "☑️",
+};
+
+export const ETIQUETAS_ESTADO_ACTIVIDAD: Record<EstadoActividad, string> = {
+  pendiente: "Pendiente",
+  completada: "Completada",
+  cancelada: "Cancelada",
 };

@@ -78,6 +78,25 @@ export const esquemaOportunidad = z.object({
 });
 export type DatosOportunidad = z.input<typeof esquemaOportunidad>;
 
+export const esquemaActividad = z.object({
+  tipo: z.enum(["llamada", "reunion", "visita_terreno", "email", "whatsapp", "tarea"]),
+  asunto: z.string().trim().min(1, "El asunto es obligatorio"),
+  cuenta_id: z.string().uuid().nullable().optional(),
+  oportunidad_id: z.string().uuid().nullable().optional(),
+  contacto_id: z.string().uuid().nullable().optional(),
+  fecha_programada: textoOpcional,
+  fecha_vencimiento: textoOpcional,
+  notas: textoOpcional,
+  proxima_accion: textoOpcional,
+});
+export type DatosActividad = z.input<typeof esquemaActividad>;
+
+export const esquemaCompletarActividad = z.object({
+  resultado: textoOpcional,
+  proxima_accion: textoOpcional,
+});
+export type DatosCompletarActividad = z.input<typeof esquemaCompletarActividad>;
+
 export const esquemaConversionLead = z.object({
   razon_social: z.string().trim().min(1, "La razón social es obligatoria"),
   nombre_oportunidad: textoOpcional,

@@ -152,6 +152,30 @@ export interface MotivoPerdida {
   activo: boolean;
 }
 
+export type EstadoActividad = "pendiente" | "completada" | "cancelada";
+
+export interface Actividad {
+  id: string;
+  tipo: TipoActividad;
+  asunto: string;
+  cuenta_id: string | null;
+  oportunidad_id: string | null;
+  contacto_id: string | null;
+  propietario_id: string;
+  fecha_programada: string | null;
+  fecha_vencimiento: string | null;
+  estado: EstadoActividad;
+  resultado: string | null;
+  notas: string | null;
+  proxima_accion: string | null;
+  completada_en: string | null;
+  creado_en: string;
+  cuenta?: { razon_social: string } | null;
+  oportunidad?: { nombre: string } | null;
+  contacto?: { nombre: string } | null;
+  propietario?: { nombre: string } | null;
+}
+
 export interface Oportunidad {
   id: string;
   nombre: string;
