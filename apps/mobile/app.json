@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "DIPREM CRM",
+    "slug": "diprem-crm",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "diprem",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.diprem.crm"
+    },
+    "android": {
+      "package": "com.diprem.crm",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

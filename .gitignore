@@ -1,0 +1,24 @@
+# dependencias
+node_modules/
+.pnpm-store/
+
+# builds
+.next/
+dist/
+out/
+.expo/
+.turbo/
+*.tsbuildinfo
+
+# entorno (nunca subir claves)
+.env
+.env.local
+.env.*.local
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+
+# sistema
+.DS_Store
+*.log

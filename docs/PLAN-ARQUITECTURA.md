@@ -1,8 +1,7 @@
 # 🏗️ Plan de Arquitectura — DIPREM CRM
 
-> **Estado: 🟡 PENDIENTE DE APROBACIÓN.** Este es el plan que se presenta antes de
-> escribir código de aplicación (regla del prompt maestro). Al aprobarse, se marca
-> ✅ y arranca la Fase 0.
+> **Estado: ✅ APROBADO (2026-07-09).** Decisión adicional: se desarrolla contra
+> **Supabase local (CLI)**; el proyecto de producción se conecta más adelante.
 
 ---
 

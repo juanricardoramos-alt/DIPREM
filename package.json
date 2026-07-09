@@ -1,0 +1,19 @@
+{
+  "name": "diprem-crm",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "db:reset": "supabase db reset",
+    "db:start": "supabase start"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  }
+}

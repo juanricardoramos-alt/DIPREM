@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+:root {
+  /* Paleta corporativa provisoria (ajustar a manual de marca DIPREM) */
+  --color-diprem: #0f4c81;
+  --color-diprem-oscuro: #0a3357;
+}
