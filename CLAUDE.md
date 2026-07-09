@@ -13,7 +13,7 @@
 - **Industria / rubro:** servicios profesionales para industria — gestión de proyectos, QA/QC, seguridad y salud ocupacional (SSO/HSE), medio ambiente y control de contratistas. Clientes en **minería, energía, infraestructura, construcción e industria**.
 - **Qué vende:** servicios B2B agrupados en **3 pilares**:
   1. **Dirección y Gestión de Proyectos + QA/QC** — supervisión técnica, control de calidad, precomisionamiento/comisionamiento, puesta en marcha, auditorías técnicas, outsourcing de personal e inspectores.
-  2. **Seguridad, Salud Ocupacional y Medio Ambiente** — sistemas de gestión SSO, higiene y seguridad en obras, seguridad en procesos, capacitaciones, auditorías HSE, programas LOTO/ATS/AST, medicina laboral, huella de carbono, permisos ambientales, evaluación de impactos, PGA, asesoría ambiental mensual.
+  2. **Seguridad, Salud Ocupacional y Medio Ambiente** (el brochure global incluye además *Sistema de Gestión de Calidad* en este pilar) — sistemas de gestión SSO, higiene y seguridad en obras, seguridad en procesos, capacitaciones, auditorías HSE, programas LOTO/ATS/AST, medicina laboral, huella de carbono, permisos ambientales, evaluación de impactos, PGA, asesoría ambiental mensual.
   3. **Evaluación de Proveedores, Control de Contratistas y Desarrollo Tecnológico** — control documental digital, evaluación/auditoría de proveedores, gestión contractual, plataformas de registro y cumplimiento, trazabilidad.
 - **Tipo de venta:** B2B · Ciclo de venta: **largo** (propuestas, licitaciones, adjudicaciones). Modalidades: proyecto puntual, contrato mensual recurrente, outsourcing de personal.
 - **Tamaño del equipo comercial:** multi-país (pendiente de confirmar nº exacto — ver `docs/CONTEXTO-DIPREM.md §5`). El sistema soporta N ejecutivos y gerentes por equipo/oficina.
@@ -91,7 +91,7 @@ Pantalla estrella, abre por defecto en el móvil:
 - **"Mi Día":** agenda del día con reuniones, visitas a terreno y tareas pendientes ordenadas por hora/prioridad.
 - **Seguimientos pendientes:** cuentas/oportunidades que requieren acción hoy, con alertas de las que llevan mucho sin contacto (ciclo largo ⇒ el sistema recuerda, no la memoria del ejecutivo).
 - **Registro rápido de gestión:** botones de acción rápida (registrar llamada, agendar visita, marcar tarea hecha) en 1–2 toques.
-- **Avance de metas:** barra de progreso del ejecutivo vs. su cuota del mes (monto adjudicado, actividades, propuestas enviadas, oportunidades abiertas).
+- **Avance de metas:** barra de progreso del ejecutivo vs. su cuota del mes (monto adjudicado, actividades, propuestas enviadas, oportunidades nuevas).
 - **Resumen de fin de día:** qué se hizo, qué quedó pendiente y qué se planifica para mañana.
 - **Recordatorios y notificaciones push:** "Tienes una visita a faena en 1 hora", "Hace 7 días sin contactar a GANFENG", "Propuesta X lleva 14 días sin respuesta".
 - *(Opcional / motivación):* rachas y ranking sano dentro del equipo.
@@ -124,34 +124,49 @@ Pantalla estrella, abre por defecto en el móvil:
 Esquema completo con SQL, RLS y seeds en `docs/PLAN-ARQUITECTURA.md §4`. Resumen:
 
 ```
-usuarios        (id→auth, nombre, email, rol, equipo_id, activo)
-equipos         (id, nombre, pais, moneda_default, gerente_id)   -- oficina/país
-cuentas         (id, razon_social, tax_id, vertical, pais, propietario_id, estado)
-contactos       (id, cuenta_id, nombre, cargo, telefono, email, canal_preferido)
-leads           (id, nombre, empresa, fuente, calificacion, propietario_id, estado,
-                 convertido_cuenta_id)
-pilares         (id, numero, nombre)                              -- los 3 pilares DIPREM
-servicios       (id, pilar_id, nombre, descripcion, unidad, precio_referencial,
-                 moneda, activo)
-etapas_embudo   (id, nombre, orden, probabilidad_default, es_ganada, es_perdida)
-oportunidades   (id, cuenta_id, propietario_id, etapa_id, pilar_id, servicio_id,
-                 nombre, monto, moneda, modalidad_contrato, probabilidad,
-                 fecha_cierre_estimada, motivo_perdida, cerrada_en)
-actividades     (id, tipo, asunto, cuenta_id, oportunidad_id, contacto_id,
-                 propietario_id, fecha_programada, fecha_vencimiento, estado,
-                 resultado, notas, proxima_accion, completada_en)
-notas           (id, entidad, entidad_id, autor_id, contenido, creado_en)
-propuestas      (id, oportunidad_id, version, total, moneda, estado, pdf_url,
-                 aprobada_por, enviada_en)
-metas           (id, usuario_id, periodo, tipo, objetivo, moneda)
-notificaciones  (id, usuario_id, tipo, titulo, mensaje, entidad, entidad_id,
-                 leida, creado_en)
-auditoria       (id, usuario_id, accion, entidad, entidad_id, cambios, creado_en)
+usuarios          (id→auth, nombre, email, rol, equipo_id, activo)
+equipos           (id, nombre, pais, moneda_default, gerente_id)  -- oficina/país
+dispositivos_push (id, usuario_id, expo_push_token, plataforma)   -- push Expo
+cuentas           (id, razon_social, tax_id, vertical, pais, propietario_id,
+                   estado, atributos jsonb)
+contactos         (id, cuenta_id, nombre, cargo, telefono, email, canal_preferido)
+leads             (id, nombre, empresa, fuente, calificacion, propietario_id,
+                   estado, convertido_cuenta_id, convertido_oportunidad_id,
+                   atributos jsonb)
+pilares           (id, numero, nombre)                            -- los 3 pilares
+lineas_servicio   (id, pilar_id, nombre)      -- ej: SSO / Medio Ambiente / SGC (P2)
+servicios         (id, pilar_id, linea_servicio_id, nombre, descripcion, unidad,
+                   precio_referencial, moneda, activo)
+etapas_embudo     (id, nombre, orden, probabilidad_default, es_ganada, es_perdida)
+motivos_perdida   (id, nombre, activo)        -- catálogo reportable, no texto libre
+oportunidades     (id, cuenta_id, propietario_id, etapa_id, pilar_id,
+                   linea_servicio_id, servicio_id, nombre, monto, moneda,
+                   modalidad_contrato, probabilidad, fecha_cierre_estimada,
+                   motivo_perdida_id, motivo_perdida_detalle, cerrada_en,
+                   ultimo_contacto_en, atributos jsonb)
+actividades       (id, tipo, asunto, cuenta_id, oportunidad_id, contacto_id,
+                   propietario_id, fecha_programada, fecha_vencimiento, estado,
+                   resultado, notas, proxima_accion, completada_en)
+notas             (id, entidad, entidad_id, autor_id, contenido, creado_en)
+propuestas        (id, oportunidad_id, version, total, moneda, estado, pdf_url,
+                   aprobada_por, enviada_en)
+propuesta_items   (id, propuesta_id, servicio_id, descripcion, cantidad, unidad,
+                   precio_unitario, subtotal)  -- líneas del PDF de propuesta
+adjudicaciones    (id, oportunidad_id, propuesta_id, modalidad, fecha_inicio,
+                   fecha_fin, estado, monto, moneda)  -- contrato resultante
+metas             (id, usuario_id, periodo, tipo, objetivo, moneda)
+notificaciones    (id, usuario_id, tipo, titulo, mensaje, entidad, entidad_id,
+                   leida, creado_en)
+definiciones_campo(id, entidad, clave, etiqueta, tipo, opciones, activo)
+                                              -- campos personalizados (admin)
+auditoria         (id, usuario_id, accion, entidad, entidad_id, cambios, creado_en)
 ```
 
 Tipos de actividad: `llamada`, `reunion`, `visita_terreno`, `email`, `whatsapp`, `tarea`.
 Modalidades de contrato: `proyecto`, `mensual_recurrente`, `outsourcing`.
 Estados de propuesta: `borrador`, `pendiente_aprobacion`, `aprobada`, `enviada`, `aceptada`, `rechazada`.
+Metas (`tipo`): `monto_adjudicado`, `propuestas_enviadas`, `actividades`, `oportunidades_nuevas`.
+Campos personalizados: definiciones en `definiciones_campo` + valores en columna `atributos jsonb` de cuentas/leads/oportunidades.
 
 ---
 

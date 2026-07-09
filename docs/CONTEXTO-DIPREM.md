@@ -1,8 +1,9 @@
 # 📎 Contexto DIPREM — extraído de los brochures oficiales
 
 > Fuente de verdad de terminología, servicios y estructura de negocio para el CRM.
-> Extraído de: `Brochure_Diprem_global_3pilares.pptx`, `Brochure_Diprem_global.pptx`,
-> `Brochure_SSO.pptx`, `Brochure_Medio_Ambiente.pptx`, `Brochure_Mineria_2026.pdf`.
+> Extraído de: `Brochure_Diprem_global__3pilares.pptx`, `Brochure_Diprem_lobal.pptx`
+> (contenido casi idéntico al anterior), `Brochure_SSO.pptx`,
+> `Brochure_Medio_Ambiente.pptx`, `Brochure_Mineria_2026.pdf`.
 
 ---
 
@@ -19,7 +20,7 @@ de experiencia** en la región.
 | Oficinas | +10 |
 | Empleados | +350 |
 | Proyectos y soluciones | +800 |
-| Potencia acompañada | +20.000 MW |
+| MW | +20.000 (el brochure no especifica qué representa la cifra — confirmar con DIPREM, ver §5) |
 
 **Presencia (14 países):** Chile, Argentina, Colombia, Brasil, México, Perú, EEUU,
 Canadá, Puerto Rico, República Dominicana, Uruguay, Panamá, Bolivia, Guatemala.
@@ -53,6 +54,13 @@ Servicios:
 ### Pilar 2 — Seguridad, Salud Ocupacional y Medio Ambiente (SSO + MA)
 > "La sostenibilidad y la seguridad no son negociables."
 
+> ⚠️ **Nombre oficial con dos variantes:** el brochure global lo llama
+> *"Salud y Seguridad Ocupacional, Ambiente, Sistema de Gestión de Calidad"* y el
+> brochure Minería 2026 *"Seguridad, Salud Ocupacional y Medio Ambiente"*. El CRM
+> adopta la forma corta (Minería 2026) como nombre del pilar y modela
+> **Sistema de Gestión de Calidad** como línea de servicio adicional del pilar
+> (el brochure la nombra pero no detalla servicios — confirmar catálogo, ver §5).
+
 **Sub-línea SSO (Seguridad y Salud Ocupacional):**
 - Sistemas de gestión en seguridad y salud ocupacional (políticas, protocolos, legajo técnico)
 - Servicio de higiene y seguridad para obras en construcción (programas de seguridad, aviso de obra)
@@ -68,6 +76,9 @@ Servicios:
 - Mediciones de entorno (iluminación, ruido, puesta a tierra)
 - Estadísticas de accidentabilidad, investigación y peritaje de accidentes
 - Representación ante organismos (ART, SRT, Ministerio de Trabajo, Municipio)
+- Inscripciones y trámites ante organismos regulatorios de la actividad
+- Supervisión en materia de SSO de personal propio y/o subcontratistas
+- Verificación de elementos de protección personal según los riesgos de cada puesto
 - Comité mixto de higiene y seguridad
 
 **Sub-línea Medio Ambiente:**
@@ -81,6 +92,11 @@ Servicios:
 
 ### Pilar 3 — Evaluación de Proveedores, Control de Contratistas y Desarrollo Tecnológico
 > "La transformación digital y la optimización de la cadena de valor son fundamentales para la competitividad."
+
+> ⚠️ **Nombre oficial con dos variantes:** brochure global: *"Evaluación de
+> Proveedores, Control de Contratistas y Desarrollo Tecnológico"*; brochure
+> Minería 2026: *"Evaluación de Proveedores, Control Documental y Tecnología"*.
+> El CRM adopta la variante del brochure global.
 
 Servicios:
 - Sistemas de control documental digital
@@ -146,3 +162,6 @@ configurables y se ajustan cuando se confirmen:
 - [ ] Metas/cuotas: ¿monto adjudicado mensual? ¿nº de propuestas? ¿actividades?
 - [ ] Lista de precios referenciales por servicio y moneda.
 - [ ] Si se requiere integración con facturación (SII Chile / AFIP Argentina) o ERP.
+- [ ] Qué representa la cifra "+20.000 MW" del brochure (¿potencia instalada, comisionada, supervisada?).
+- [ ] Catálogo de servicios de la línea "Sistema de Gestión de Calidad" del Pilar 2 (el brochure la nombra sin detallar servicios).
+- [ ] Qué variante de nombre usar en la UI para los pilares 2 y 3 (ver notas ⚠️ en §2).
