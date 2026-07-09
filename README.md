@@ -11,10 +11,12 @@ Web (Next.js) + móvil (Expo) sobre Supabase, en un monorepo Turborepo.
 | [`docs/PLAN-ARQUITECTURA.md`](./docs/PLAN-ARQUITECTURA.md) | Plan técnico aprobado: stack, carpetas, esquema SQL, fases |
 | [`docs/DEPLOY.md`](./docs/DEPLOY.md) | Guía paso a paso para publicar el entorno de prueba (Vercel + Supabase) |
 
-**Estado:** ✅ Fase 2 — "Mi Día": agenda diaria, registro rápido de gestión,
-actividades (llamada/reunión/visita a terreno/correo/WhatsApp/tarea) y
-seguimientos con alerta de días sin contacto. *(Push pendiente: se integra
-con Expo Notifications más adelante.)*
+**Estado:** ✅ Fase 3 — Metas y dashboards: dashboard del dueño/gerente
+(resumen, ranking con semáforo, estancadas >14 días, embudo agregado),
+dashboard del ejecutivo (avance vs meta, KPIs, comparativa), metas por
+mes configurables y reportes exportables (Excel/PDF).
+⚠️ Proyectos ya desplegados: correr `supabase/deploy/actualizacion_fase3.sql`
+en el SQL Editor de Supabase. *(Push pendiente para una fase posterior.)*
 
 ---
 

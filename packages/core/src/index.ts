@@ -7,3 +7,5 @@ export * from "./lib/moneda";
 export * from "./lib/etiquetas";
 export * from "./lib/seguimientos";
 export * from "./lib/fechas";
+export * from "./lib/metas";
+export * from "./lib/csv";

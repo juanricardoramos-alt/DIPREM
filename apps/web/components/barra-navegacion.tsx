@@ -18,7 +18,7 @@ export function BarraNavegacion({ usuario }: { usuario: Usuario }) {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="border-b border-slate-200 bg-white print:hidden">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
           <span className="text-lg font-bold text-[var(--color-diprem)]">

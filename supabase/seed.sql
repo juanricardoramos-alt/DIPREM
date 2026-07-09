@@ -137,3 +137,41 @@ insert into cuentas (razon_social, vertical, pais, propietario_id, equipo_id, es
   'a0000000-0000-4000-8000-000000000002', 'activa'),
  ('CAN II',        'mineria', 'Argentina', 'b0000000-0000-4000-8000-000000000005',
   'a0000000-0000-4000-8000-000000000002', 'prospecto');
+
+-- Oportunidades demo para poblar el embudo (cartera Argentina; dos quedan
+-- "estancadas" a propósito para demostrar la alerta de >14 días sin actividad)
+insert into oportunidades
+  (nombre, cuenta_id, propietario_id, etapa_id, pilar_id, modalidad_contrato,
+   monto, moneda, creado_en, ultimo_contacto_en)
+select v.nombre,
+       (select id from cuentas where razon_social = v.cuenta),
+       'b0000000-0000-4000-8000-000000000005',
+       (select id from etapas_embudo where nombre = v.etapa),
+       v.pilar, v.modalidad::modalidad_contrato, v.monto, 'ARS',
+       now() - (v.dias_creada || ' days')::interval,
+       case when v.dias_contacto is null then null
+            else now() - (v.dias_contacto || ' days')::interval end
+from (values
+  ('Outsourcing de inspectores — WORLEY',            'WORLEY',        'Contactado',              1, 'outsourcing',        12000000, 30, 2),
+  ('Auditoría HSE — MILICIC',                        'MILICIC',       'Reunión / Levantamiento', 2, 'proyecto',            3500000, 10, 1),
+  ('Plan de seguridad — GANFENG Salta',              'GANFENG',       'Propuesta enviada',       2, 'proyecto',            8000000, 45, 21),
+  ('Asesoría ambiental mensual — FIRST QUANTUM',     'FIRST QUANTUM', 'Negociación',             2, 'mensual_recurrente',  2400000, 25, 2),
+  ('Control documental de contratistas — CAN II',    'CAN II',        'Prospecto',               3, 'proyecto',            1500000, 16, null)
+) as v(nombre, cuenta, etapa, pilar, modalidad, monto, dias_creada, dias_contacto)
+where exists (select 1 from cuentas where razon_social = v.cuenta)
+  and not exists (select 1 from oportunidades o where o.nombre = v.nombre);
+
+-- Metas demo del MES EN CURSO (el admin las edita en Administración → Metas)
+insert into metas (usuario_id, periodo, tipo, objetivo, moneda)
+select v.usuario_id::uuid, to_char(now(), 'YYYY-MM'), v.tipo::tipo_meta, v.objetivo, v.moneda::moneda
+from (values
+  ('b0000000-0000-4000-8000-000000000005', 'monto_adjudicado',    5000000, 'ARS'),
+  ('b0000000-0000-4000-8000-000000000005', 'actividades',              40, null),
+  ('b0000000-0000-4000-8000-000000000005', 'oportunidades_nuevas',      5, null),
+  ('b0000000-0000-4000-8000-000000000005', 'propuestas_enviadas',       3, null),
+  ('b0000000-0000-4000-8000-000000000003', 'monto_adjudicado',   20000000, 'CLP'),
+  ('b0000000-0000-4000-8000-000000000003', 'actividades',              40, null),
+  ('b0000000-0000-4000-8000-000000000003', 'oportunidades_nuevas',      5, null)
+) as v(usuario_id, tipo, objetivo, moneda)
+where exists (select 1 from usuarios where id = v.usuario_id::uuid)
+on conflict (usuario_id, periodo, tipo) do nothing;

@@ -128,3 +128,22 @@ export async function cancelarActividad(sb: SupabaseClient, id: string): Promise
   const { error } = await sb.from("actividades").update({ estado: "cancelada" }).eq("id", id);
   lanzar(error);
 }
+
+/** Gestión completada en un rango, para el reporte exportable por ejecutivo. */
+export async function listarGestionReporte(
+  sb: SupabaseClient,
+  filtros: { desde: string; hasta: string; propietario_id?: string },
+): Promise<Actividad[]> {
+  let query = sb
+    .from("actividades")
+    .select(SELECT_ACTIVIDAD)
+    .eq("estado", "completada")
+    .gte("completada_en", filtros.desde)
+    .lt("completada_en", filtros.hasta)
+    .order("completada_en", { ascending: true })
+    .limit(5000);
+  if (filtros.propietario_id) query = query.eq("propietario_id", filtros.propietario_id);
+  const { data, error } = await query;
+  lanzar(error);
+  return (data ?? []) as unknown as Actividad[];
+}
