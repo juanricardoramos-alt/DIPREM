@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProveedorSesion, useSesion } from "@/lib/sesion";
 import "../global.css";
 
@@ -24,15 +25,27 @@ function NavegacionProtegida() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)/login" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="cuenta/[id]"
+        options={{ headerShown: true, headerTitle: "Cuenta", headerBackTitle: "Volver" }}
+      />
     </Stack>
   );
 }
 
 export default function LayoutRaiz() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+      }),
+  );
   return (
-    <ProveedorSesion>
-      <StatusBar style="dark" />
-      <NavegacionProtegida />
-    </ProveedorSesion>
+    <QueryClientProvider client={queryClient}>
+      <ProveedorSesion>
+        <StatusBar style="dark" />
+        <NavegacionProtegida />
+      </ProveedorSesion>
+    </QueryClientProvider>
   );
 }
