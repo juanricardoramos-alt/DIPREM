@@ -113,6 +113,8 @@ export interface Lead {
   convertido_cuenta_id: string | null;
   convertido_oportunidad_id: string | null;
   notas: string | null;
+  /** Campos personalizados + info de asignación de proyectos del mercado. */
+  atributos?: Record<string, unknown> | null;
   creado_en: string;
   propietario?: { nombre: string } | null;
 }
@@ -206,6 +208,7 @@ export interface Oportunidad {
 // Mercado nacional (base de proyectos importables — solo admin/gerente)
 // ---------------------------------------------------------------------------
 export type EstadoProyectoMercado = "sin_asignar" | "asignado" | "convertido";
+export type PrioridadProyecto = "alta" | "media" | "baja";
 
 export interface ProyectoMercado {
   id: string;
@@ -226,6 +229,11 @@ export interface ProyectoMercado {
   lead_id: string | null;
   importado_por: string;
   creado_en: string;
+  /** Desde la migración 0007 (asignación mejorada); antes vienen undefined. */
+  prioridad?: PrioridadProyecto;
+  fecha_limite_contacto?: string | null;
+  nota_asignacion?: string | null;
+  dias_alerta_sin_gestion?: number;
   /** join opcional */
   asignado?: { nombre: string } | null;
 }

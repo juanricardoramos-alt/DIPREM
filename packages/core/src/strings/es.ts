@@ -166,6 +166,9 @@ export const es = {
     recordar: "Recordar",
     recordando: "Enviando…",
     recordatorioEnviado: "Recordatorio enviado ✓",
+    vencido: "Vencido",
+    fechaLimiteCorta: "Límite",
+    notaDelDueno: "Nota de quien asignó",
     historialTitulo: "Historial de asignaciones",
     historialNota: "Quién asignó qué proyecto, a quién y cuándo",
     colProyecto: "Proyecto",
@@ -218,8 +221,15 @@ export const es = {
     asignarSeleccionados: (n: number) => (n === 1 ? "Asignar 1 proyecto" : `Asignar ${n} proyectos`),
     asignarTitulo: "Asignar proyectos a un ejecutivo",
     asignarDescripcion:
-      "Cada proyecto se convierte en un lead nuevo del ejecutivo, con el teléfono y correo del contacto ya cargados. Lo verá en su Mi Día.",
+      "Cada proyecto se convierte en un lead nuevo del ejecutivo, con el teléfono y correo del contacto ya cargados. Lo verá destacado en su Mi Día.",
     ejecutivo: "Ejecutivo",
+    prioridad: "Prioridad",
+    fechaLimite: "Fecha límite de primer contacto",
+    notaPrivada: "Nota para el ejecutivo",
+    notaPrivadaAyuda:
+      "Privada: solo la ven el ejecutivo asignado, su gerente y el administrador.",
+    notaPlaceholder: "Ej: Este contacto conoce a Pedro, di que vas de parte de él",
+    diasAlerta: "Alertarme si no hay gestión en (días)",
     asignando: "Asignando…",
     resultadoAsignacion: (asignados: number, omitidos: number) =>
       `${asignados} ${asignados === 1 ? "proyecto asignado" : "proyectos asignados"}.${omitidos > 0 ? ` ${omitidos} ya estaban asignados y se omitieron.` : ""}`,

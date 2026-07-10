@@ -1,5 +1,7 @@
+import type { Lead, PrioridadProyecto } from "../types/dominio";
 import type { PipelineFila, RankingFila } from "./metas";
 import { diasSinActividad } from "./metas";
+import { ORDEN_PRIORIDAD } from "./etiquetas";
 
 /**
  * Panel de Control del dueño: reglas e interpretación de las vistas
@@ -22,6 +24,11 @@ export interface FilaGestionProyecto {
   asignado_en: string | null;
   lead_id: string | null;
   ultima_gestion: string | null;
+  /** Desde la migración 0007; antes vienen undefined. */
+  prioridad?: PrioridadProyecto;
+  fecha_limite_contacto?: string | null;
+  nota_asignacion?: string | null;
+  dias_alerta_sin_gestion?: number;
 }
 
 /** Fila de v_historial_asignaciones. */
@@ -82,6 +89,94 @@ export function proyectosSinGestion(
     .map((f) => ({ ...f, dias: diasSinGestionProyecto(f, ahora) }))
     .filter((f) => f.dias >= DIAS_PROYECTO_SIN_GESTION)
     .sort((a, b) => b.dias - a.dias);
+}
+
+/**
+ * ¿La asignación está vencida? Sin gestión más allá de su umbral configurado
+ * o con la fecha límite de primer contacto pasada y sin gestión alguna.
+ */
+export function estaVencido(
+  fila: Pick<
+    FilaGestionProyecto,
+    "ultima_gestion" | "asignado_en" | "dias_alerta_sin_gestion" | "fecha_limite_contacto" | "estado"
+  >,
+  ahora: Date = new Date(),
+): boolean {
+  if (fila.estado !== "asignado") return false;
+  const dias = diasSinGestionProyecto(fila, ahora);
+  if (dias >= (fila.dias_alerta_sin_gestion ?? 5)) return true;
+  if (
+    fila.fecha_limite_contacto &&
+    !fila.ultima_gestion &&
+    ahora.getTime() > new Date(`${fila.fecha_limite_contacto}T23:59:59`).getTime()
+  ) {
+    return true;
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// Información de asignación que viaja con el lead (atributos jsonb)
+// ---------------------------------------------------------------------------
+export interface InfoAsignacionLead {
+  proyecto_nombre: string | null;
+  prioridad: PrioridadProyecto | null;
+  fecha_limite_contacto: string | null;
+  nota_asignacion: string | null;
+}
+
+const PRIORIDADES: PrioridadProyecto[] = ["alta", "media", "baja"];
+
+/** Lee prioridad, fecha límite y nota del dueño desde lead.atributos. */
+export function infoAsignacionLead(
+  lead: Pick<Lead, "atributos">,
+): InfoAsignacionLead | null {
+  const atributos = lead.atributos;
+  if (!atributos || typeof atributos !== "object") return null;
+  const prioridad = PRIORIDADES.includes(atributos.prioridad as PrioridadProyecto)
+    ? (atributos.prioridad as PrioridadProyecto)
+    : null;
+  const info: InfoAsignacionLead = {
+    proyecto_nombre:
+      typeof atributos.proyecto_nombre === "string" ? atributos.proyecto_nombre : null,
+    prioridad,
+    fecha_limite_contacto:
+      typeof atributos.fecha_limite_contacto === "string"
+        ? atributos.fecha_limite_contacto
+        : null,
+    nota_asignacion:
+      typeof atributos.nota_asignacion === "string" ? atributos.nota_asignacion : null,
+  };
+  if (!info.proyecto_nombre && !info.prioridad && !info.fecha_limite_contacto && !info.nota_asignacion) {
+    return null;
+  }
+  return info;
+}
+
+/** ¿Fecha límite de primer contacto ya pasada? */
+export function fechaLimiteVencida(
+  fechaLimite: string | null | undefined,
+  ahora: Date = new Date(),
+): boolean {
+  if (!fechaLimite) return false;
+  return ahora.getTime() > new Date(`${fechaLimite}T23:59:59`).getTime();
+}
+
+/** Leads nuevos ordenados: prioridad alta primero, luego fecha límite más próxima. */
+export function ordenarLeadsPorPrioridad<T extends Pick<Lead, "atributos" | "creado_en">>(
+  leads: T[],
+): T[] {
+  return [...leads].sort((a, b) => {
+    const infoA = infoAsignacionLead(a);
+    const infoB = infoAsignacionLead(b);
+    const prioridadA = ORDEN_PRIORIDAD[infoA?.prioridad ?? "media"];
+    const prioridadB = ORDEN_PRIORIDAD[infoB?.prioridad ?? "media"];
+    if (prioridadA !== prioridadB) return prioridadA - prioridadB;
+    const limiteA = infoA?.fecha_limite_contacto ?? "9999-12-31";
+    const limiteB = infoB?.fecha_limite_contacto ?? "9999-12-31";
+    if (limiteA !== limiteB) return limiteA.localeCompare(limiteB);
+    return new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime();
+  });
 }
 
 /** Métrica 2: ejecutivo con mejor gestión del mes (null si nadie registró). */

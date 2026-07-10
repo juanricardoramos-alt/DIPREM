@@ -6,6 +6,7 @@ import type {
   EstadoLead,
   FuenteLead,
   ModalidadContrato,
+  PrioridadProyecto,
   TipoActividad,
   VerticalCuenta,
 } from "../types/dominio";
@@ -87,4 +88,17 @@ export const ETIQUETAS_ESTADO_ACTIVIDAD: Record<EstadoActividad, string> = {
   pendiente: "Pendiente",
   completada: "Completada",
   cancelada: "Cancelada",
+};
+
+export const ETIQUETAS_PRIORIDAD: Record<PrioridadProyecto, string> = {
+  alta: "Alta",
+  media: "Media",
+  baja: "Baja",
+};
+
+/** Orden para listas: alta primero. */
+export const ORDEN_PRIORIDAD: Record<PrioridadProyecto, number> = {
+  alta: 0,
+  media: 1,
+  baja: 2,
 };

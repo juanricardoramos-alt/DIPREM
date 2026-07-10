@@ -1,5 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { EstadoProyectoMercado, FilaProyecto, ProyectoMercado } from "@diprem/core";
+import type {
+  EstadoProyectoMercado,
+  FilaProyecto,
+  PrioridadProyecto,
+  ProyectoMercado,
+} from "@diprem/core";
 
 /**
  * Base de proyectos del mercado nacional (solo admin/gerente — RLS).
@@ -73,15 +78,27 @@ export interface ResultadoAsignacion {
   omitidos: number;
 }
 
+export interface OpcionesAsignacion {
+  prioridad?: PrioridadProyecto;
+  fecha_limite?: string | null; // 'YYYY-MM-DD'
+  nota?: string | null; // nota privada del dueño al ejecutivo
+  dias_alerta?: number; // alerta automática si no hay gestión en N días
+}
+
 /** Asigna proyectos (uno o en lote) a un ejecutivo: crea un lead por proyecto. */
 export async function asignarProyectosMercado(
   sb: SupabaseClient,
   proyectoIds: string[],
   ejecutivoId: string,
+  opciones?: OpcionesAsignacion,
 ): Promise<ResultadoAsignacion> {
   const { data, error } = await sb.rpc("asignar_proyectos_mercado", {
     p_proyecto_ids: proyectoIds,
     p_ejecutivo_id: ejecutivoId,
+    ...(opciones?.prioridad ? { p_prioridad: opciones.prioridad } : {}),
+    ...(opciones?.fecha_limite ? { p_fecha_limite: opciones.fecha_limite } : {}),
+    ...(opciones?.nota ? { p_nota: opciones.nota } : {}),
+    ...(opciones?.dias_alerta ? { p_dias_alerta: opciones.dias_alerta } : {}),
   });
   lanzar(error);
   const fila = Array.isArray(data) ? data[0] : data;

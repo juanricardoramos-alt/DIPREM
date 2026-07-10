@@ -7,8 +7,11 @@ import {
   ETIQUETAS_CALIFICACION,
   ETIQUETAS_ESTADO_LEAD,
   ETIQUETAS_FUENTE,
+  ETIQUETAS_PRIORIDAD,
   es,
+  fechaLimiteVencida,
   formatearFechaCorta,
+  infoAsignacionLead,
   type Lead,
 } from "@diprem/core";
 import { actualizarLead, obtenerLead } from "@diprem/api";
@@ -52,6 +55,8 @@ export default function PaginaDetalleLead({
   if (!lead) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
   const activo = lead.estado === "nuevo" || lead.estado === "en_gestion";
+  const asignacion = infoAsignacionLead(lead);
+  const limiteVencido = fechaLimiteVencida(asignacion?.fecha_limite_contacto);
 
   return (
     <div>
@@ -73,6 +78,26 @@ export default function PaginaDetalleLead({
             {lead.propietario?.nombre && (
               <span>· {es.crm.propietario}: {lead.propietario.nombre}</span>
             )}
+            {asignacion?.prioridad && (
+              <Insignia
+                tono={
+                  asignacion.prioridad === "alta"
+                    ? "rojo"
+                    : asignacion.prioridad === "media"
+                      ? "ambar"
+                      : "gris"
+                }
+              >
+                {es.mercado.prioridad}: {ETIQUETAS_PRIORIDAD[asignacion.prioridad]}
+              </Insignia>
+            )}
+            {asignacion?.fecha_limite_contacto && (
+              <Insignia tono={limiteVencido ? "rojo" : "azul"}>
+                ⏰ {es.mercado.fechaLimite}:{" "}
+                {formatearFechaCorta(asignacion.fecha_limite_contacto)}
+                {limiteVencido && ` · ${es.control.vencido}`}
+              </Insignia>
+            )}
           </div>
           {/* Teléfono → WhatsApp/llamada · correo → email, con un toque */}
           <div className="mt-3">
@@ -93,6 +118,16 @@ export default function PaginaDetalleLead({
           </div>
         )}
       </div>
+
+      {/* Nota privada de quien asignó el proyecto */}
+      {asignacion?.nota_asignacion && (
+        <div className="mt-4 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-900 dark:text-amber-200">
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-70">
+            💬 {es.control.notaDelDueno}
+          </p>
+          <p className="mt-1 italic">{asignacion.nota_asignacion}</p>
+        </div>
+      )}
 
       {lead.notas && (
         <p className="mt-4 whitespace-pre-wrap rounded-lg border border-borde bg-superficie p-4 text-sm text-tinta-suave">

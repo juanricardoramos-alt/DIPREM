@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ETIQUETAS_PRIORIDAD,
   enlaceCorreo,
   enlaceWhatsApp,
   es,
   formatearFechaCorta,
   formatearMonto,
   type EstadoProyectoMercado,
+  type PrioridadProyecto,
   type ProyectoMercado,
 } from "@diprem/core";
 import {
@@ -18,6 +20,7 @@ import {
 } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import {
+  AreaTexto,
   BannerError,
   Boton,
   Campo,
@@ -111,7 +114,12 @@ export function MercadoCliente() {
     mutationFn: async (form: FormData) => {
       const ejecutivoId = form.get("ejecutivo_id") as string;
       if (!ejecutivoId) throw new Error("Selecciona un ejecutivo");
-      return asignarProyectosMercado(supabase, [...seleccion], ejecutivoId);
+      return asignarProyectosMercado(supabase, [...seleccion], ejecutivoId, {
+        prioridad: (form.get("prioridad") as PrioridadProyecto) || "media",
+        fecha_limite: (form.get("fecha_limite") as string) || null,
+        nota: (form.get("nota") as string) || null,
+        dias_alerta: Number(form.get("dias_alerta")) || 5,
+      });
     },
     onSuccess: (resultado) => {
       void queryClient.invalidateQueries({ queryKey: ["mercado"] });
@@ -304,6 +312,29 @@ export function MercadoCliente() {
               ))}
             </Selector>
           </Campo>
+
+          <div className="grid grid-cols-3 gap-4">
+            <Campo etiqueta={es.mercado.prioridad}>
+              <Selector name="prioridad" defaultValue="media">
+                {(Object.keys(ETIQUETAS_PRIORIDAD) as PrioridadProyecto[]).map((p) => (
+                  <option key={p} value={p}>
+                    {ETIQUETAS_PRIORIDAD[p]}
+                  </option>
+                ))}
+              </Selector>
+            </Campo>
+            <Campo etiqueta={`${es.mercado.fechaLimite} (${es.comunes.opcional})`}>
+              <Entrada name="fecha_limite" type="date" />
+            </Campo>
+            <Campo etiqueta={es.mercado.diasAlerta}>
+              <Entrada name="dias_alerta" type="number" min="1" max="60" defaultValue={5} />
+            </Campo>
+          </div>
+
+          <Campo etiqueta={`${es.mercado.notaPrivada} (${es.comunes.opcional})`}>
+            <AreaTexto name="nota" placeholder={es.mercado.notaPlaceholder} />
+          </Campo>
+          <p className="-mt-2 text-xs text-tinta-tenue">{es.mercado.notaPrivadaAyuda}</p>
 
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 

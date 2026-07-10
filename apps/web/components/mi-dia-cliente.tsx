@@ -4,13 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ETIQUETAS_PRIORIDAD,
   ETIQUETAS_TIPO_ACTIVIDAD,
   ICONOS_TIPO_ACTIVIDAD,
   es,
+  fechaLimiteVencida,
+  formatearFechaCorta,
   formatearFechaLarga,
   formatearHora,
   formatearMonto,
+  infoAsignacionLead,
   limitesDiaLocal,
+  ordenarLeadsPorPrioridad,
   ordenarPorUrgencia,
   type Actividad,
   type TipoActividad,
@@ -127,45 +132,81 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           </h2>
           <p className="text-sm text-tinta-suave">{es.miDia.leadsNuevosNota}</p>
           <div className="mt-3 grid gap-2 lg:grid-cols-2">
-            {leadsNuevos?.map((lead) => (
-              <div
-                key={lead.id}
-                className="rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/leads/${lead.id}`}
-                      className="font-medium hover:text-primario hover:underline"
-                    >
-                      {lead.nombre}
-                    </Link>
-                    {lead.empresa && (
-                      <p className="truncate text-sm text-tinta-suave">{lead.empresa}</p>
-                    )}
-                    <div className="mt-1.5">
-                      <EnlacesContacto
-                        telefono={lead.telefono}
-                        email={lead.email}
-                        compacto
-                      />
+            {ordenarLeadsPorPrioridad(leadsNuevos ?? []).map((lead) => {
+              const asignacion = infoAsignacionLead(lead);
+              const limiteVencido = fechaLimiteVencida(asignacion?.fecha_limite_contacto);
+              const prioridadAlta = asignacion?.prioridad === "alta";
+              return (
+                <div
+                  key={lead.id}
+                  className={`rounded-lg border p-4 ${
+                    prioridadAlta || limiteVencido
+                      ? "border-red-300 dark:border-red-900 bg-red-50/50 dark:bg-red-950/20"
+                      : "border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-center gap-1.5">
+                        <Link
+                          href={`/leads/${lead.id}`}
+                          className="font-medium hover:text-primario hover:underline"
+                        >
+                          {lead.nombre}
+                        </Link>
+                        {asignacion?.prioridad && (
+                          <Insignia
+                            tono={
+                              asignacion.prioridad === "alta"
+                                ? "rojo"
+                                : asignacion.prioridad === "media"
+                                  ? "ambar"
+                                  : "gris"
+                            }
+                          >
+                            {es.mercado.prioridad}: {ETIQUETAS_PRIORIDAD[asignacion.prioridad]}
+                          </Insignia>
+                        )}
+                        {asignacion?.fecha_limite_contacto && (
+                          <Insignia tono={limiteVencido ? "rojo" : "azul"}>
+                            ⏰ {es.control.fechaLimiteCorta}:{" "}
+                            {formatearFechaCorta(asignacion.fecha_limite_contacto)}
+                            {limiteVencido && ` · ${es.control.vencido}`}
+                          </Insignia>
+                        )}
+                      </p>
+                      {lead.empresa && (
+                        <p className="truncate text-sm text-tinta-suave">{lead.empresa}</p>
+                      )}
+                      {asignacion?.nota_asignacion && (
+                        <p className="mt-1 rounded-lg bg-superficie px-2.5 py-1.5 text-sm italic text-tinta-suave">
+                          💬 {asignacion.nota_asignacion}
+                        </p>
+                      )}
+                      <div className="mt-1.5">
+                        <EnlacesContacto
+                          telefono={lead.telefono}
+                          email={lead.email}
+                          compacto
+                        />
+                      </div>
                     </div>
+                    <Boton
+                      variante="secundario"
+                      onClick={() =>
+                        setFormulario({
+                          tipo: "llamada",
+                          rapido: true,
+                          lead: { id: lead.id, nombre: lead.nombre },
+                        })
+                      }
+                    >
+                      {es.miDia.registrarGestion}
+                    </Boton>
                   </div>
-                  <Boton
-                    variante="secundario"
-                    onClick={() =>
-                      setFormulario({
-                        tipo: "llamada",
-                        rapido: true,
-                        lead: { id: lead.id, nombre: lead.nombre },
-                      })
-                    }
-                  >
-                    {es.miDia.registrarGestion}
-                  </Boton>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

@@ -6,7 +6,10 @@ import { useMutation } from "@tanstack/react-query";
 import { BellRing } from "lucide-react";
 import {
   DIAS_PROYECTO_SIN_GESTION,
+  ETIQUETAS_PRIORIDAD,
   es,
+  estaVencido,
+  formatearFechaCorta,
   proyectosSinGestion,
   type FilaGestionProyecto,
 } from "@diprem/core";
@@ -56,10 +59,16 @@ export function ProyectosSinGestion({
         {!cargando && sinGestion.length === 0 && (
           <EstadoVacio titulo={es.control.todosGestionados} />
         )}
-        {sinGestion.map((proyecto) => (
+        {sinGestion.map((proyecto) => {
+          const vencido = estaVencido(proyecto);
+          return (
           <div
             key={proyecto.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-superficie p-3"
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-superficie p-3 ${
+              vencido
+                ? "border-red-300 dark:border-red-900"
+                : "border-amber-300 dark:border-amber-800"
+            }`}
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
@@ -76,8 +85,24 @@ export function ProyectosSinGestion({
               </p>
               <p className="truncate text-xs text-tinta-suave">
                 {proyecto.empresa} · {proyecto.ejecutivo ?? "—"}
+                {proyecto.fecha_limite_contacto &&
+                  ` · ⏰ ${es.control.fechaLimiteCorta}: ${formatearFechaCorta(proyecto.fecha_limite_contacto)}`}
               </p>
             </div>
+            {proyecto.prioridad && (
+              <Insignia
+                tono={
+                  proyecto.prioridad === "alta"
+                    ? "rojo"
+                    : proyecto.prioridad === "media"
+                      ? "ambar"
+                      : "gris"
+                }
+              >
+                {ETIQUETAS_PRIORIDAD[proyecto.prioridad]}
+              </Insignia>
+            )}
+            {vencido && <Insignia tono="rojo">{es.control.vencido}</Insignia>}
             <Insignia tono={proyecto.dias >= 14 ? "rojo" : "ambar"}>
               {es.gestion.diasSinGestion(proyecto.dias)}
             </Insignia>
@@ -95,7 +120,8 @@ export function ProyectosSinGestion({
               </Boton>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
