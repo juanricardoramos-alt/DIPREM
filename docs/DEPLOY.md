@@ -107,6 +107,11 @@ de BD, te pasaré el script SQL nuevo para pegar en el SQL Editor.
 
 ## Scripts de actualización de BD (proyectos ya creados)
 
+**Atajo:** si te faltan todos los scripts de las fases 2 a 7, pega de una sola vez
+[`actualizacion_completa_fases2_7.sql`](../supabase/deploy/actualizacion_completa_fases2_7.sql)
+(requiere haber corrido antes `actualizacion_mercado.sql`; es idempotente y combina
+los 5 scripts de abajo sin duplicar definiciones intermedias).
+
 Si tu proyecto Supabase ya existe (corriste `setup_completo.sql` antes), pega en el
 SQL Editor **solo** los scripts que te falten, en orden:
 
