@@ -58,7 +58,7 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
             · {etiquetaPeriodo(periodo)}
           </span>
         </h2>
-        <div className="mt-3 space-y-4 rounded-xl border border-borde bg-superficie p-5">
+        <div className="mt-3 space-y-4 rounded-xl border border-borde bg-superficie shadow-sm p-5">
           {(metas?.length ?? 0) === 0 && (
             <p className="text-center text-sm text-tinta-tenue">{es.reportes.sinMetas}</p>
           )}
@@ -86,7 +86,7 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
         <section>
           <h2 className="text-lg font-semibold">{es.reportes.comparativa}</h2>
           <p className="text-sm text-tinta-suave">{es.reportes.comparativaNota}</p>
-          <div className="mt-3 space-y-4 rounded-xl border border-borde bg-superficie p-5">
+          <div className="mt-3 space-y-4 rounded-xl border border-borde bg-superficie shadow-sm p-5">
             <Comparativa
               etiqueta={es.reportes.kpiActividades}
               mio={Number(mio?.actividades_mes ?? 0)}
@@ -111,7 +111,7 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
 
 function Kpi({ titulo, valor, nota }: { titulo: string; valor: string; nota?: string }) {
   return (
-    <div className="rounded-xl border border-borde bg-superficie p-4">
+    <div className="rounded-xl border border-borde bg-superficie shadow-sm p-4">
       <p className="text-xs font-medium uppercase tracking-wide text-tinta-tenue">
         {titulo}
       </p>

@@ -98,7 +98,7 @@ export function DashboardEquipo() {
       <section>
         <h2 className="text-lg font-semibold">{es.reportes.ranking}</h2>
         <p className="text-sm text-tinta-suave">{es.reportes.rankingNota}</p>
-        <div className="mt-3 overflow-x-auto rounded-xl border border-borde bg-superficie">
+        <div className="mt-3 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
               <tr>
@@ -197,7 +197,7 @@ export function DashboardEquipo() {
         {/* Embudo agregado */}
         <section>
           <h2 className="text-lg font-semibold">{es.reportes.embudoAgregado}</h2>
-          <div className="mt-3 space-y-3 rounded-xl border border-borde bg-superficie p-4">
+          <div className="mt-3 space-y-3 rounded-xl border border-borde bg-superficie shadow-sm p-4">
             {embudo.map((etapa) => (
               <div key={etapa.nombre}>
                 <div className="flex items-baseline justify-between text-sm">
@@ -239,7 +239,7 @@ function Tarjeta({
   chica?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-borde bg-superficie p-4">
+    <div className="rounded-xl border border-borde bg-superficie shadow-sm p-4">
       <p className="text-xs font-medium uppercase tracking-wide text-tinta-tenue">
         {titulo}
       </p>

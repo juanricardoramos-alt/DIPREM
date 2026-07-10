@@ -71,7 +71,7 @@ function TarjetaEjecutivo({ analisis }: { analisis: AnalisisEjecutivo }) {
     : 0;
 
   return (
-    <div className="rounded-xl border border-borde bg-superficie p-4">
+    <div className="rounded-xl border border-borde bg-superficie shadow-sm p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold">{analisis.ejecutivo}</p>
         <p className="text-xs text-tinta-suave">

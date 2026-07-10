@@ -18,15 +18,17 @@ export function Boton({
   variante?: "primario" | "secundario" | "peligro" | "fantasma";
 }) {
   const estilos = {
-    primario: "bg-primario text-white hover:bg-primario-oscuro shadow-sm",
+    primario:
+      "bg-primario text-white shadow-md shadow-primario/30 hover:bg-primario-oscuro active:bg-primario-oscuro",
     secundario:
-      "border border-borde bg-superficie text-tinta-suave hover:bg-superficie-2 hover:text-tinta",
-    peligro: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
-    fantasma: "text-tinta-suave hover:bg-superficie-2 hover:text-tinta",
+      "border border-borde bg-superficie text-tinta-suave shadow-sm hover:border-primario/40 hover:bg-primario-suave/60 hover:text-primario active:bg-primario-suave",
+    peligro:
+      "bg-red-600 text-white shadow-md shadow-red-600/25 hover:bg-red-700 active:bg-red-700",
+    fantasma: "text-tinta-suave hover:bg-superficie-2 hover:text-tinta active:bg-superficie-2",
   }[variante];
   return (
     <button
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primario disabled:pointer-events-none disabled:opacity-50 ${estilos} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primario disabled:pointer-events-none disabled:opacity-50 ${estilos} ${className}`}
       {...props}
     />
   );

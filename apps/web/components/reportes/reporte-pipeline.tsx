@@ -110,7 +110,7 @@ export function ReportePipeline() {
         <Selector
           value={filtroEjecutivo}
           onChange={(e) => setFiltroEjecutivo(e.target.value)}
-          className="w-48 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-48 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">{es.reportes.filtroEjecutivo}: {es.comunes.todos}</option>
           {ejecutivos.map((e2) => (
@@ -120,7 +120,7 @@ export function ReportePipeline() {
         <Selector
           value={filtroRubro}
           onChange={(e) => setFiltroRubro(e.target.value)}
-          className="w-44 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-44 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">{es.reportes.filtroRubro}: {es.comunes.todos}</option>
           {rubros.map((r) => (
@@ -132,7 +132,7 @@ export function ReportePipeline() {
         <Selector
           value={filtroPais}
           onChange={(e) => setFiltroPais(e.target.value)}
-          className="w-44 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-44 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">{es.reportes.filtroPais}: {es.reportes.todosMasc}</option>
           {paises.map((p) => (
@@ -189,7 +189,7 @@ export function ReportePipeline() {
 function BloqueBarras({ titulo, grupos }: { titulo: string; grupos: Grupo[] }) {
   const max = Math.max(1, ...grupos.map((g) => g.filas.length));
   return (
-    <div className="rounded-xl border border-borde bg-superficie p-4">
+    <div className="rounded-xl border border-borde bg-superficie shadow-sm p-4">
       <h3 className="text-sm font-semibold uppercase tracking-wide text-tinta-tenue">
         {titulo}
       </h3>

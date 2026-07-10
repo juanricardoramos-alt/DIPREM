@@ -40,12 +40,12 @@ export function ReportesCliente({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{es.nav.reportes}</h1>
         {pestanas.length > 1 && (
-          <div className="flex flex-wrap rounded-lg bg-superficie-2 p-1 print:hidden">
+          <div className="flex max-w-full overflow-x-auto rounded-lg bg-superficie-2 p-1 print:hidden">
             {pestanas.map((p) => (
               <button
                 key={p.clave}
                 onClick={() => setPestana(p.clave)}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                   pestana === p.clave
                     ? "bg-superficie text-primario shadow-sm"
                     : "text-tinta-suave hover:text-tinta"

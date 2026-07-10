@@ -41,14 +41,7 @@ import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
 import { Recordatorios } from "@/components/recordatorios";
-
-const ACCIONES_RAPIDAS: { tipo: TipoActividad; rapido: boolean }[] = [
-  { tipo: "llamada", rapido: true },
-  { tipo: "whatsapp", rapido: true },
-  { tipo: "reunion", rapido: false },
-  { tipo: "visita_terreno", rapido: false },
-  { tipo: "tarea", rapido: false },
-];
+import { AccionesRapidas } from "@/components/acciones-rapidas";
 
 export function MiDiaCliente({ nombre }: { nombre: string }) {
   const supabase = useSupabase();
@@ -136,7 +129,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           <p className="mt-0.5 capitalize text-tinta-suave">{formatearFechaLarga()}</p>
         </div>
         {/* Resumen del día */}
-        <div className="flex gap-4 rounded-xl border border-borde bg-superficie px-4 py-2 text-sm">
+        <div className="flex w-full flex-wrap justify-between gap-x-4 gap-y-1 rounded-xl border border-borde bg-superficie px-4 py-2.5 text-sm shadow-sm sm:w-auto sm:justify-start">
           <span>
             <b className="text-emerald-600 dark:text-emerald-400">{completadasHoy}</b>{" "}
             {es.miDia.completadasHoy}
@@ -156,7 +149,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
 
       {/* Racha de gestión + semana vs meta */}
       <div className="mt-4 flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-borde bg-superficie px-4 py-2.5 text-sm">
+        <div className="flex items-center gap-2 rounded-xl border border-borde bg-superficie shadow-sm px-4 py-2.5 text-sm">
           <span className="text-xl">🔥</span>
           {racha > 0 ? (
             <span>
@@ -168,7 +161,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           )}
         </div>
         <div
-          className="min-w-56 flex-1 rounded-xl border border-borde bg-superficie px-4 py-2.5 text-sm sm:max-w-xs"
+          className="min-w-56 flex-1 rounded-xl border border-borde bg-superficie shadow-sm px-4 py-2.5 text-sm sm:max-w-xs"
           title={metaSemanal ? es.miDia.metaSemanalNota : undefined}
         >
           <div className="flex items-baseline justify-between">
@@ -301,28 +294,12 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
         </section>
       )}
 
-      {/* Registro rápido */}
+      {/* Registro rápido: color e identidad por tipo de gestión */}
       <div className="mt-5">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
           {es.miDia.registroRapido}
         </p>
-        <div className="flex flex-wrap gap-2">
-          {ACCIONES_RAPIDAS.map(({ tipo, rapido }) => (
-            <Boton
-              key={tipo}
-              variante="secundario"
-              onClick={() => setFormulario({ tipo, rapido })}
-              className="py-2.5"
-            >
-              {ICONOS_TIPO_ACTIVIDAD[tipo]}{" "}
-              {rapido
-                ? `Registrar ${ETIQUETAS_TIPO_ACTIVIDAD[tipo].toLowerCase()}`
-                : tipo === "tarea"
-                  ? "Nueva tarea"
-                  : `Agendar ${ETIQUETAS_TIPO_ACTIVIDAD[tipo].toLowerCase()}`}
-            </Boton>
-          ))}
-        </div>
+        <AccionesRapidas onSeleccion={(tipo, rapido) => setFormulario({ tipo, rapido })} />
       </div>
 
       {/* Leads nuevos asignados (los prioritarios ya se muestran arriba) */}
@@ -464,7 +441,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
             {seguimientos.slice(0, 12).map((seguimiento) => (
               <div
                 key={seguimiento.id}
-                className={`flex items-center justify-between gap-3 rounded-lg border bg-superficie p-4 ${
+                className={`flex items-center justify-between gap-3 rounded-lg border bg-superficie shadow-sm p-4 ${
                   seguimiento.alerta === "critico"
                     ? "border-red-300 dark:border-red-900"
                     : seguimiento.alerta === "atencion"
@@ -549,7 +526,7 @@ function TarjetaActividad({
   const hecha = actividad.estado === "completada";
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg border bg-superficie p-3 ${
+      className={`flex items-center gap-3 rounded-lg border bg-superficie shadow-sm p-3 ${
         vencida ? "border-red-200 dark:border-red-900" : "border-borde"
       } ${hecha ? "opacity-60" : ""}`}
     >

@@ -64,7 +64,7 @@ export function ProyectosSinGestion({
           return (
           <div
             key={proyecto.id}
-            className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-superficie p-3 ${
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-superficie shadow-sm p-3 ${
               vencido
                 ? "border-red-300 dark:border-red-900"
                 : "border-amber-300 dark:border-amber-800"

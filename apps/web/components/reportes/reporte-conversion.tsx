@@ -96,19 +96,19 @@ export function ReporteConversion() {
 
       {/* Filtros: período, ejecutivo, rubro y región */}
       <div className="mt-3 flex flex-wrap items-center gap-2 print:hidden">
-        <label className="flex items-center gap-1.5 text-sm text-tinta-suave">
+        <label className="flex w-full flex-wrap items-center gap-1.5 text-sm text-tinta-suave sm:w-auto">
           {es.reportes.filtroDesde}
           <Entrada
             type="date"
             value={desde}
             onChange={(e) => setDesde(e.target.value)}
-            className="w-40 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+            className="w-full sm:w-40 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
           />
         </label>
         <Selector
           value={filtroEjecutivo}
           onChange={(e) => setFiltroEjecutivo(e.target.value)}
-          className="w-48 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-48 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">{es.reportes.filtroEjecutivo}: {es.comunes.todos}</option>
           {ejecutivos.map((e2) => (
@@ -118,7 +118,7 @@ export function ReporteConversion() {
         <Selector
           value={filtroRubro}
           onChange={(e) => setFiltroRubro(e.target.value)}
-          className="w-44 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-44 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">{es.reportes.filtroRubro}: {es.comunes.todos}</option>
           {rubros.map((r) => (
@@ -128,7 +128,7 @@ export function ReporteConversion() {
         <Selector
           value={filtroRegion}
           onChange={(e) => setFiltroRegion(e.target.value)}
-          className="w-44 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-44 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">{es.reportes.filtroRegion}: {es.reportes.todasFem}</option>
           {regiones.map((r) => (
@@ -147,7 +147,7 @@ export function ReporteConversion() {
       {embudo.asignados > 0 && (
         <>
           {/* Embudo visual */}
-          <div className="mt-4 rounded-xl border border-borde bg-superficie p-4">
+          <div className="mt-4 rounded-xl border border-borde bg-superficie shadow-sm p-4">
             <div className="space-y-3">
               {PASOS.map((paso, i) => {
                 const valor = embudo[paso.clave];
@@ -180,7 +180,7 @@ export function ReporteConversion() {
           </div>
 
           {/* Desglose por ejecutivo */}
-          <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
+          <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
                 <tr>

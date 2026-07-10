@@ -52,7 +52,7 @@ export default function PaginaDetalleLead({
     },
   });
 
-  if (isLoading) return <p className="text-tinta-tenue">{es.comunes.cargando}</p>;
+  if (isLoading) return <p className="py-16 text-center text-tinta-tenue">{es.comunes.cargando}</p>;
   if (!lead) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
   const activo = lead.estado === "nuevo" || lead.estado === "en_gestion";
@@ -131,7 +131,7 @@ export default function PaginaDetalleLead({
       )}
 
       {lead.notas && (
-        <p className="mt-4 whitespace-pre-wrap rounded-lg border border-borde bg-superficie p-4 text-sm text-tinta-suave">
+        <p className="mt-4 whitespace-pre-wrap rounded-lg border border-borde bg-superficie shadow-sm p-4 text-sm text-tinta-suave">
           {lead.notas}
         </p>
       )}

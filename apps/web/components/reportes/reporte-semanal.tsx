@@ -87,7 +87,7 @@ export function ReporteSemanal() {
         <Boton variante="secundario" onClick={() => setOffset((o) => o + 1)}>
           <ChevronLeft className="h-4 w-4" /> {es.reportes.semanaAnteriorBtn}
         </Boton>
-        <span className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-medium">
+        <span className="rounded-lg border border-borde bg-superficie shadow-sm px-3 py-1.5 text-sm font-medium">
           {etiquetaSemana(rango)}
         </span>
         <Boton
@@ -100,7 +100,7 @@ export function ReporteSemanal() {
         <Selector
           value={filtroEjecutivo}
           onChange={(e) => setFiltroEjecutivo(e.target.value)}
-          className="w-52 rounded-lg border border-borde bg-superficie px-3 py-2 text-sm"
+          className="w-full sm:w-52 rounded-lg border border-borde bg-superficie shadow-sm px-3 py-2 text-sm"
         >
           <option value="">
             {es.reportes.filtroEjecutivo}: {es.comunes.todos}
@@ -113,7 +113,7 @@ export function ReporteSemanal() {
         </Selector>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>

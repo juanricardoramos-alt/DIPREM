@@ -99,12 +99,12 @@ export default function PaginaLeads() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{es.crm.leads}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
           <Entrada
             placeholder={es.comunes.buscar}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-56 rounded-md border border-borde px-3 py-2 text-sm"
+            className="sm:w-56 rounded-md border border-borde px-3 py-2 text-sm"
           />
           <Boton onClick={() => setLeadForm({ lead: null })}>
             + {es.crm.nuevoLead}
@@ -112,7 +112,7 @@ export default function PaginaLeads() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
@@ -202,7 +202,7 @@ export default function PaginaLeads() {
             guardarLead.mutate(new FormData(e.currentTarget));
           }}
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta={es.crm.nombre}>
               <Entrada
                 name="nombre"

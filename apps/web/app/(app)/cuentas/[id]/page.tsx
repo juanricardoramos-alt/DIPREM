@@ -107,7 +107,7 @@ export default function PaginaDetalleCuenta({
       void queryClient.invalidateQueries({ queryKey: ["contactos", id] }),
   });
 
-  if (isLoading) return <p className="text-tinta-tenue">{es.comunes.cargando}</p>;
+  if (isLoading) return <p className="py-16 text-center text-tinta-tenue">{es.comunes.cargando}</p>;
   if (!cuenta) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
   const nombreEtapa = (etapaId: string) =>
@@ -168,7 +168,7 @@ export default function PaginaDetalleCuenta({
             {contactos?.map((contacto) => (
               <div
                 key={contacto.id}
-                className="flex items-start justify-between rounded-lg border border-borde bg-superficie p-4"
+                className="flex items-start justify-between rounded-lg border border-borde bg-superficie shadow-sm p-4"
               >
                 <div>
                   <p className="font-medium">
@@ -234,7 +234,7 @@ export default function PaginaDetalleCuenta({
             {oportunidades?.map((op) => (
               <div
                 key={op.id}
-                className="rounded-lg border border-borde bg-superficie p-4"
+                className="rounded-lg border border-borde bg-superficie shadow-sm p-4"
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="min-w-0 truncate font-medium">{op.nombre}</p>
@@ -322,7 +322,7 @@ export default function PaginaDetalleCuenta({
               autoFocus
             />
           </Campo>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta={`${es.crm.cargo} (${es.comunes.opcional})`}>
               <Entrada name="cargo" defaultValue={contactoForm?.contacto?.cargo ?? ""} />
             </Campo>
