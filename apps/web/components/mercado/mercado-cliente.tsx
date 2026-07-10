@@ -159,10 +159,10 @@ export function MercadoCliente() {
           placeholder={es.comunes.buscar}
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          className="w-56 rounded-md border border-borde px-3 py-2 text-sm"
+          className="sm:w-56 rounded-md border border-borde px-3 py-2 text-sm"
         />
         <select
-          className="rounded-md border border-borde px-3 py-2 text-sm"
+          className="w-full rounded-md border border-borde bg-superficie px-3 py-2 text-sm sm:w-auto"
           value={filtroRubro}
           onChange={(e) => setFiltroRubro(e.target.value)}
         >
@@ -174,7 +174,7 @@ export function MercadoCliente() {
           ))}
         </select>
         <select
-          className="rounded-md border border-borde px-3 py-2 text-sm"
+          className="w-full rounded-md border border-borde bg-superficie px-3 py-2 text-sm sm:w-auto"
           value={filtroRegion}
           onChange={(e) => setFiltroRegion(e.target.value)}
         >
@@ -186,7 +186,7 @@ export function MercadoCliente() {
           ))}
         </select>
         <select
-          className="rounded-md border border-borde px-3 py-2 text-sm"
+          className="w-full rounded-md border border-borde bg-superficie px-3 py-2 text-sm sm:w-auto"
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value as "" | EstadoProyectoMercado)}
         >
@@ -211,7 +211,7 @@ export function MercadoCliente() {
       </div>
 
       {/* Tabla de proyectos */}
-      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
@@ -313,7 +313,7 @@ export function MercadoCliente() {
             </Selector>
           </Campo>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             <Campo etiqueta={es.mercado.prioridad}>
               <Selector name="prioridad" defaultValue="media">
                 {(Object.keys(ETIQUETAS_PRIORIDAD) as PrioridadProyecto[]).map((p) => (

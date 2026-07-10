@@ -198,7 +198,7 @@ function ItemLineaTiempo({
       <span className="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-borde bg-superficie text-sm">
         {ICONOS_TIPO_ACTIVIDAD[actividad.tipo]}
       </span>
-      <div className="min-w-0 flex-1 rounded-lg border border-borde bg-superficie p-3">
+      <div className="min-w-0 flex-1 rounded-lg border border-borde bg-superficie shadow-sm p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-medium">{actividad.asunto}</p>
           <p className="text-xs text-tinta-tenue">{fechaLarga(fecha)}</p>

@@ -103,7 +103,7 @@ export function NotasInternas({
         {notas?.map((nota) => (
           <div
             key={nota.id}
-            className="flex items-start gap-3 rounded-xl border border-borde bg-superficie p-3"
+            className="flex items-start gap-3 rounded-xl border border-borde bg-superficie shadow-sm p-3"
           >
             <Avatar nombre={nota.autor?.nombre ?? "?"} tamano="sm" />
             <div className="min-w-0 flex-1">

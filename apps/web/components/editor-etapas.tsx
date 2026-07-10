@@ -78,7 +78,7 @@ export function EditorEtapas() {
         </Boton>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>

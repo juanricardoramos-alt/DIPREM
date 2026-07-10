@@ -54,11 +54,11 @@ export default function PaginaActividades() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{es.nav.actividades}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
           <Selector
             value={tipo}
             onChange={(e) => setTipo(e.target.value as TipoActividad | "")}
-            className="w-44 rounded-md border border-borde px-2 py-2 text-sm"
+            className="sm:w-44 rounded-md border border-borde px-2 py-2 text-sm"
           >
             <option value="">{es.actividades.filtroTodas}</option>
             {Object.entries(ETIQUETAS_TIPO_ACTIVIDAD).map(([valor, etiqueta]) => (
@@ -70,7 +70,7 @@ export default function PaginaActividades() {
           <Selector
             value={estado}
             onChange={(e) => setEstado(e.target.value as EstadoActividad | "")}
-            className="w-40 rounded-md border border-borde px-2 py-2 text-sm"
+            className="sm:w-40 rounded-md border border-borde px-2 py-2 text-sm"
           >
             <option value="">{es.actividades.filtroTodas}</option>
             {Object.entries(ETIQUETAS_ESTADO_ACTIVIDAD).map(([valor, etiqueta]) => (
@@ -85,7 +85,7 @@ export default function PaginaActividades() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>

@@ -134,7 +134,7 @@ export function Exportes() {
   return (
     <section className="print:hidden">
       <h2 className="text-lg font-semibold">{es.reportes.exportar}</h2>
-      <div className="mt-3 rounded-xl border border-borde bg-superficie p-5">
+      <div className="mt-3 rounded-xl border border-borde bg-superficie shadow-sm p-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Campo etiqueta={es.reportes.filtroPeriodo}>
             <Entrada

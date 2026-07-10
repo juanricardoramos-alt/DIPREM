@@ -97,7 +97,7 @@ export default function PaginaFichaContacto({
 
       {/* Preferencias de contacto */}
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-borde bg-superficie p-4">
+        <div className="rounded-xl border border-borde bg-superficie shadow-sm p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
             {es.crm.canalPreferido}
           </p>
@@ -107,7 +107,7 @@ export default function PaginaFichaContacto({
               : "—"}
           </p>
         </div>
-        <div className="rounded-xl border border-borde bg-superficie p-4">
+        <div className="rounded-xl border border-borde bg-superficie shadow-sm p-4">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
             <Clock className="h-3.5 w-3.5" /> {es.crm.mejorHorario}
           </p>

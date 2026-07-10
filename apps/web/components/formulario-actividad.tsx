@@ -181,7 +181,7 @@ export function FormularioActividad({
             <Entrada value={leadFijo.nombre} disabled />
           </Campo>
         ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Campo etiqueta={`${es.actividades.cuenta} (${es.comunes.opcional})`}>
             {cuentaFija || oportunidadFija ? (
               <Entrada
@@ -235,7 +235,7 @@ export function FormularioActividad({
             <Entrada name="resultado" placeholder="Ej: Cliente pide ajustar plazo" />
           </Campo>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta={es.actividades.fechaProgramada}>
               <Entrada
                 name="fecha_programada"
