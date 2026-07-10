@@ -13,3 +13,4 @@ export * from "./lib/contacto";
 export * from "./lib/gestion";
 export * from "./lib/importacion";
 export * from "./lib/control";
+export * from "./lib/midia";

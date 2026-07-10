@@ -284,6 +284,22 @@ export const es = {
     leadsNuevos: "Leads nuevos asignados",
     leadsNuevosNota: "Proyectos del mercado y leads que esperan tu primer contacto",
     verLead: "Ver lead",
+    prioritarios: "Proyectos prioritarios de hoy",
+    prioritariosNota: "Por dónde empezar: prioridad del dueño, fecha límite y urgencia",
+    racha: (dias: number) =>
+      dias === 1 ? "1 día seguido con gestión" : `${dias} días seguidos con gestión`,
+    sinRacha: "Registra una gestión hoy para partir tu racha",
+    gestionesSemana: "Gestión de la semana",
+    gestionesSemanaDe: (hechas: number, meta: number) => `${hechas} de ${meta}`,
+    gestionesSemanaSinMeta: (hechas: number) =>
+      hechas === 1 ? "1 gestión esta semana" : `${hechas} gestiones esta semana`,
+    metaSemanalNota: "Meta semanal derivada de tu meta mensual de actividades",
+    resumenFinDia: "Resumen del día",
+    resumenFinDiaNota: "Lo que se hizo hoy y por dónde partir mañana",
+    hicisteHoy: (n: number) => (n === 1 ? "Registraste 1 gestión hoy" : `Registraste ${n} gestiones hoy`),
+    quedaronPendientes: (n: number) => (n === 1 ? "1 pendiente" : `${n} pendientes`),
+    paraManana: "Sugerencias para mañana",
+    sinSugerencias: "Sin pendientes urgentes. ¡Buen cierre de día! 🎉",
   },
   actividades: {
     nueva: "Nueva actividad",

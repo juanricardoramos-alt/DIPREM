@@ -7,21 +7,35 @@ import {
   ETIQUETAS_PRIORIDAD,
   ETIQUETAS_TIPO_ACTIVIDAD,
   ICONOS_TIPO_ACTIVIDAD,
+  calcularRacha,
   es,
+  esFinDeDia,
   fechaLimiteVencida,
   formatearFechaCorta,
   formatearFechaLarga,
   formatearHora,
   formatearMonto,
   infoAsignacionLead,
+  inicioSemana,
   limitesDiaLocal,
+  metaSemanalDerivada,
   ordenarLeadsPorPrioridad,
   ordenarPorUrgencia,
+  periodoActual,
+  proyectosPrioritarios,
+  sugerenciasManana,
   type Actividad,
   type TipoActividad,
 } from "@diprem/core";
-import { agendaDelDia, listarLeadsNuevos, oportunidadesAbiertas } from "@diprem/api";
-import { useSupabase } from "@/lib/hooks";
+import {
+  agendaDelDia,
+  listarAvanceMetas,
+  listarFechasGestion,
+  listarLeadsActivos,
+  listarLeadsNuevos,
+  oportunidadesAbiertas,
+} from "@diprem/api";
+import { usePerfil, useSupabase } from "@/lib/hooks";
 import { Boton, Insignia, TarjetasEsqueleto } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
@@ -38,6 +52,7 @@ const ACCIONES_RAPIDAS: { tipo: TipoActividad; rapido: boolean }[] = [
 
 export function MiDiaCliente({ nombre }: { nombre: string }) {
   const supabase = useSupabase();
+  const { data: perfil } = usePerfil();
   const [formulario, setFormulario] = useState<{
     tipo: TipoActividad;
     rapido: boolean;
@@ -57,8 +72,29 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
     queryFn: () => oportunidadesAbiertas(supabase),
   });
   const { data: leadsNuevos } = useQuery({
-    queryKey: ["leads", "nuevos"],
-    queryFn: () => listarLeadsNuevos(supabase),
+    queryKey: ["leads", "nuevos", perfil?.id],
+    queryFn: () => listarLeadsNuevos(supabase, perfil?.id),
+    enabled: !!perfil,
+  });
+  const { data: leadsActivos } = useQuery({
+    queryKey: ["leads", "activos", perfil?.id],
+    queryFn: () => listarLeadsActivos(supabase, perfil?.id),
+    enabled: !!perfil,
+  });
+  // 60 días de fechas de gestión: alcanzan para la racha y la semana
+  const desdeRacha = new Date(Date.now() - 60 * 86_400_000).toISOString();
+  const { data: fechasGestion } = useQuery({
+    queryKey: ["fechas-gestion", perfil?.id],
+    queryFn: () => listarFechasGestion(supabase, perfil!.id, desdeRacha),
+    enabled: !!perfil,
+    refetchInterval: 60_000,
+  });
+  const periodo = periodoActual();
+  const { data: metas } = useQuery({
+    queryKey: ["avance_metas", periodo, perfil?.id],
+    queryFn: () => listarAvanceMetas(supabase, { periodo, usuario_id: perfil?.id }),
+    enabled: !!perfil,
+    retry: false,
   });
 
   const seguimientos = ordenarPorUrgencia(abiertas ?? []);
@@ -68,6 +104,27 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
   const pendientesHoy =
     (agenda?.agenda.filter((a) => a.estado === "pendiente").length ?? 0) +
     (agenda?.vencidas.length ?? 0);
+
+  // Racha, semana vs meta y prioritarios
+  const racha = calcularRacha(fechasGestion ?? []);
+  const desdeSemana = inicioSemana().getTime();
+  const gestionesSemana = (fechasGestion ?? []).filter(
+    (f) => new Date(f).getTime() >= desdeSemana,
+  ).length;
+  const metaActividades = (metas ?? []).find((m) => m.tipo === "actividades");
+  const metaSemanal = metaActividades
+    ? metaSemanalDerivada(Number(metaActividades.objetivo))
+    : null;
+  const prioritarios = proyectosPrioritarios(leadsActivos ?? []);
+  const idsPrioritarios = new Set(prioritarios.map((p) => p.lead.id));
+  const leadsNuevosRestantes = ordenarLeadsPorPrioridad(leadsNuevos ?? []).filter(
+    (l) => !idsPrioritarios.has(l.id),
+  );
+  const sugerencias = sugerenciasManana(
+    seguimientos,
+    prioritarios,
+    agenda?.vencidas ?? [],
+  );
 
   return (
     <div>
@@ -97,8 +154,152 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
         </div>
       </div>
 
+      {/* Racha de gestión + semana vs meta */}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 rounded-xl border border-borde bg-superficie px-4 py-2.5 text-sm">
+          <span className="text-xl">🔥</span>
+          {racha > 0 ? (
+            <span>
+              <b className="text-amber-600 dark:text-amber-400">{racha}</b>{" "}
+              {es.miDia.racha(racha).replace(/^\d+ /, "")}
+            </span>
+          ) : (
+            <span className="text-tinta-suave">{es.miDia.sinRacha}</span>
+          )}
+        </div>
+        <div
+          className="min-w-56 flex-1 rounded-xl border border-borde bg-superficie px-4 py-2.5 text-sm sm:max-w-xs"
+          title={metaSemanal ? es.miDia.metaSemanalNota : undefined}
+        >
+          <div className="flex items-baseline justify-between">
+            <span className="text-tinta-suave">{es.miDia.gestionesSemana}</span>
+            <b>
+              {metaSemanal
+                ? es.miDia.gestionesSemanaDe(gestionesSemana, metaSemanal)
+                : es.miDia.gestionesSemanaSinMeta(gestionesSemana)}
+            </b>
+          </div>
+          {metaSemanal && (
+            <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-superficie-2">
+              <div
+                className={`h-full rounded-full ${
+                  gestionesSemana >= metaSemanal ? "bg-emerald-500" : "bg-primario"
+                }`}
+                style={{
+                  width: `${Math.min(100, (gestionesSemana / metaSemanal) * 100)}%`,
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Recordatorios pendientes (botón "Recordar" del Panel de Control) */}
       <Recordatorios />
+
+      {/* Resumen de fin de día (desde las 17:00) */}
+      {esFinDeDia() && (
+        <section className="mt-5 rounded-xl border border-primario/30 bg-primario-suave/50 p-4">
+          <h2 className="text-lg font-semibold">🌇 {es.miDia.resumenFinDia}</h2>
+          <p className="text-sm text-tinta-suave">{es.miDia.resumenFinDiaNota}</p>
+          <p className="mt-2 text-sm">
+            ✅ {es.miDia.hicisteHoy(completadasHoy)} ·{" "}
+            {es.miDia.quedaronPendientes(pendientesHoy)}
+          </p>
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
+            {es.miDia.paraManana}
+          </p>
+          {sugerencias.length === 0 ? (
+            <p className="mt-1 text-sm text-tinta-suave">{es.miDia.sinSugerencias}</p>
+          ) : (
+            <ol className="mt-1 list-inside list-decimal space-y-1 text-sm">
+              {sugerencias.map((sugerencia) => (
+                <li key={sugerencia.texto}>
+                  {sugerencia.ruta ? (
+                    <Link href={sugerencia.ruta} className="hover:text-primario hover:underline">
+                      {sugerencia.texto}
+                    </Link>
+                  ) : (
+                    sugerencia.texto
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      )}
+
+      {/* Proyectos prioritarios de hoy */}
+      {prioritarios.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-lg font-semibold">🎯 {es.miDia.prioritarios}</h2>
+          <p className="text-sm text-tinta-suave">{es.miDia.prioritariosNota}</p>
+          <div className="mt-3 grid gap-2 lg:grid-cols-3">
+            {prioritarios.map(({ lead, limiteVencido }) => {
+              const asignacion = infoAsignacionLead(lead);
+              return (
+                <div
+                  key={lead.id}
+                  className={`rounded-xl border-2 p-4 ${
+                    limiteVencido || asignacion?.prioridad === "alta"
+                      ? "border-red-300 dark:border-red-900 bg-superficie"
+                      : "border-primario/40 bg-superficie"
+                  }`}
+                >
+                  <p className="flex flex-wrap items-center gap-1.5">
+                    <Link
+                      href={`/leads/${lead.id}`}
+                      className="font-semibold hover:text-primario hover:underline"
+                    >
+                      {asignacion?.proyecto_nombre ?? lead.nombre}
+                    </Link>
+                    {asignacion?.prioridad && (
+                      <Insignia
+                        tono={
+                          asignacion.prioridad === "alta"
+                            ? "rojo"
+                            : asignacion.prioridad === "media"
+                              ? "ambar"
+                              : "gris"
+                        }
+                      >
+                        {ETIQUETAS_PRIORIDAD[asignacion.prioridad]}
+                      </Insignia>
+                    )}
+                  </p>
+                  <p className="truncate text-sm text-tinta-suave">
+                    {lead.nombre}
+                    {lead.empresa ? ` · ${lead.empresa}` : ""}
+                  </p>
+                  {asignacion?.fecha_limite_contacto && (
+                    <p className="mt-1">
+                      <Insignia tono={limiteVencido ? "rojo" : "azul"}>
+                        ⏰ {es.control.fechaLimiteCorta}:{" "}
+                        {formatearFechaCorta(asignacion.fecha_limite_contacto)}
+                        {limiteVencido && ` · ${es.control.vencido}`}
+                      </Insignia>
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <Boton
+                      variante="secundario"
+                      onClick={() =>
+                        setFormulario({
+                          tipo: "llamada",
+                          rapido: true,
+                          lead: { id: lead.id, nombre: lead.nombre },
+                        })
+                      }
+                    >
+                      {es.miDia.registrarGestion}
+                    </Boton>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Registro rápido */}
       <div className="mt-5">
@@ -124,15 +325,15 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
         </div>
       </div>
 
-      {/* Leads nuevos asignados (proyectos del mercado y otros) */}
-      {(leadsNuevos?.length ?? 0) > 0 && (
+      {/* Leads nuevos asignados (los prioritarios ya se muestran arriba) */}
+      {leadsNuevosRestantes.length > 0 && (
         <section className="mt-8">
           <h2 className="text-lg font-semibold">
-            🆕 {es.miDia.leadsNuevos} ({leadsNuevos?.length})
+            🆕 {es.miDia.leadsNuevos} ({leadsNuevosRestantes.length})
           </h2>
           <p className="text-sm text-tinta-suave">{es.miDia.leadsNuevosNota}</p>
           <div className="mt-3 grid gap-2 lg:grid-cols-2">
-            {ordenarLeadsPorPrioridad(leadsNuevos ?? []).map((lead) => {
+            {leadsNuevosRestantes.map((lead) => {
               const asignacion = infoAsignacionLead(lead);
               const limiteVencido = fechaLimiteVencida(asignacion?.fecha_limite_contacto);
               const prioridadAlta = asignacion?.prioridad === "alta";

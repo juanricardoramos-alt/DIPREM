@@ -64,14 +64,64 @@ export async function listarDistribucionGestion(
   return (data ?? []) as DistribucionGestion[];
 }
 
-/** Leads nuevos (recién asignados, sin primera gestión) para Mi Día. */
-export async function listarLeadsNuevos(sb: SupabaseClient): Promise<Lead[]> {
-  const { data, error } = await sb
+/**
+ * Leads nuevos (recién asignados, sin primera gestión) para Mi Día.
+ * Con propietarioId muestra solo los del usuario (Mi Día es personal:
+ * a un gerente la RLS también le mostraría los de su equipo).
+ */
+export async function listarLeadsNuevos(
+  sb: SupabaseClient,
+  propietarioId?: string,
+): Promise<Lead[]> {
+  let query = sb
     .from("leads")
     .select("*")
     .eq("estado", "nuevo")
     .order("creado_en", { ascending: false })
     .limit(20);
+  if (propietarioId) query = query.eq("propietario_id", propietarioId);
+  const { data, error } = await query;
   lanzar(error);
   return (data ?? []) as Lead[];
+}
+
+/** Leads activos (nuevo + en gestión) — para los proyectos prioritarios del día. */
+export async function listarLeadsActivos(
+  sb: SupabaseClient,
+  propietarioId?: string,
+): Promise<Lead[]> {
+  let query = sb
+    .from("leads")
+    .select("*")
+    .in("estado", ["nuevo", "en_gestion"])
+    .order("creado_en", { ascending: false })
+    .limit(200);
+  if (propietarioId) query = query.eq("propietario_id", propietarioId);
+  const { data, error } = await query;
+  lanzar(error);
+  return (data ?? []) as Lead[];
+}
+
+/**
+ * Fechas de gestiones completadas del PROPIO usuario (racha y contador
+ * semanal). Se filtra por propietario porque gerente/admin ven más filas
+ * vía RLS y la racha es personal.
+ */
+export async function listarFechasGestion(
+  sb: SupabaseClient,
+  propietarioId: string,
+  desdeISO: string,
+): Promise<string[]> {
+  const { data, error } = await sb
+    .from("actividades")
+    .select("completada_en")
+    .eq("propietario_id", propietarioId)
+    .eq("estado", "completada")
+    .gte("completada_en", desdeISO)
+    .order("completada_en", { ascending: false })
+    .limit(2000);
+  lanzar(error);
+  return ((data ?? []) as { completada_en: string | null }[])
+    .map((f) => f.completada_en)
+    .filter((f): f is string => f !== null);
 }
