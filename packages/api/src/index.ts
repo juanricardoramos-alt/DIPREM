@@ -6,3 +6,5 @@ export * from "./metricas";
 export * from "./mercado";
 export * from "./gestion";
 export * from "./busqueda";
+export * from "./control";
+export * from "./notificaciones";

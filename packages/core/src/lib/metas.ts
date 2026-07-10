@@ -27,6 +27,8 @@ export interface RankingFila {
   adjudicadas_mes: number;
   perdidas_mes: number;
   nuevas_mes: number;
+  /** Solo con la migración 0006 (actualizacion_control.sql); antes viene undefined. */
+  actividades_7d?: number;
 }
 
 /** Fila de v_pipeline_detalle. */
@@ -111,6 +113,16 @@ export function semaforoMeta(
 export function porcentajeMeta(meta: Pick<MetaAvance, "avance" | "objetivo">): number {
   if (meta.objetivo <= 0) return 100;
   return Math.round((Number(meta.avance) / Number(meta.objetivo)) * 100);
+}
+
+/** Semáforo global de un ejecutivo = el peor de sus metas del mes (null sin metas). */
+export function semaforoGlobal(
+  metas: Pick<MetaAvance, "avance" | "objetivo" | "periodo">[],
+  fecha: Date = new Date(),
+): Semaforo | null {
+  if (!metas.length) return null;
+  const orden: Semaforo[] = ["rojo", "ambar", "verde"];
+  return orden.find((s) => metas.some((m) => semaforoMeta(m, fecha) === s)) ?? "verde";
 }
 
 /** Umbral de oportunidad estancada (regla de negocio pedida por gerencia). */

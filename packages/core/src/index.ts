@@ -12,3 +12,4 @@ export * from "./lib/csv";
 export * from "./lib/contacto";
 export * from "./lib/gestion";
 export * from "./lib/importacion";
+export * from "./lib/control";

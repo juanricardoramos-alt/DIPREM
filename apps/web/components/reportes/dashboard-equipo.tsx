@@ -9,7 +9,7 @@ import {
   formatearMonto,
   periodoActual,
   porcentajeMeta,
-  semaforoMeta,
+  semaforoGlobal,
   type MetaAvance,
   type Moneda,
   type PipelineFila,
@@ -26,13 +26,6 @@ function sumaPorMoneda(filas: { monto: number; moneda: Moneda }[]): string {
   for (const f of filas) sumas.set(f.moneda, (sumas.get(f.moneda) ?? 0) + Number(f.monto));
   if (!sumas.size) return "—";
   return [...sumas.entries()].map(([m, t]) => formatearMonto(t, m)).join(" · ");
-}
-
-/** Semáforo global de un ejecutivo = el peor de sus metas del mes. */
-function semaforoUsuario(metas: MetaAvance[]): Semaforo | null {
-  if (!metas.length) return null;
-  const orden: Semaforo[] = ["rojo", "ambar", "verde"];
-  return orden.find((s) => metas.some((m) => semaforoMeta(m) === s)) ?? "verde";
 }
 
 const PUNTO: Record<Semaforo, string> = {
@@ -123,7 +116,7 @@ export function DashboardEquipo() {
             <tbody>
               {(ranking ?? []).map((fila: RankingFila, i) => {
                 const suyas = metasPorUsuario.get(fila.usuario_id) ?? [];
-                const semaforo = semaforoUsuario(suyas);
+                const semaforo = semaforoGlobal(suyas);
                 const pctProm = suyas.length
                   ? Math.round(
                       suyas.reduce((s, m) => s + porcentajeMeta(m), 0) / suyas.length,

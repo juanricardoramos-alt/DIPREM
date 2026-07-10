@@ -222,9 +222,22 @@ export interface ProyectoMercado {
   estado: EstadoProyectoMercado;
   asignado_a: string | null;
   asignado_en: string | null;
+  asignado_por: string | null;
   lead_id: string | null;
   importado_por: string;
   creado_en: string;
   /** join opcional */
   asignado?: { nombre: string } | null;
+}
+
+export interface Notificacion {
+  id: string;
+  usuario_id: string;
+  tipo: string; // recordatorio | seguimiento | aprobacion | alerta_gerencial
+  titulo: string;
+  mensaje: string;
+  entidad: string | null;
+  entidad_id: string | null;
+  leida: boolean;
+  creado_en: string;
 }

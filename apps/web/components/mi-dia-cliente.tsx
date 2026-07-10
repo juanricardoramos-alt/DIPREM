@@ -21,6 +21,7 @@ import { Boton, Insignia, TarjetasEsqueleto } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
+import { Recordatorios } from "@/components/recordatorios";
 
 const ACCIONES_RAPIDAS: { tipo: TipoActividad; rapido: boolean }[] = [
   { tipo: "llamada", rapido: true },
@@ -90,6 +91,9 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           </span>
         </div>
       </div>
+
+      {/* Recordatorios pendientes (botón "Recordar" del Panel de Control) */}
+      <Recordatorios />
 
       {/* Registro rápido */}
       <div className="mt-5">
