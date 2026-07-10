@@ -44,3 +44,11 @@ export function enlaceCorreo(email: string, asunto?: string): string {
   const base = `mailto:${email.trim()}`;
   return asunto ? `${base}?subject=${encodeURIComponent(asunto)}` : base;
 }
+
+/** Acepta URL completa o solo el usuario ("jperez" → linkedin.com/in/jperez). */
+export function enlaceLinkedIn(perfil: string): string {
+  const limpio = perfil.trim();
+  if (/^https?:\/\//i.test(limpio)) return limpio;
+  if (/linkedin\.com/i.test(limpio)) return `https://${limpio.replace(/^\/+/, "")}`;
+  return `https://www.linkedin.com/in/${limpio.replace(/^@/, "")}`;
+}

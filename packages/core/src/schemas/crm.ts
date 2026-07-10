@@ -44,6 +44,9 @@ export const esquemaContacto = z.object({
   email: correoObligatorio,
   canal_preferido: z.enum(["llamada", "email", "whatsapp", "reunion"]).default("email"),
   es_principal: z.boolean().default(false),
+  linkedin: textoOpcional,
+  mejor_horario: textoOpcional,
+  notas_privadas: textoOpcional,
 });
 export type DatosContacto = z.input<typeof esquemaContacto>;
 

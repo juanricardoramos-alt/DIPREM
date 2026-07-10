@@ -68,3 +68,18 @@ html {
 html.dark {
   color-scheme: dark;
 }
+
+/* Impresión (fichas y reportes): siempre en claro, fondo blanco */
+@media print {
+  html,
+  html.dark {
+    --fondo: #ffffff;
+    --superficie: #ffffff;
+    --superficie-2: #f1f5f9;
+    --borde: #e2e8f0;
+    --tinta: #0f172a;
+    --tinta-suave: #475569;
+    --tinta-tenue: #64748b;
+    color-scheme: light;
+  }
+}

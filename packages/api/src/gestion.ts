@@ -23,13 +23,14 @@ const SELECT_ACTIVIDAD_GESTION =
   " contacto:contactos!actividades_contacto_id_fkey(nombre)," +
   " oportunidad:oportunidades!actividades_oportunidad_id_fkey(nombre)";
 
-/** Todas las gestiones (completadas y pendientes) de un lead o una cuenta. */
+/** Todas las gestiones (completadas y pendientes) de un lead, cuenta o contacto. */
 export async function actividadesDeEntidad(
   sb: SupabaseClient,
-  entidad: "lead" | "cuenta",
+  entidad: "lead" | "cuenta" | "contacto",
   entidadId: string,
 ): Promise<Actividad[]> {
-  const columna = entidad === "lead" ? "lead_id" : "cuenta_id";
+  const columna =
+    entidad === "lead" ? "lead_id" : entidad === "contacto" ? "contacto_id" : "cuenta_id";
   const { data, error } = await sb
     .from("actividades")
     .select(SELECT_ACTIVIDAD_GESTION)

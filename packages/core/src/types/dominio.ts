@@ -98,6 +98,13 @@ export interface Contacto {
   email: string | null;
   canal_preferido: CanalContacto | null;
   es_principal: boolean;
+  creado_en?: string;
+  /** Desde la migración 0008 (perfil enriquecido); antes vienen undefined. */
+  linkedin?: string | null;
+  mejor_horario?: string | null;
+  notas_privadas?: string | null;
+  /** join opcional */
+  cuenta?: { razon_social: string } | null;
 }
 
 export interface Lead {

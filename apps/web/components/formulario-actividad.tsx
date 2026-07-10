@@ -35,6 +35,7 @@ export function FormularioActividad({
   cuentaFija,
   oportunidadFija,
   leadFijo,
+  contactoFijo,
   registroRapido = false,
 }: {
   abierto: boolean;
@@ -45,6 +46,8 @@ export function FormularioActividad({
   oportunidadFija?: { id: string; nombre: string; cuenta_id: string } | null;
   /** gestión sobre un lead (aún sin cuenta): oculta cuenta/oportunidad */
   leadFijo?: { id: string; nombre: string } | null;
+  /** gestión ligada a una persona (desde su ficha de contacto) */
+  contactoFijo?: { id: string; nombre: string } | null;
   /** true = flujo "registrar gestión ya realizada" (marca completada al guardar) */
   registroRapido?: boolean;
 }) {
@@ -83,6 +86,7 @@ export function FormularioActividad({
           oportunidadFija?.id ?? ((form.get("oportunidad_id") as string) || null),
         // undefined (no null) cuando no aplica: el insert no incluye la columna
         lead_id: leadFijo?.id ?? actividad?.lead_id ?? undefined,
+        contacto_id: contactoFijo?.id ?? actividad?.contacto_id ?? undefined,
         fecha_programada: form.get("fecha_programada")
           ? new Date(form.get("fecha_programada") as string).toISOString()
           : null,
@@ -167,6 +171,11 @@ export function FormularioActividad({
           />
         </Campo>
 
+        {contactoFijo && (
+          <Campo etiqueta={es.actividades.contacto}>
+            <Entrada value={contactoFijo.nombre} disabled />
+          </Campo>
+        )}
         {leadFijo ? (
           <Campo etiqueta="Lead">
             <Entrada value={leadFijo.nombre} disabled />

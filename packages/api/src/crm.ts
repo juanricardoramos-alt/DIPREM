@@ -115,6 +115,19 @@ export async function actualizarCuenta(
   lanzar(error);
 }
 
+export async function obtenerContacto(
+  sb: SupabaseClient,
+  id: string,
+): Promise<Contacto | null> {
+  const { data, error } = await sb
+    .from("contactos")
+    .select("*, cuenta:cuentas!contactos_cuenta_id_fkey(razon_social)")
+    .eq("id", id)
+    .maybeSingle();
+  lanzar(error);
+  return data as Contacto | null;
+}
+
 export async function listarContactos(sb: SupabaseClient, cuentaId: string): Promise<Contacto[]> {
   const { data, error } = await sb
     .from("contactos")

@@ -46,17 +46,23 @@ function fechaLarga(iso: string): string {
 export function AnalisisGestion({
   lead,
   cuenta,
+  contacto,
   creadoEn,
+  titulo,
 }: {
   lead?: { id: string; nombre: string } | null;
   cuenta?: { id: string; razon_social: string } | null;
+  /** ficha de contacto: historial con la persona + registro ligado a ella */
+  contacto?: { id: string; nombre: string } | null;
   /** fecha de creación de la entidad (referencia si aún no hay gestiones) */
   creadoEn: string;
+  /** título alternativo de la sección (default: "Análisis de gestión") */
+  titulo?: string;
 }) {
   const supabase = useSupabase();
   const [registrando, setRegistrando] = useState(false);
-  const entidad = lead ? "lead" : "cuenta";
-  const entidadId = lead?.id ?? cuenta?.id ?? "";
+  const entidad = lead ? "lead" : contacto ? "contacto" : "cuenta";
+  const entidadId = lead?.id ?? contacto?.id ?? cuenta?.id ?? "";
 
   const { data: actividades, isLoading, error } = useQuery({
     queryKey: ["gestion", entidad, entidadId],
@@ -80,8 +86,12 @@ export function AnalisisGestion({
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">{es.gestion.titulo}</h2>
-        <Boton variante="secundario" onClick={() => setRegistrando(true)}>
+        <h2 className="text-lg font-semibold">{titulo ?? es.gestion.titulo}</h2>
+        <Boton
+          variante="secundario"
+          className="print:hidden"
+          onClick={() => setRegistrando(true)}
+        >
           + {es.miDia.registrarGestion}
         </Boton>
       </div>
@@ -160,6 +170,7 @@ export function AnalisisGestion({
           registroRapido
           leadFijo={lead ?? null}
           cuentaFija={cuenta ?? null}
+          contactoFijo={contacto ?? null}
           onCerrar={() => setRegistrando(false)}
         />
       )}

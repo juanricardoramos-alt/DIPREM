@@ -24,6 +24,7 @@ import {
 } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import {
+  AreaTexto,
   Boton,
   Campo,
   Dialogo,
@@ -78,6 +79,9 @@ export default function PaginaDetalleCuenta({
         email: form.get("email"),
         canal_preferido: form.get("canal_preferido"),
         es_principal: form.get("es_principal") === "on",
+        linkedin: form.get("linkedin"),
+        mejor_horario: form.get("mejor_horario"),
+        notas_privadas: form.get("notas_privadas"),
       });
       if (contactoForm?.contacto) {
         await actualizarContacto(supabase, contactoForm.contacto.id, datos);
@@ -164,7 +168,13 @@ export default function PaginaDetalleCuenta({
               >
                 <div>
                   <p className="font-medium">
-                    {contacto.nombre}{" "}
+                    <Link
+                      href={`/contactos/${contacto.id}`}
+                      className="hover:text-primario hover:underline"
+                      title={es.crm.verFicha}
+                    >
+                      {contacto.nombre}
+                    </Link>{" "}
                     {contacto.es_principal && <Insignia tono="azul">Principal</Insignia>}
                   </p>
                   <p className="text-sm text-tinta-suave">{contacto.cargo ?? ""}</p>
@@ -313,7 +323,28 @@ export default function PaginaDetalleCuenta({
                 required
               />
             </Campo>
+            <Campo etiqueta={`${es.crm.linkedin} (${es.comunes.opcional})`}>
+              <Entrada
+                name="linkedin"
+                placeholder="linkedin.com/in/usuario"
+                defaultValue={contactoForm?.contacto?.linkedin ?? ""}
+              />
+            </Campo>
+            <Campo etiqueta={`${es.crm.mejorHorario} (${es.comunes.opcional})`}>
+              <Entrada
+                name="mejor_horario"
+                placeholder={es.crm.mejorHorarioPlaceholder}
+                defaultValue={contactoForm?.contacto?.mejor_horario ?? ""}
+              />
+            </Campo>
           </div>
+          <Campo etiqueta={`${es.crm.notasPrivadas} (${es.comunes.opcional})`}>
+            <AreaTexto
+              name="notas_privadas"
+              defaultValue={contactoForm?.contacto?.notas_privadas ?? ""}
+            />
+          </Campo>
+          <p className="-mt-2 text-xs text-tinta-tenue">{es.crm.notasPrivadasAyuda}</p>
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"

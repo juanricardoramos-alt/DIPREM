@@ -116,6 +116,7 @@ SQL Editor **solo** los scripts que te falten, en orden:
 | [`actualizacion_mercado.sql`](../supabase/deploy/actualizacion_mercado.sql) | Módulo **Mercado** (proyectos importables + asignación), gestión por lead y vistas de análisis de gestión |
 | [`actualizacion_control.sql`](../supabase/deploy/actualizacion_control.sql) | Panel de **Control** del dueño: trazabilidad de asignaciones, vistas del panel y botón "Recordar" |
 | [`actualizacion_asignacion.sql`](../supabase/deploy/actualizacion_asignacion.sql) | Asignación mejorada: prioridad, fecha límite, nota privada y alertas automáticas al dueño (pg_cron opcional) |
+| [`actualizacion_contactos.sql`](../supabase/deploy/actualizacion_contactos.sql) | Perfil de contacto enriquecido: LinkedIn, mejor horario y notas privadas |
 
 Ambos se pueden ejecutar más de una vez sin duplicar datos. Los proyectos nuevos
 no los necesitan: `setup_completo.sql` ya incluye todo.
