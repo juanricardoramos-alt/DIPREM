@@ -8,3 +8,4 @@ export * from "./gestion";
 export * from "./busqueda";
 export * from "./control";
 export * from "./notificaciones";
+export * from "./reportes";

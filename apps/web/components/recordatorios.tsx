@@ -38,7 +38,9 @@ export function Recordatorios() {
             ? `/leads/${notificacion.entidad_id}`
             : notificacion.entidad === "cuenta" && notificacion.entidad_id
               ? `/cuentas/${notificacion.entidad_id}`
-              : null;
+              : notificacion.entidad === "reporte_semanal"
+                ? "/reportes"
+                : null;
         return (
           <div
             key={notificacion.id}
