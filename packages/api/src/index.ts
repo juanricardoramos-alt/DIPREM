@@ -9,3 +9,4 @@ export * from "./busqueda";
 export * from "./control";
 export * from "./notificaciones";
 export * from "./reportes";
+export * from "./notas";

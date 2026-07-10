@@ -194,6 +194,21 @@ export const es = {
     titulo: "Recordatorios",
     marcarLeida: "Marcar como vista",
     sinPendientes: "Sin recordatorios pendientes",
+    campana: "Notificaciones",
+    sinNotificaciones: "Estás al día. Sin notificaciones pendientes. 🎉",
+    marcarTodas: "Marcar todas como vistas",
+    abrir: "Abrir",
+  },
+  notas: {
+    titulo: "Notas internas",
+    descripcion:
+      "Visibles solo para el ejecutivo del registro, su gerente y el administrador. Al comentar, el ejecutivo recibe una notificación.",
+    placeholder: "Escribe una nota para el equipo…",
+    agregar: "Agregar nota",
+    agregando: "Guardando…",
+    sinNotas: "Aún no hay notas internas.",
+    eliminar: "Eliminar nota",
+    notasDeOportunidad: (nombre: string) => `Notas internas — ${nombre}`,
   },
   mercado: {
     titulo: "Mercado nacional",

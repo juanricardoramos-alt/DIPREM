@@ -7,6 +7,7 @@ import { es, type Usuario } from "@diprem/core";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { Avatar } from "@/components/ui";
 import { BusquedaGlobal } from "@/components/shell/busqueda-global";
+import { Campana } from "@/components/shell/campana";
 
 function temaOscuroActivo(): boolean {
   return typeof document !== "undefined" &&
@@ -86,6 +87,9 @@ export function Encabezado({ usuario }: { usuario: Usuario }) {
         </button>
 
         <div className="ml-auto" />
+
+        {/* Campana de notificaciones */}
+        <Campana />
 
         {/* Menú del usuario */}
         <div className="relative" ref={menuRef}>

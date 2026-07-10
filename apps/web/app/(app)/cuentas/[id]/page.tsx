@@ -36,6 +36,7 @@ import { FormularioCuenta } from "@/components/formulario-cuenta";
 import { FormularioOportunidad } from "@/components/formulario-oportunidad";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
 import { AnalisisGestion } from "@/components/analisis-gestion";
+import { NotasInternas } from "@/components/notas-internas";
 
 export default function PaginaDetalleCuenta({
   params,
@@ -52,6 +53,9 @@ export default function PaginaDetalleCuenta({
   >(null);
   const [oportunidadForm, setOportunidadForm] = useState(false);
   const [errorContacto, setErrorContacto] = useState<string | null>(null);
+  const [notasDeOportunidad, setNotasDeOportunidad] = useState<
+    { id: string; nombre: string } | null
+  >(null);
 
   const { data: cuenta, isLoading } = useQuery({
     queryKey: ["cuenta", id],
@@ -232,13 +236,22 @@ export default function PaginaDetalleCuenta({
                 key={op.id}
                 className="rounded-lg border border-borde bg-superficie p-4"
               >
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">{op.nombre}</p>
-                  <Insignia
-                    tono={op.cerrada_en ? (op.motivo_perdida_id ? "rojo" : "verde") : "azul"}
-                  >
-                    {nombreEtapa(op.etapa_id)}
-                  </Insignia>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="min-w-0 truncate font-medium">{op.nombre}</p>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <Insignia
+                      tono={op.cerrada_en ? (op.motivo_perdida_id ? "rojo" : "verde") : "azul"}
+                    >
+                      {nombreEtapa(op.etapa_id)}
+                    </Insignia>
+                    <Boton
+                      variante="fantasma"
+                      title={es.notas.titulo}
+                      onClick={() => setNotasDeOportunidad({ id: op.id, nombre: op.nombre })}
+                    >
+                      💬
+                    </Boton>
+                  </span>
                 </div>
                 <p className="mt-1 text-sm text-tinta-suave">
                   {formatearMonto(op.monto, op.moneda)} ·{" "}
@@ -251,13 +264,32 @@ export default function PaginaDetalleCuenta({
         </section>
       </div>
 
-      {/* Análisis de gestión de la cuenta */}
-      <div className="mt-10">
+      {/* Análisis de gestión + notas internas de la cuenta */}
+      <div className="mt-10 grid gap-8 lg:grid-cols-[2fr_1fr]">
         <AnalisisGestion
           cuenta={{ id: cuenta.id, razon_social: cuenta.razon_social }}
           creadoEn={cuenta.creado_en}
         />
+        <NotasInternas entidad="cuenta" entidadId={cuenta.id} />
       </div>
+
+      {/* Notas internas de una oportunidad */}
+      <Dialogo
+        abierto={notasDeOportunidad !== null}
+        titulo={es.notas.notasDeOportunidad(notasDeOportunidad?.nombre ?? "")}
+        onCerrar={() => setNotasDeOportunidad(null)}
+      >
+        {notasDeOportunidad && (
+          <>
+            <p className="text-sm text-tinta-suave">{es.notas.descripcion}</p>
+            <NotasInternas
+              entidad="oportunidad"
+              entidadId={notasDeOportunidad.id}
+              compacto
+            />
+          </>
+        )}
+      </Dialogo>
 
       {/* Diálogos */}
       <FormularioCuenta

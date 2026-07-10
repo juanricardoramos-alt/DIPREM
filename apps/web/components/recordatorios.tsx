@@ -6,6 +6,7 @@ import { BellRing, X } from "lucide-react";
 import { es, formatearFechaCorta } from "@diprem/core";
 import { listarNotificacionesNoLeidas, marcarNotificacionLeida } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
+import { rutaNotificacion } from "@/lib/notificaciones";
 
 /**
  * Recordatorios in-app no leídos (p. ej. "Recordar" del Panel de Control).
@@ -33,14 +34,7 @@ export function Recordatorios() {
   return (
     <section className="mt-5 space-y-2">
       {notificaciones.map((notificacion) => {
-        const ruta =
-          notificacion.entidad === "lead" && notificacion.entidad_id
-            ? `/leads/${notificacion.entidad_id}`
-            : notificacion.entidad === "cuenta" && notificacion.entidad_id
-              ? `/cuentas/${notificacion.entidad_id}`
-              : notificacion.entidad === "reporte_semanal"
-                ? "/reportes"
-                : null;
+        const ruta = rutaNotificacion(notificacion);
         return (
           <div
             key={notificacion.id}

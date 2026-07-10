@@ -27,3 +27,16 @@ export async function marcarNotificacionLeida(
   const { error } = await sb.from("notificaciones").update({ leida: true }).eq("id", id);
   lanzar(error);
 }
+
+/** Se filtra por usuario: la RLS del admin le permitiría tocar las de todos. */
+export async function marcarTodasNotificacionesLeidas(
+  sb: SupabaseClient,
+  usuarioId: string,
+): Promise<void> {
+  const { error } = await sb
+    .from("notificaciones")
+    .update({ leida: true })
+    .eq("usuario_id", usuarioId)
+    .eq("leida", false);
+  lanzar(error);
+}

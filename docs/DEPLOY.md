@@ -118,6 +118,7 @@ SQL Editor **solo** los scripts que te falten, en orden:
 | [`actualizacion_asignacion.sql`](../supabase/deploy/actualizacion_asignacion.sql) | Asignación mejorada: prioridad, fecha límite, nota privada y alertas automáticas al dueño (pg_cron opcional) |
 | [`actualizacion_contactos.sql`](../supabase/deploy/actualizacion_contactos.sql) | Perfil de contacto enriquecido: LinkedIn, mejor horario y notas privadas |
 | [`actualizacion_reportes.sql`](../supabase/deploy/actualizacion_reportes.sql) | Reportes del dueño: vista de conversión de proyectos y aviso del reporte semanal (pg_cron opcional) |
+| [`actualizacion_comunicacion.sql`](../supabase/deploy/actualizacion_comunicacion.sql) | Comunicación interna: notificación automática al ejecutivo cuando le dejan una nota |
 
 Ambos se pueden ejecutar más de una vez sin duplicar datos. Los proyectos nuevos
 no los necesitan: `setup_completo.sql` ya incluye todo.

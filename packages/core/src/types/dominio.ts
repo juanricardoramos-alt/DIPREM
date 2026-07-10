@@ -245,6 +245,20 @@ export interface ProyectoMercado {
   asignado?: { nombre: string } | null;
 }
 
+export type EntidadNota = "cuenta" | "oportunidad" | "contacto" | "lead";
+
+/** Nota interna: visible para quien ve el registro padre (RLS heredada). */
+export interface Nota {
+  id: string;
+  entidad: EntidadNota;
+  entidad_id: string;
+  autor_id: string;
+  contenido: string;
+  creado_en: string;
+  /** join opcional */
+  autor?: { nombre: string } | null;
+}
+
 export interface Notificacion {
   id: string;
   usuario_id: string;

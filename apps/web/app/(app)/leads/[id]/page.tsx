@@ -20,6 +20,7 @@ import { Boton, Insignia } from "@/components/ui";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
 import { AnalisisGestion } from "@/components/analisis-gestion";
 import { DialogoConvertirLead } from "@/components/dialogo-convertir-lead";
+import { NotasInternas } from "@/components/notas-internas";
 
 const TONO_ESTADO_LEAD = {
   nuevo: "azul",
@@ -135,11 +136,12 @@ export default function PaginaDetalleLead({
         </p>
       )}
 
-      <div className="mt-8">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[2fr_1fr]">
         <AnalisisGestion
           lead={{ id: lead.id, nombre: lead.nombre }}
           creadoEn={lead.creado_en}
         />
+        <NotasInternas entidad="lead" entidadId={lead.id} />
       </div>
 
       <DialogoConvertirLead lead={convirtiendo} onCerrar={() => setConvirtiendo(null)} />
