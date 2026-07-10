@@ -10,7 +10,7 @@ import {
 } from "@diprem/core";
 import { listarCuentas } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, Entrada, Insignia } from "@/components/ui";
+import { Boton, Entrada, EstadoVacio, FilasEsqueleto, Insignia } from "@/components/ui";
 import { FormularioCuenta } from "@/components/formulario-cuenta";
 
 const TONO_ESTADO = { prospecto: "ambar", activa: "verde", inactiva: "gris" } as const;
@@ -34,15 +34,15 @@ export default function PaginaCuentas() {
             placeholder={es.comunes.buscar}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-56 rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-56 rounded-md border border-borde px-3 py-2 text-sm"
           />
           <Boton onClick={() => setFormAbierto(true)}>+ {es.crm.nuevaCuenta}</Boton>
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.crm.razonSocial}</th>
               <th className="px-4 py-3">{es.crm.vertical}</th>
@@ -52,26 +52,27 @@ export default function PaginaCuentas() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                  {es.comunes.cargando}
-                </td>
-              </tr>
-            )}
+            {isLoading && <FilasEsqueleto columnas={5} />}
             {!isLoading && (cuentas?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                  {es.crm.sinCuentas}
+                <td colSpan={5} className="p-4">
+                  <EstadoVacio
+                    titulo={es.crm.sinCuentas}
+                    accion={
+                      <Boton variante="secundario" onClick={() => setFormAbierto(true)}>
+                        + {es.crm.nuevaCuenta}
+                      </Boton>
+                    }
+                  />
                 </td>
               </tr>
             )}
             {cuentas?.map((cuenta) => (
-              <tr key={cuenta.id} className="border-t border-slate-100 hover:bg-slate-50">
+              <tr key={cuenta.id} className="border-t border-borde hover:bg-superficie-2">
                 <td className="px-4 py-3">
                   <Link
                     href={`/cuentas/${cuenta.id}`}
-                    className="font-medium text-[var(--color-diprem)] hover:underline"
+                    className="font-medium text-primario hover:underline"
                   >
                     {cuenta.razon_social}
                   </Link>

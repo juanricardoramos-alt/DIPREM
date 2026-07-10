@@ -125,12 +125,12 @@ export function DialogoConvertirLead({
             </Selector>
           </Campo>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-tinta-suave">
           Se creará la cuenta, el contacto principal y una oportunidad en la
           primera etapa del embudo, con la moneda del equipo del ejecutivo.
         </p>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
           <Boton type="button" variante="secundario" onClick={onCerrar}>

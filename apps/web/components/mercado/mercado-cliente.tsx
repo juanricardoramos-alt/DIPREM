@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   enlaceCorreo,
@@ -17,7 +17,17 @@ import {
   listarProyectosMercado,
 } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, Campo, Dialogo, Entrada, Insignia, Selector } from "@/components/ui";
+import {
+  BannerError,
+  Boton,
+  Campo,
+  Dialogo,
+  Entrada,
+  EstadoVacio,
+  FilasEsqueleto,
+  Insignia,
+  Selector,
+} from "@/components/ui";
 import { ImportadorMercado } from "@/components/mercado/importador";
 
 const TONO_ESTADO: Record<EstadoProyectoMercado, "ambar" | "azul" | "verde"> = {
@@ -40,10 +50,20 @@ export function MercadoCliente() {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: proyectos, isLoading, error: errorCarga } = useQuery({
+  const { data: proyectos, isLoading, error: errorCarga, refetch } = useQuery({
     queryKey: ["mercado"],
     queryFn: () => listarProyectosMercado(supabase),
   });
+
+  // Llegada desde el buscador global: /mercado?buscar=<proyecto>
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const buscar = params.get("buscar");
+    if (buscar) {
+      setBusqueda(buscar);
+      window.history.replaceState(null, "", "/mercado");
+    }
+  }, []);
   const { data: ejecutivos } = useQuery({
     queryKey: ["ejecutivos-asignables"],
     queryFn: () => listarEjecutivosAsignables(supabase),
@@ -109,7 +129,7 @@ export function MercadoCliente() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{es.mercado.titulo}</h1>
-          <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
+          <p className="mt-0.5 max-w-2xl text-sm text-tinta-suave">
             {es.mercado.descripcion}
           </p>
         </div>
@@ -117,7 +137,7 @@ export function MercadoCliente() {
       </div>
 
       {mensaje && (
-        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+        <p className="mt-4 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 text-sm text-emerald-800 dark:text-emerald-300">
           {mensaje}{" "}
           <button className="underline" onClick={() => setMensaje(null)}>
             ✕
@@ -131,10 +151,10 @@ export function MercadoCliente() {
           placeholder={es.comunes.buscar}
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          className="w-56 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-56 rounded-md border border-borde px-3 py-2 text-sm"
         />
         <select
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-md border border-borde px-3 py-2 text-sm"
           value={filtroRubro}
           onChange={(e) => setFiltroRubro(e.target.value)}
         >
@@ -146,7 +166,7 @@ export function MercadoCliente() {
           ))}
         </select>
         <select
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-md border border-borde px-3 py-2 text-sm"
           value={filtroRegion}
           onChange={(e) => setFiltroRegion(e.target.value)}
         >
@@ -158,7 +178,7 @@ export function MercadoCliente() {
           ))}
         </select>
         <select
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-md border border-borde px-3 py-2 text-sm"
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value as "" | EstadoProyectoMercado)}
         >
@@ -172,7 +192,7 @@ export function MercadoCliente() {
 
         {seleccion.size > 0 && (
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-tinta-suave">
               {es.mercado.seleccionados(seleccion.size)}
             </span>
             <Boton onClick={() => setAsignando(true)}>
@@ -183,9 +203,9 @@ export function MercadoCliente() {
       </div>
 
       {/* Tabla de proyectos */}
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-3 py-3">
                 <input
@@ -212,24 +232,28 @@ export function MercadoCliente() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                  {es.comunes.cargando}
-                </td>
-              </tr>
-            )}
+            {isLoading && <FilasEsqueleto columnas={9} />}
             {errorCarga && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-red-600">
-                  {(errorCarga as Error).message}
+                <td colSpan={9} className="p-4">
+                  <BannerError
+                    mensaje={(errorCarga as Error).message}
+                    onReintentar={() => void refetch()}
+                  />
                 </td>
               </tr>
             )}
             {!isLoading && !errorCarga && filtrados.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                  {es.mercado.sinProyectos}
+                <td colSpan={9} className="p-4">
+                  <EstadoVacio
+                    titulo={es.mercado.sinProyectos}
+                    accion={
+                      <Boton variante="secundario" onClick={() => setImportando(true)}>
+                        📥 {es.mercado.importar}
+                      </Boton>
+                    }
+                  />
                 </td>
               </tr>
             )}
@@ -265,7 +289,7 @@ export function MercadoCliente() {
             asignar.mutate(new FormData(e.currentTarget));
           }}
         >
-          <p className="text-sm text-slate-600">{es.mercado.asignarDescripcion}</p>
+          <p className="text-sm text-tinta-suave">{es.mercado.asignarDescripcion}</p>
           <p className="text-sm font-medium">{es.mercado.seleccionados(seleccion.size)}</p>
           <Campo etiqueta={es.mercado.ejecutivo}>
             <Selector name="ejecutivo_id" defaultValue="" required autoFocus>
@@ -281,7 +305,7 @@ export function MercadoCliente() {
             </Selector>
           </Campo>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <Boton type="button" variante="secundario" onClick={() => setAsignando(false)}>
@@ -310,7 +334,7 @@ function FilaProyectoMercado({
 }) {
   const sinAsignar = proyecto.estado === "sin_asignar";
   return (
-    <tr className="border-t border-slate-100 hover:bg-slate-50">
+    <tr className="border-t border-borde hover:bg-superficie-2">
       <td className="px-3 py-3">
         <input
           type="checkbox"
@@ -322,7 +346,7 @@ function FilaProyectoMercado({
       </td>
       <td className="px-3 py-3">
         <p className="font-medium">{proyecto.nombre}</p>
-        <p className="text-xs text-slate-500">{proyecto.empresa}</p>
+        <p className="text-xs text-tinta-suave">{proyecto.empresa}</p>
       </td>
       <td className="px-3 py-3">{proyecto.rubro ?? "—"}</td>
       <td className="px-3 py-3">{proyecto.region ?? "—"}</td>
@@ -336,7 +360,7 @@ function FilaProyectoMercado({
         <p className="space-x-2 text-xs">
           {proyecto.contacto_telefono && (
             <a
-              className="text-emerald-700 hover:underline"
+              className="text-emerald-700 dark:text-emerald-300 hover:underline"
               href={enlaceWhatsApp(proyecto.contacto_telefono)}
               target="_blank"
               rel="noreferrer"
@@ -346,7 +370,7 @@ function FilaProyectoMercado({
           )}
           {proyecto.contacto_email && (
             <a
-              className="text-[var(--color-diprem)] hover:underline"
+              className="text-primario hover:underline"
               href={enlaceCorreo(proyecto.contacto_email)}
             >
               ✉️ {proyecto.contacto_email}
@@ -360,7 +384,7 @@ function FilaProyectoMercado({
           {es.mercado.estados[proyecto.estado]}
         </Insignia>
         {proyecto.estado !== "sin_asignar" && (
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-tinta-suave">
             {proyecto.asignado?.nombre ?? "—"}
             {proyecto.asignado_en ? ` · ${formatearFechaCorta(proyecto.asignado_en)}` : ""}
           </p>

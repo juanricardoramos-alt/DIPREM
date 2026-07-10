@@ -148,8 +148,8 @@ export function FormularioActividad({
               onClick={() => setTipo(t)}
               className={`rounded-lg border px-3 py-2 text-sm ${
                 tipo === t
-                  ? "border-[var(--color-diprem)] bg-[var(--color-diprem)] text-white"
-                  : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                  ? "border-primario bg-primario text-white"
+                  : "border-borde bg-superficie text-tinta-suave hover:bg-superficie-2"
               }`}
             >
               {ICONOS_TIPO_ACTIVIDAD[t]} {ETIQUETAS_TIPO_ACTIVIDAD[t]}
@@ -265,7 +265,7 @@ export function FormularioActividad({
           <AreaTexto name="notas" defaultValue={actividad?.notas ?? ""} />
         </Campo>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
           <Boton type="button" variante="secundario" onClick={onCerrar}>

@@ -17,18 +17,18 @@ export function EnlacesContacto({
   /** true = solo íconos + dato, en una línea (tablas y tarjetas chicas) */
   compacto?: boolean;
 }) {
-  if (!telefono && !email) return <span className="text-slate-400">—</span>;
+  if (!telefono && !email) return <span className="text-tinta-tenue">—</span>;
 
   const clase = compacto
     ? "inline-flex items-center gap-1 text-xs hover:underline"
-    : "inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm hover:bg-slate-50";
+    : "inline-flex items-center gap-1.5 rounded-md border border-borde bg-superficie px-2.5 py-1.5 text-sm hover:bg-superficie-2";
 
   return (
     <span className={`flex flex-wrap items-center ${compacto ? "gap-x-3 gap-y-0.5" : "gap-2"}`}>
       {telefono && (
         <>
           <a
-            className={`${clase} text-emerald-700`}
+            className={`${clase} text-emerald-700 dark:text-emerald-300`}
             href={enlaceWhatsApp(telefono)}
             target="_blank"
             rel="noreferrer"
@@ -37,7 +37,7 @@ export function EnlacesContacto({
             💬 {compacto ? telefono : `${es.gestion.whatsapp} ${telefono}`}
           </a>
           <a
-            className={`${clase} text-slate-700`}
+            className={`${clase} text-tinta-suave`}
             href={enlaceLlamada(telefono)}
             title={es.gestion.llamar}
           >
@@ -47,7 +47,7 @@ export function EnlacesContacto({
       )}
       {email && (
         <a
-          className={`${clase} text-[var(--color-diprem)]`}
+          className={`${clase} text-primario`}
           href={enlaceCorreo(email)}
           title={es.gestion.escribirCorreo}
         >

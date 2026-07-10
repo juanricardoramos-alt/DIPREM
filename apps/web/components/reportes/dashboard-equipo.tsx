@@ -63,7 +63,7 @@ export function DashboardEquipo() {
 
   if (errorVistas) {
     return (
-      <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+      <p className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-800 dark:text-amber-300">
         ⚠️ {errorVistas.message}
       </p>
     );
@@ -104,10 +104,10 @@ export function DashboardEquipo() {
       {/* Ranking con semáforo */}
       <section>
         <h2 className="text-lg font-semibold">{es.reportes.ranking}</h2>
-        <p className="text-sm text-slate-500">{es.reportes.rankingNota}</p>
-        <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <p className="text-sm text-tinta-suave">{es.reportes.rankingNota}</p>
+        <div className="mt-3 overflow-x-auto rounded-xl border border-borde bg-superficie">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
               <tr>
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">{es.reportes.colEjecutivo}</th>
@@ -130,10 +130,10 @@ export function DashboardEquipo() {
                     )
                   : null;
                 return (
-                  <tr key={fila.usuario_id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 text-slate-400">{i + 1}</td>
+                  <tr key={fila.usuario_id} className="border-t border-borde">
+                    <td className="px-4 py-3 text-tinta-tenue">{i + 1}</td>
                     <td className="px-4 py-3 font-medium">{fila.nombre}</td>
-                    <td className="px-4 py-3 text-slate-500">
+                    <td className="px-4 py-3 text-tinta-suave">
                       {fila.equipo ?? "—"}
                       {fila.pais ? ` · ${fila.pais}` : ""}
                     </td>
@@ -151,7 +151,7 @@ export function DashboardEquipo() {
                           {es.reportes.semaforo[semaforo]} · {pctProm}%
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-tinta-tenue">
                           {es.reportes.sinMetasFila}
                         </span>
                       )}
@@ -168,23 +168,23 @@ export function DashboardEquipo() {
         {/* Estancadas */}
         <section>
           <h2 className="text-lg font-semibold">⚠️ {es.reportes.estancadas}</h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-tinta-suave">
             {es.reportes.estancadasNota(DIAS_ESTANCADA)}
           </p>
           <div className="mt-3 space-y-2">
             {listaEstancadas.length === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.reportes.sinEstancadas}
               </p>
             )}
             {listaEstancadas.map((f) => (
               <div
                 key={f.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-white p-3"
+                className="flex items-center justify-between gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-superficie p-3"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{f.nombre}</p>
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-tinta-suave">
                     {f.cuenta} · {f.ejecutivo} · {f.etapa}
                   </p>
                 </div>
@@ -204,25 +204,25 @@ export function DashboardEquipo() {
         {/* Embudo agregado */}
         <section>
           <h2 className="text-lg font-semibold">{es.reportes.embudoAgregado}</h2>
-          <div className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="mt-3 space-y-3 rounded-xl border border-borde bg-superficie p-4">
             {embudo.map((etapa) => (
               <div key={etapa.nombre}>
                 <div className="flex items-baseline justify-between text-sm">
                   <span className="font-medium">{etapa.nombre}</span>
-                  <span className="text-slate-500">
+                  <span className="text-tinta-suave">
                     {etapa.filas.length} · {sumaPorMoneda(etapa.filas)}
                   </span>
                 </div>
-                <div className="mt-1 h-3 w-full overflow-hidden rounded bg-slate-100">
+                <div className="mt-1 h-3 w-full overflow-hidden rounded bg-superficie-2">
                   <div
-                    className="h-full rounded bg-[var(--color-diprem)]"
+                    className="h-full rounded bg-primario"
                     style={{ width: `${(etapa.filas.length / maxCantidad) * 100}%` }}
                   />
                 </div>
               </div>
             ))}
             {embudo.length === 0 && (
-              <p className="text-center text-sm text-slate-400">
+              <p className="text-center text-sm text-tinta-tenue">
                 {es.crm.sinOportunidades}
               </p>
             )}
@@ -246,8 +246,8 @@ function Tarjeta({
   chica?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl border border-borde bg-superficie p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-tinta-tenue">
         {titulo}
       </p>
       <p className={`mt-1 font-bold ${chica ? "text-base" : "text-2xl"}`}>{valor}</p>

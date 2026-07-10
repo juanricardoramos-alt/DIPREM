@@ -61,7 +61,7 @@ export function DialogoCompletar({
             placeholder="Ej: Agendar visita a faena la próxima semana"
           />
         </Campo>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
           <Boton type="button" variante="secundario" onClick={onCerrar}>
             {es.comunes.cancelar}

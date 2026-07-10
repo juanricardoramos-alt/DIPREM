@@ -1,7 +1,70 @@
 @import "tailwindcss";
 
+/* Modo oscuro por clase .dark en <html> (toggle en el menú del usuario) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Sistema de diseño DIPREM — paleta sobria: azul oscuro + blanco + gris claro.
+ * Un solo lugar para los colores: cada token tiene valor claro y oscuro,
+ * y los componentes SOLO usan los tokens (nunca colores sueltos).
+ */
 :root {
-  /* Paleta corporativa provisoria (ajustar a manual de marca DIPREM) */
-  --color-diprem: #0f4c81;
-  --color-diprem-oscuro: #0a3357;
+  --fondo: #f4f6f9;
+  --superficie: #ffffff;
+  --superficie-2: #edf1f6;
+  --borde: #e2e8f0;
+  --tinta: #16283c;
+  --tinta-suave: #51637a;
+  --tinta-tenue: #8ba0b5;
+  --primario: #1d5b94;
+  --primario-oscuro: #14456f; /* hover del primario */
+  --primario-suave: #e4eef7;  /* fondos activos / seleccionados */
+  --sidebar: #0f2b46;
+  --sidebar-hover: #17395e;
+  --sidebar-texto: #b6c8db;
+
+  /* Compatibilidad con clases existentes */
+  --color-diprem: var(--primario);
+  --color-diprem-oscuro: var(--primario-oscuro);
+}
+
+.dark {
+  --fondo: #0b1322;
+  --superficie: #121d31;
+  --superficie-2: #1a2941;
+  --borde: #263a56;
+  --tinta: #e7edf5;
+  --tinta-suave: #a6b6c9;
+  --tinta-tenue: #6d8098;
+  --primario: #4f92d3;
+  --primario-oscuro: #6aa5de; /* en oscuro el hover aclara */
+  --primario-suave: #16324f;
+  --sidebar: #0a1626;
+  --sidebar-hover: #14304f;
+  --sidebar-texto: #8fa6bd;
+}
+
+/* Utilidades Tailwind generadas desde los tokens (bg-superficie, text-tinta…) */
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-borde: var(--borde);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-tinta-tenue: var(--tinta-tenue);
+  --color-primario: var(--primario);
+  --color-primario-oscuro: var(--primario-oscuro);
+  --color-primario-suave: var(--primario-suave);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-texto: var(--sidebar-texto);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
 }

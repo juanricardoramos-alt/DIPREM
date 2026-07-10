@@ -48,21 +48,21 @@ export default function PaginaDetalleLead({
     },
   });
 
-  if (isLoading) return <p className="text-slate-400">{es.comunes.cargando}</p>;
-  if (!lead) return <p className="text-slate-400">{es.comunes.sinResultados}</p>;
+  if (isLoading) return <p className="text-tinta-tenue">{es.comunes.cargando}</p>;
+  if (!lead) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
   const activo = lead.estado === "nuevo" || lead.estado === "en_gestion";
 
   return (
     <div>
-      <Link href="/leads" className="text-sm text-slate-500 hover:underline">
+      <Link href="/leads" className="text-sm text-tinta-suave hover:underline">
         ← {es.crm.leads}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{lead.nombre}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-tinta-suave">
             <Insignia tono={TONO_ESTADO_LEAD[lead.estado]}>
               {ETIQUETAS_ESTADO_LEAD[lead.estado]}
             </Insignia>
@@ -95,7 +95,7 @@ export default function PaginaDetalleLead({
       </div>
 
       {lead.notas && (
-        <p className="mt-4 whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        <p className="mt-4 whitespace-pre-wrap rounded-lg border border-borde bg-superficie p-4 text-sm text-tinta-suave">
           {lead.notas}
         </p>
       )}

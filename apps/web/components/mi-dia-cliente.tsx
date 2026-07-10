@@ -17,7 +17,7 @@ import {
 } from "@diprem/core";
 import { agendaDelDia, listarLeadsNuevos, oportunidadesAbiertas } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, Insignia } from "@/components/ui";
+import { Boton, Insignia, TarjetasEsqueleto } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
@@ -41,12 +41,12 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
   const [completando, setCompletando] = useState<Actividad | null>(null);
 
   const { inicio, fin } = limitesDiaLocal();
-  const { data: agenda } = useQuery({
+  const { data: agenda, isLoading: cargandoAgenda } = useQuery({
     queryKey: ["agenda", inicio],
     queryFn: () => agendaDelDia(supabase, inicio, fin),
     refetchInterval: 60_000,
   });
-  const { data: abiertas } = useQuery({
+  const { data: abiertas, isLoading: cargandoSeguimientos } = useQuery({
     queryKey: ["seguimientos"],
     queryFn: () => oportunidadesAbiertas(supabase),
   });
@@ -70,20 +70,20 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           <h1 className="text-2xl font-bold">
             {es.fase0.bienvenida}, {nombre.split(" ")[0]} 👋
           </h1>
-          <p className="mt-0.5 capitalize text-slate-500">{formatearFechaLarga()}</p>
+          <p className="mt-0.5 capitalize text-tinta-suave">{formatearFechaLarga()}</p>
         </div>
         {/* Resumen del día */}
-        <div className="flex gap-4 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm">
+        <div className="flex gap-4 rounded-xl border border-borde bg-superficie px-4 py-2 text-sm">
           <span>
-            <b className="text-emerald-600">{completadasHoy}</b>{" "}
+            <b className="text-emerald-600 dark:text-emerald-400">{completadasHoy}</b>{" "}
             {es.miDia.completadasHoy}
           </span>
           <span>
-            <b className="text-[var(--color-diprem)]">{pendientesHoy}</b>{" "}
+            <b className="text-primario">{pendientesHoy}</b>{" "}
             {es.miDia.pendientesHoy}
           </span>
           <span>
-            <b className={conAlerta.length ? "text-red-600" : "text-slate-500"}>
+            <b className={conAlerta.length ? "text-red-600 dark:text-red-400" : "text-tinta-suave"}>
               {conAlerta.length}
             </b>{" "}
             {es.miDia.alertasSeguimiento}
@@ -93,7 +93,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
 
       {/* Registro rápido */}
       <div className="mt-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
           {es.miDia.registroRapido}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -121,23 +121,23 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           <h2 className="text-lg font-semibold">
             🆕 {es.miDia.leadsNuevos} ({leadsNuevos?.length})
           </h2>
-          <p className="text-sm text-slate-500">{es.miDia.leadsNuevosNota}</p>
+          <p className="text-sm text-tinta-suave">{es.miDia.leadsNuevosNota}</p>
           <div className="mt-3 grid gap-2 lg:grid-cols-2">
             {leadsNuevos?.map((lead) => (
               <div
                 key={lead.id}
-                className="rounded-lg border border-blue-200 bg-blue-50/50 p-4"
+                className="rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
                       href={`/leads/${lead.id}`}
-                      className="font-medium hover:text-[var(--color-diprem)] hover:underline"
+                      className="font-medium hover:text-primario hover:underline"
                     >
                       {lead.nombre}
                     </Link>
                     {lead.empresa && (
-                      <p className="truncate text-sm text-slate-500">{lead.empresa}</p>
+                      <p className="truncate text-sm text-tinta-suave">{lead.empresa}</p>
                     )}
                     <div className="mt-1.5">
                       <EnlacesContacto
@@ -171,8 +171,9 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
         <section>
           <h2 className="text-lg font-semibold">{es.miDia.agendaHoy}</h2>
           <div className="mt-3 space-y-2">
-            {(agenda?.agenda.length ?? 0) === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+            {cargandoAgenda && <TarjetasEsqueleto />}
+            {!cargandoAgenda && (agenda?.agenda.length ?? 0) === 0 && (
+              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.miDia.sinAgenda}
               </p>
             )}
@@ -187,7 +188,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
 
           {(agenda?.vencidas.length ?? 0) > 0 && (
             <>
-              <h3 className="mt-6 flex items-center gap-2 text-sm font-semibold text-red-600">
+              <h3 className="mt-6 flex items-center gap-2 text-sm font-semibold text-red-600 dark:text-red-400">
                 ⚠️ {es.miDia.vencidas} ({agenda?.vencidas.length})
               </h3>
               <div className="mt-2 space-y-2">
@@ -208,25 +209,26 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
         <section>
           <h2 className="text-lg font-semibold">{es.miDia.seguimientos}</h2>
           <div className="mt-3 space-y-2">
-            {seguimientos.length === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+            {cargandoSeguimientos && <TarjetasEsqueleto />}
+            {!cargandoSeguimientos && seguimientos.length === 0 && (
+              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.miDia.sinSeguimientos}
               </p>
             )}
             {seguimientos.slice(0, 12).map((seguimiento) => (
               <div
                 key={seguimiento.id}
-                className={`flex items-center justify-between gap-3 rounded-lg border bg-white p-4 ${
+                className={`flex items-center justify-between gap-3 rounded-lg border bg-superficie p-4 ${
                   seguimiento.alerta === "critico"
-                    ? "border-red-300"
+                    ? "border-red-300 dark:border-red-900"
                     : seguimiento.alerta === "atencion"
-                      ? "border-amber-300"
-                      : "border-slate-200"
+                      ? "border-amber-300 dark:border-amber-800"
+                      : "border-borde"
                 }`}
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{seguimiento.nombre}</p>
-                  <p className="truncate text-sm text-slate-500">
+                  <p className="truncate text-sm text-tinta-suave">
                     {seguimiento.cuenta?.razon_social} ·{" "}
                     {formatearMonto(seguimiento.monto, seguimiento.moneda)}
                   </p>
@@ -266,7 +268,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           <p className="mt-3 text-right">
             <Link
               href="/oportunidades"
-              className="text-sm text-[var(--color-diprem)] hover:underline"
+              className="text-sm text-primario hover:underline"
             >
               Ver embudo completo →
             </Link>
@@ -301,8 +303,8 @@ function TarjetaActividad({
   const hecha = actividad.estado === "completada";
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg border bg-white p-3 ${
-        vencida ? "border-red-200" : "border-slate-200"
+      className={`flex items-center gap-3 rounded-lg border bg-superficie p-3 ${
+        vencida ? "border-red-200 dark:border-red-900" : "border-borde"
       } ${hecha ? "opacity-60" : ""}`}
     >
       <span className="text-xl">{ICONOS_TIPO_ACTIVIDAD[actividad.tipo]}</span>
@@ -310,14 +312,14 @@ function TarjetaActividad({
         <p className={`truncate font-medium ${hecha ? "line-through" : ""}`}>
           {actividad.asunto}
         </p>
-        <p className="truncate text-xs text-slate-500">
+        <p className="truncate text-xs text-tinta-suave">
           {actividad.fecha_programada && formatearHora(actividad.fecha_programada)}
           {actividad.cuenta?.razon_social && ` · ${actividad.cuenta.razon_social}`}
           {actividad.oportunidad?.nombre && ` · ${actividad.oportunidad.nombre}`}
           {actividad.propietario?.nombre && ` · ${actividad.propietario.nombre}`}
         </p>
         {actividad.proxima_accion && hecha && (
-          <p className="truncate text-xs text-amber-700">
+          <p className="truncate text-xs text-amber-700 dark:text-amber-300">
             → {actividad.proxima_accion}
           </p>
         )}
@@ -327,7 +329,7 @@ function TarjetaActividad({
           ✓ {es.miDia.completar}
         </Boton>
       )}
-      {hecha && <span className="text-xs text-emerald-600">{es.miDia.completada}</span>}
+      {hecha && <span className="text-xs text-emerald-600 dark:text-emerald-400">{es.miDia.completada}</span>}
     </div>
   );
 }

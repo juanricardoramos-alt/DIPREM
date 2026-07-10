@@ -88,7 +88,7 @@ export function EditorMetas() {
 
   if (errorVistas) {
     return (
-      <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+      <p className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-800 dark:text-amber-300">
         ⚠️ {errorVistas.message}
       </p>
     );
@@ -99,7 +99,7 @@ export function EditorMetas() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">{es.metasAdmin.titulo}</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+          <p className="mt-1 max-w-2xl text-sm text-tinta-suave">
             {es.metasAdmin.descripcion}
           </p>
         </div>
@@ -107,13 +107,13 @@ export function EditorMetas() {
           type="month"
           value={periodo}
           onChange={(e) => setPeriodo(e.target.value)}
-          className="w-44 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-44 rounded-md border border-borde px-3 py-2 text-sm"
         />
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.reportes.colEjecutivo}</th>
               <th className="px-4 py-3">{ETIQUETAS_TIPO_META.monto_adjudicado}</th>
@@ -126,16 +126,16 @@ export function EditorMetas() {
           <tbody>
             {(comerciales?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-tinta-tenue">
                   {es.metasAdmin.sinComerciales}
                 </td>
               </tr>
             )}
             {comerciales?.map((c) => (
-              <tr key={c.id} className="border-t border-slate-100">
+              <tr key={c.id} className="border-t border-borde">
                 <td className="px-4 py-3">
                   <p className="font-medium">{c.nombre}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-tinta-tenue">
                     {c.equipo ?? "—"}
                     {c.pais ? ` · ${c.pais}` : ""}
                   </p>
@@ -145,7 +145,7 @@ export function EditorMetas() {
                     <Entrada
                       type="number"
                       min="0"
-                      className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                      className="w-28 rounded-md border border-borde px-2 py-1.5 text-sm"
                       value={valores[`${c.id}:monto_adjudicado`] ?? ""}
                       onChange={(e) =>
                         setValores((v) => ({
@@ -155,7 +155,7 @@ export function EditorMetas() {
                       }
                     />
                     <Selector
-                      className="w-20 rounded-md border border-slate-300 px-1 py-1.5 text-sm"
+                      className="w-20 rounded-md border border-borde px-1 py-1.5 text-sm"
                       value={monedas[c.id] ?? "USD"}
                       onChange={(e) =>
                         setMonedas((m) => ({ ...m, [c.id]: e.target.value as Moneda }))
@@ -175,7 +175,7 @@ export function EditorMetas() {
                       <Entrada
                         type="number"
                         min="0"
-                        className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                        className="w-24 rounded-md border border-borde px-2 py-1.5 text-sm"
                         value={valores[`${c.id}:${tipo}`] ?? ""}
                         onChange={(e) =>
                           setValores((v) => ({ ...v, [`${c.id}:${tipo}`]: e.target.value }))
@@ -198,7 +198,7 @@ export function EditorMetas() {
           </tbody>
         </table>
       </div>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
     </section>
   );
 }

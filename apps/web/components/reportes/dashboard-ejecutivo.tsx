@@ -28,7 +28,7 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
 
   if (errorVistas) {
     return (
-      <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+      <p className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-800 dark:text-amber-300">
         ⚠️ {errorVistas.message}
       </p>
     );
@@ -54,13 +54,13 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
       <section>
         <h2 className="text-lg font-semibold">
           {es.reportes.avanceMetas}{" "}
-          <span className="font-normal capitalize text-slate-400">
+          <span className="font-normal capitalize text-tinta-tenue">
             · {etiquetaPeriodo(periodo)}
           </span>
         </h2>
-        <div className="mt-3 space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="mt-3 space-y-4 rounded-xl border border-borde bg-superficie p-5">
           {(metas?.length ?? 0) === 0 && (
-            <p className="text-center text-sm text-slate-400">{es.reportes.sinMetas}</p>
+            <p className="text-center text-sm text-tinta-tenue">{es.reportes.sinMetas}</p>
           )}
           {metas?.map((meta) => <BarraMeta key={meta.id} meta={meta} />)}
         </div>
@@ -85,8 +85,8 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
       {otros.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold">{es.reportes.comparativa}</h2>
-          <p className="text-sm text-slate-500">{es.reportes.comparativaNota}</p>
-          <div className="mt-3 space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+          <p className="text-sm text-tinta-suave">{es.reportes.comparativaNota}</p>
+          <div className="mt-3 space-y-4 rounded-xl border border-borde bg-superficie p-5">
             <Comparativa
               etiqueta={es.reportes.kpiActividades}
               mio={Number(mio?.actividades_mes ?? 0)}
@@ -111,12 +111,12 @@ export function DashboardEjecutivo({ usuarioId }: { usuarioId: string }) {
 
 function Kpi({ titulo, valor, nota }: { titulo: string; valor: string; nota?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl border border-borde bg-superficie p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-tinta-tenue">
         {titulo}
       </p>
       <p className="mt-1 text-2xl font-bold">{valor}</p>
-      {nota && <p className="mt-0.5 text-xs text-slate-400">{nota}</p>}
+      {nota && <p className="mt-0.5 text-xs text-tinta-tenue">{nota}</p>}
     </div>
   );
 }
@@ -136,28 +136,28 @@ function Comparativa({
       <p className="text-sm font-medium">{etiqueta}</p>
       <div className="mt-1.5 space-y-1.5">
         <div className="flex items-center gap-2">
-          <span className="w-28 shrink-0 text-xs text-slate-500">
+          <span className="w-28 shrink-0 text-xs text-tinta-suave">
             {es.reportes.tuValor}
           </span>
-          <div className="h-3 flex-1 overflow-hidden rounded bg-slate-100">
+          <div className="h-3 flex-1 overflow-hidden rounded bg-superficie-2">
             <div
-              className="h-full rounded bg-[var(--color-diprem)]"
+              className="h-full rounded bg-primario"
               style={{ width: `${(mio / max) * 100}%` }}
             />
           </div>
           <span className="w-8 text-right text-sm font-semibold">{mio}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-28 shrink-0 text-xs text-slate-500">
+          <span className="w-28 shrink-0 text-xs text-tinta-suave">
             {es.reportes.promedioEquipo}
           </span>
-          <div className="h-3 flex-1 overflow-hidden rounded bg-slate-100">
+          <div className="h-3 flex-1 overflow-hidden rounded bg-superficie-2">
             <div
-              className="h-full rounded bg-slate-300"
+              className="h-full rounded bg-borde"
               style={{ width: `${(equipo / max) * 100}%` }}
             />
           </div>
-          <span className="w-8 text-right text-sm text-slate-500">{equipo}</span>
+          <span className="w-8 text-right text-sm text-tinta-suave">{equipo}</span>
         </div>
       </div>
     </div>

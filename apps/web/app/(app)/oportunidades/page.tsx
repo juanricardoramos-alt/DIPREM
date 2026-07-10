@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ETIQUETAS_MODALIDAD,
@@ -22,6 +22,7 @@ import {
   Boton,
   Campo,
   Dialogo,
+  Esqueleto,
   Selector,
 } from "@/components/ui";
 import { FormularioOportunidad } from "@/components/formulario-oportunidad";
@@ -80,6 +81,15 @@ export default function PaginaOportunidades() {
 
   const etapasActivas = etapas?.filter((e) => e.activa) ?? [];
 
+  // Acción rápida del botón flotante: /oportunidades?crear=1 abre el formulario
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("crear") === "1") {
+      setFormAbierto(true);
+      window.history.replaceState(null, "", "/oportunidades");
+    }
+  }, []);
+
   function soltarEn(etapa: EtapaEmbudo, oportunidadId: string) {
     const op = oportunidades?.find((o) => o.id === oportunidadId);
     if (!op || op.etapa_id === etapa.id) return;
@@ -96,15 +106,29 @@ export default function PaginaOportunidades() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{es.crm.embudo}</h1>
-          {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
         </div>
         <Boton onClick={() => setFormAbierto(true)}>
           + {es.crm.nuevaOportunidad}
         </Boton>
       </div>
 
-      {isLoading && <p className="mt-6 text-slate-400">{es.comunes.cargando}</p>}
+      {isLoading && (
+        <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div
+              key={i}
+              className="w-72 shrink-0 space-y-2 rounded-xl border border-borde bg-superficie-2/60 p-3"
+            >
+              <Esqueleto className="h-5 w-2/3" />
+              <Esqueleto className="h-24" />
+              <Esqueleto className="h-24" />
+            </div>
+          ))}
+        </div>
+      )}
 
+      {!isLoading && (
       <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
         {etapasActivas.map((etapa) => {
           const deEtapa =
@@ -112,8 +136,8 @@ export default function PaginaOportunidades() {
           return (
             <div
               key={etapa.id}
-              className={`w-72 shrink-0 rounded-xl border bg-slate-100/60 ${
-                arrastrando ? "border-dashed border-[var(--color-diprem)]" : "border-slate-200"
+              className={`w-72 shrink-0 rounded-xl border bg-superficie-2/60 ${
+                arrastrando ? "border-dashed border-primario" : "border-borde"
               }`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -125,16 +149,16 @@ export default function PaginaOportunidades() {
             >
               <div className="px-3 pt-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-slate-700">
+                  <h2 className="text-sm font-semibold text-tinta-suave">
                     {etapa.nombre}
                     {etapa.es_ganada && " ✅"}
                     {etapa.es_perdida && " ❌"}
                   </h2>
-                  <span className="rounded-full bg-white px-2 text-xs text-slate-500">
+                  <span className="rounded-full bg-superficie px-2 text-xs text-tinta-suave">
                     {deEtapa.length}
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-tinta-suave">
                   {es.crm.totalPipeline}: {totalesPorMoneda(deEtapa)}
                 </p>
               </div>
@@ -149,21 +173,21 @@ export default function PaginaOportunidades() {
                       setArrastrando(op.id);
                     }}
                     onDragEnd={() => setArrastrando(null)}
-                    className="cursor-grab rounded-lg border border-slate-200 bg-white p-3 shadow-sm hover:shadow"
+                    className="cursor-grab rounded-lg border border-borde bg-superficie p-3 shadow-sm hover:shadow"
                   >
                     <button
-                      className="text-left text-sm font-medium hover:text-[var(--color-diprem)]"
+                      className="text-left text-sm font-medium hover:text-primario"
                       onClick={() => setEditando(op)}
                     >
                       {op.nombre}
                     </button>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-tinta-suave">
                       {op.cuenta?.razon_social ?? "—"}
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                    <p className="mt-1 text-sm font-semibold text-tinta-suave">
                       {formatearMonto(op.monto, op.moneda)}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-tinta-tenue">
                       {ETIQUETAS_MODALIDAD[op.modalidad_contrato]}
                       {op.probabilidad != null && ` · ${op.probabilidad}%`}
                       {op.propietario?.nombre && ` · ${op.propietario.nombre}`}
@@ -177,7 +201,7 @@ export default function PaginaOportunidades() {
                         );
                         if (etapaDestino) soltarEn(etapaDestino, op.id);
                       }}
-                      className="mt-2 w-full rounded border border-slate-200 px-1 py-1 text-xs text-slate-500"
+                      className="mt-2 w-full rounded border border-borde px-1 py-1 text-xs text-tinta-suave"
                     >
                       <option value="">{es.crm.moverA}</option>
                       {etapasActivas
@@ -191,7 +215,7 @@ export default function PaginaOportunidades() {
                   </div>
                 ))}
                 {deEtapa.length === 0 && (
-                  <p className="py-4 text-center text-xs text-slate-400">
+                  <p className="py-4 text-center text-xs text-tinta-tenue">
                     {es.crm.sinOportunidades}
                   </p>
                 )}
@@ -200,6 +224,7 @@ export default function PaginaOportunidades() {
           );
         })}
       </div>
+      )}
 
       {/* Nueva / editar oportunidad */}
       <FormularioOportunidad

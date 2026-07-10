@@ -10,9 +10,9 @@ export function PantallaPlaceholder({
   return (
     <div>
       <h1 className="text-2xl font-bold">{titulo}</h1>
-      <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-        <p className="text-slate-600">{descripcion}</p>
-        <p className="mt-2 text-sm text-slate-400">{es.comunes.proximamente}</p>
+      <div className="mt-6 rounded-xl border border-dashed border-borde bg-superficie p-10 text-center">
+        <p className="text-tinta-suave">{descripcion}</p>
+        <p className="mt-2 text-sm text-tinta-tenue">{es.comunes.proximamente}</p>
       </div>
     </div>
   );

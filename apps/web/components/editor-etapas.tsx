@@ -69,7 +69,7 @@ export function EditorEtapas() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{es.admin.etapasEmbudo}</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+          <p className="mt-1 max-w-2xl text-sm text-tinta-suave">
             {es.admin.etapasDescripcion}
           </p>
         </div>
@@ -78,9 +78,9 @@ export function EditorEtapas() {
         </Boton>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.admin.orden}</th>
               <th className="px-4 py-3">{es.admin.nombreEtapa}</th>
@@ -92,10 +92,10 @@ export function EditorEtapas() {
           </thead>
           <tbody>
             {ordenadas.map((etapa, i) => (
-              <tr key={etapa.id} className="border-t border-slate-100">
+              <tr key={etapa.id} className="border-t border-borde">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
-                    <span className="w-6 text-slate-500">{etapa.orden}</span>
+                    <span className="w-6 text-tinta-suave">{etapa.orden}</span>
                     <button
                       aria-label={es.admin.subir}
                       disabled={i === 0}
@@ -104,7 +104,7 @@ export function EditorEtapas() {
                         if (anterior)
                           intercambiar.mutate({ a: etapa, b: anterior });
                       }}
-                      className="rounded px-1 text-slate-400 hover:bg-slate-100 disabled:opacity-30"
+                      className="rounded px-1 text-tinta-tenue hover:bg-superficie-2 disabled:opacity-30"
                     >
                       ↑
                     </button>
@@ -116,7 +116,7 @@ export function EditorEtapas() {
                         if (siguiente)
                           intercambiar.mutate({ a: etapa, b: siguiente });
                       }}
-                      className="rounded px-1 text-slate-400 hover:bg-slate-100 disabled:opacity-30"
+                      className="rounded px-1 text-tinta-tenue hover:bg-superficie-2 disabled:opacity-30"
                     >
                       ↓
                     </button>
@@ -200,7 +200,7 @@ export function EditorEtapas() {
             </label>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <Boton type="button" variante="secundario" onClick={() => setEditando(null)}>

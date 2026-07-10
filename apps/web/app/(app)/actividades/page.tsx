@@ -15,7 +15,7 @@ import {
 } from "@diprem/core";
 import { cancelarActividad, listarActividades } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, Insignia, Selector } from "@/components/ui";
+import { Boton, EstadoVacio, FilasEsqueleto, Insignia, Selector } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
 
@@ -58,7 +58,7 @@ export default function PaginaActividades() {
           <Selector
             value={tipo}
             onChange={(e) => setTipo(e.target.value as TipoActividad | "")}
-            className="w-44 rounded-md border border-slate-300 px-2 py-2 text-sm"
+            className="w-44 rounded-md border border-borde px-2 py-2 text-sm"
           >
             <option value="">{es.actividades.filtroTodas}</option>
             {Object.entries(ETIQUETAS_TIPO_ACTIVIDAD).map(([valor, etiqueta]) => (
@@ -70,7 +70,7 @@ export default function PaginaActividades() {
           <Selector
             value={estado}
             onChange={(e) => setEstado(e.target.value as EstadoActividad | "")}
-            className="w-40 rounded-md border border-slate-300 px-2 py-2 text-sm"
+            className="w-40 rounded-md border border-borde px-2 py-2 text-sm"
           >
             <option value="">{es.actividades.filtroTodas}</option>
             {Object.entries(ETIQUETAS_ESTADO_ACTIVIDAD).map(([valor, etiqueta]) => (
@@ -85,9 +85,9 @@ export default function PaginaActividades() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.actividades.tipo}</th>
               <th className="px-4 py-3">{es.actividades.asunto}</th>
@@ -98,24 +98,28 @@ export default function PaginaActividades() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                  {es.comunes.cargando}
-                </td>
-              </tr>
-            )}
+            {isLoading && <FilasEsqueleto columnas={6} />}
             {!isLoading && (visibles?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                  {es.actividades.sinActividades}
+                <td colSpan={6} className="p-4">
+                  <EstadoVacio
+                    titulo={es.actividades.sinActividades}
+                    accion={
+                      <Boton
+                        variante="secundario"
+                        onClick={() => setFormulario({ actividad: null })}
+                      >
+                        + {es.actividades.nueva}
+                      </Boton>
+                    }
+                  />
                 </td>
               </tr>
             )}
             {visibles?.map((actividad) => (
               <tr
                 key={actividad.id}
-                className="border-t border-slate-100 hover:bg-slate-50"
+                className="border-t border-borde hover:bg-superficie-2"
               >
                 <td className="px-4 py-3 whitespace-nowrap">
                   {ICONOS_TIPO_ACTIVIDAD[actividad.tipo]}{" "}
@@ -124,7 +128,7 @@ export default function PaginaActividades() {
                 <td className="px-4 py-3">
                   <p className="font-medium">{actividad.asunto}</p>
                   {actividad.proxima_accion && (
-                    <p className="text-xs text-amber-700">
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
                       → {actividad.proxima_accion}
                     </p>
                   )}
@@ -132,7 +136,7 @@ export default function PaginaActividades() {
                 <td className="px-4 py-3">
                   {actividad.cuenta?.razon_social ?? "—"}
                   {actividad.oportunidad?.nombre && (
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-tinta-tenue">
                       {actividad.oportunidad.nombre}
                     </p>
                   )}

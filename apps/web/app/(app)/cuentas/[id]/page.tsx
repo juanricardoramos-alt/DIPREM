@@ -99,22 +99,22 @@ export default function PaginaDetalleCuenta({
       void queryClient.invalidateQueries({ queryKey: ["contactos", id] }),
   });
 
-  if (isLoading) return <p className="text-slate-400">{es.comunes.cargando}</p>;
-  if (!cuenta) return <p className="text-slate-400">{es.comunes.sinResultados}</p>;
+  if (isLoading) return <p className="text-tinta-tenue">{es.comunes.cargando}</p>;
+  if (!cuenta) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
   const nombreEtapa = (etapaId: string) =>
     etapas?.find((e) => e.id === etapaId)?.nombre ?? "—";
 
   return (
     <div>
-      <Link href="/cuentas" className="text-sm text-slate-500 hover:underline">
+      <Link href="/cuentas" className="text-sm text-tinta-suave hover:underline">
         ← {es.nav.cuentas}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{cuenta.razon_social}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-tinta-suave">
             <Insignia tono="azul">{ETIQUETAS_VERTICAL[cuenta.vertical]}</Insignia>
             <Insignia
               tono={
@@ -153,21 +153,21 @@ export default function PaginaDetalleCuenta({
           </div>
           <div className="mt-3 space-y-2">
             {(contactos?.length ?? 0) === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.crm.sinContactos}
               </p>
             )}
             {contactos?.map((contacto) => (
               <div
                 key={contacto.id}
-                className="flex items-start justify-between rounded-lg border border-slate-200 bg-white p-4"
+                className="flex items-start justify-between rounded-lg border border-borde bg-superficie p-4"
               >
                 <div>
                   <p className="font-medium">
                     {contacto.nombre}{" "}
                     {contacto.es_principal && <Insignia tono="azul">Principal</Insignia>}
                   </p>
-                  <p className="text-sm text-slate-500">{contacto.cargo ?? ""}</p>
+                  <p className="text-sm text-tinta-suave">{contacto.cargo ?? ""}</p>
                   <p className="mt-1 text-sm">
                     <EnlacesContacto
                       telefono={contacto.telefono}
@@ -176,7 +176,7 @@ export default function PaginaDetalleCuenta({
                     />
                   </p>
                   {contacto.canal_preferido && (
-                    <p className="mt-0.5 text-xs text-slate-400">
+                    <p className="mt-0.5 text-xs text-tinta-tenue">
                       {es.crm.canalPreferido}: {ETIQUETAS_CANAL[contacto.canal_preferido]}
                     </p>
                   )}
@@ -213,14 +213,14 @@ export default function PaginaDetalleCuenta({
           </div>
           <div className="mt-3 space-y-2">
             {(oportunidades?.length ?? 0) === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.crm.sinOportunidades}
               </p>
             )}
             {oportunidades?.map((op) => (
               <div
                 key={op.id}
-                className="rounded-lg border border-slate-200 bg-white p-4"
+                className="rounded-lg border border-borde bg-superficie p-4"
               >
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{op.nombre}</p>
@@ -230,7 +230,7 @@ export default function PaginaDetalleCuenta({
                     {nombreEtapa(op.etapa_id)}
                   </Insignia>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-tinta-suave">
                   {formatearMonto(op.monto, op.moneda)} ·{" "}
                   {ETIQUETAS_MODALIDAD[op.modalidad_contrato]}
                   {op.servicio?.nombre ? ` · ${op.servicio.nombre}` : ""}
@@ -323,7 +323,7 @@ export default function PaginaDetalleCuenta({
             {es.crm.contactoPrincipal}
           </label>
 
-          {errorContacto && <p className="text-sm text-red-600">{errorContacto}</p>}
+          {errorContacto && <p className="text-sm text-red-600 dark:text-red-400">{errorContacto}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <Boton

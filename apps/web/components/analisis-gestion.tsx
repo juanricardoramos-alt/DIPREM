@@ -86,8 +86,8 @@ export function AnalisisGestion({
         </Boton>
       </div>
 
-      {error && <p className="mt-3 text-sm text-red-600">{(error as Error).message}</p>}
-      {isLoading && <p className="mt-3 text-sm text-slate-400">{es.comunes.cargando}</p>}
+      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{(error as Error).message}</p>}
+      {isLoading && <p className="mt-3 text-sm text-tinta-tenue">{es.comunes.cargando}</p>}
 
       {!isLoading && !error && (
         <>
@@ -103,7 +103,7 @@ export function AnalisisGestion({
               ([tipo, total]) => (
                 <span
                   key={tipo}
-                  className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+                  className="inline-block rounded-full bg-superficie-2 px-2 py-0.5 text-xs text-tinta-suave"
                   title={es.gestion.resumenTipos}
                 >
                   {ICONOS_TIPO_ACTIVIDAD[tipo]} {ETIQUETAS_TIPO_ACTIVIDAD[tipo]}: {total}
@@ -116,8 +116,8 @@ export function AnalisisGestion({
           <div
             className={`mt-3 rounded-lg border p-3 text-sm ${
               siguiente
-                ? "border-amber-300 bg-amber-50 text-amber-900"
-                : "border-dashed border-slate-300 text-slate-400"
+                ? "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200"
+                : "border-dashed border-borde text-tinta-tenue"
             }`}
           >
             <span className="font-semibold">→ {es.gestion.proximaAccion}: </span>
@@ -133,11 +133,11 @@ export function AnalisisGestion({
           </div>
 
           {/* Línea de tiempo */}
-          <h3 className="mt-5 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <h3 className="mt-5 text-sm font-semibold uppercase tracking-wide text-tinta-tenue">
             {es.gestion.lineaTiempo}
           </h3>
           {historial.length === 0 ? (
-            <p className="mt-2 rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+            <p className="mt-2 rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
               {es.gestion.sinGestiones}
             </p>
           ) : (
@@ -181,27 +181,27 @@ function ItemLineaTiempo({
       {!ultimo && (
         <span
           aria-hidden
-          className="absolute left-[15px] top-7 h-full w-px bg-slate-200"
+          className="absolute left-[15px] top-7 h-full w-px bg-borde"
         />
       )}
-      <span className="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-sm">
+      <span className="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-borde bg-superficie text-sm">
         {ICONOS_TIPO_ACTIVIDAD[actividad.tipo]}
       </span>
-      <div className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white p-3">
+      <div className="min-w-0 flex-1 rounded-lg border border-borde bg-superficie p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-medium">{actividad.asunto}</p>
-          <p className="text-xs text-slate-400">{fechaLarga(fecha)}</p>
+          <p className="text-xs text-tinta-tenue">{fechaLarga(fecha)}</p>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-tinta-suave">
           {ETIQUETAS_TIPO_ACTIVIDAD[actividad.tipo]}
           {actividad.propietario?.nombre && ` · ${actividad.propietario.nombre}`}
           {actividad.contacto?.nombre && ` · con ${actividad.contacto.nombre}`}
         </p>
         {actividad.resultado && (
-          <p className="mt-1 text-sm text-slate-600">{actividad.resultado}</p>
+          <p className="mt-1 text-sm text-tinta-suave">{actividad.resultado}</p>
         )}
         {actividad.proxima_accion && (
-          <p className="mt-1 text-xs text-amber-700">→ {actividad.proxima_accion}</p>
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">→ {actividad.proxima_accion}</p>
         )}
       </div>
     </li>

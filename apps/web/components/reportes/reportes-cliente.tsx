@@ -23,13 +23,13 @@ export function ReportesCliente({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{es.nav.reportes}</h1>
         {veEquipo && vePropio && (
-          <div className="flex rounded-lg bg-slate-100 p-1 print:hidden">
+          <div className="flex rounded-lg bg-superficie-2 p-1 print:hidden">
             {(["equipo", "mio"] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPestana(p)}
                 className={`rounded-md px-4 py-1.5 text-sm font-medium ${
-                  pestana === p ? "bg-white shadow-sm text-[var(--color-diprem)]" : "text-slate-500"
+                  pestana === p ? "bg-superficie shadow-sm text-primario" : "text-tinta-suave"
                 }`}
               >
                 {p === "equipo" ? es.reportes.pestanaEquipo : es.reportes.pestanaMio}

@@ -37,7 +37,7 @@ export function AnalisisEjecutivos() {
     return (
       <section>
         <h2 className="text-lg font-semibold">{es.reportes.analisisEjecutivos}</h2>
-        <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+        <p className="mt-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-800 dark:text-amber-300">
           ⚠️ {(error as Error).message}
         </p>
       </section>
@@ -49,11 +49,11 @@ export function AnalisisEjecutivos() {
   return (
     <section>
       <h2 className="text-lg font-semibold">{es.reportes.analisisEjecutivos}</h2>
-      <p className="text-sm text-slate-500">{es.reportes.analisisEjecutivosNota}</p>
+      <p className="text-sm text-tinta-suave">{es.reportes.analisisEjecutivosNota}</p>
 
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         {analisis.length === 0 && (
-          <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400 lg:col-span-2">
+          <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue lg:col-span-2">
             {es.reportes.sinContactosActivos}
           </p>
         )}
@@ -71,10 +71,10 @@ function TarjetaEjecutivo({ analisis }: { analisis: AnalisisEjecutivo }) {
     : 0;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-xl border border-borde bg-superficie p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold">{analisis.ejecutivo}</p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-tinta-suave">
           {analisis.totalContactos} {es.reportes.contactosActivos}
         </p>
       </div>
@@ -82,39 +82,39 @@ function TarjetaEjecutivo({ analisis }: { analisis: AnalisisEjecutivo }) {
       {/* Cobertura: con gestión reciente vs sin gestión */}
       <div className="mt-3">
         <div className="flex items-baseline justify-between text-xs">
-          <span className="text-emerald-700">
+          <span className="text-emerald-700 dark:text-emerald-300">
             {es.reportes.conGestionReciente}: {analisis.conGestionReciente}
           </span>
-          <span className="text-red-600">
+          <span className="text-red-600 dark:text-red-400">
             {es.reportes.sinGestionReciente}: {analisis.sinGestionReciente}
           </span>
         </div>
-        <div className="mt-1 flex h-3 w-full overflow-hidden rounded bg-red-100">
+        <div className="mt-1 flex h-3 w-full overflow-hidden rounded bg-red-100 dark:bg-red-950/60">
           <div className="h-full bg-emerald-500" style={{ width: `${pctReciente}%` }} />
         </div>
       </div>
 
       {/* Frecuencia promedio */}
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-tinta-suave">
         {analisis.frecuenciaPromedioDias != null
           ? `📆 ${es.reportes.frecuenciaPromedio(analisis.frecuenciaPromedioDias)}`
           : es.reportes.sinFrecuencia}
       </p>
 
       {/* Mezcla de tipos de gestión (90 días) */}
-      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
         {es.reportes.mezclaGestion}
       </p>
       <div className="mt-1 flex flex-wrap gap-1.5">
         {analisis.totalGestiones90d === 0 && (
-          <span className="text-xs text-slate-400">—</span>
+          <span className="text-xs text-tinta-tenue">—</span>
         )}
         {(Object.entries(analisis.distribucion) as [TipoActividad, number][])
           .sort((a, b) => b[1] - a[1])
           .map(([tipo, total]) => (
             <span
               key={tipo}
-              className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+              className="inline-block rounded-full bg-superficie-2 px-2 py-0.5 text-xs text-tinta-suave"
             >
               {ICONOS_TIPO_ACTIVIDAD[tipo]} {ETIQUETAS_TIPO_ACTIVIDAD[tipo]}: {total}
             </span>
@@ -122,12 +122,12 @@ function TarjetaEjecutivo({ analisis }: { analisis: AnalisisEjecutivo }) {
       </div>
 
       {/* Top 5 contactos con más días sin gestión */}
-      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
         {es.reportes.masAbandonados}
       </p>
       <ul className="mt-1 space-y-1">
         {analisis.masAbandonados.length === 0 && (
-          <li className="text-xs text-slate-400">—</li>
+          <li className="text-xs text-tinta-tenue">—</li>
         )}
         {analisis.masAbandonados.map((contacto) => (
           <li
@@ -140,10 +140,10 @@ function TarjetaEjecutivo({ analisis }: { analisis: AnalisisEjecutivo }) {
                   ? `/leads/${contacto.entidad_id}`
                   : `/cuentas/${contacto.entidad_id}`
               }
-              className="min-w-0 truncate hover:text-[var(--color-diprem)] hover:underline"
+              className="min-w-0 truncate hover:text-primario hover:underline"
             >
               {contacto.nombre}
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-tinta-tenue">
                 {" "}
                 · {contacto.entidad === "lead" ? "Lead" : es.crm.cuenta}
               </span>

@@ -2,7 +2,8 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { es } from "@diprem/core";
 
-const COLOR_DIPREM = "#0f4c81";
+// Misma paleta del sistema de diseño web (apps/web/app/globals.css)
+const COLOR_DIPREM = "#1d5b94";
 
 export default function LayoutTabs() {
   return (

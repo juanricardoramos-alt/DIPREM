@@ -29,11 +29,11 @@ export function BarraMeta({ meta }: { meta: MetaAvance }) {
     <div>
       <div className="flex items-baseline justify-between text-sm">
         <span className="font-medium">{ETIQUETAS_TIPO_META[meta.tipo]}</span>
-        <span className="text-slate-500">
+        <span className="text-tinta-suave">
           {avanceTexto} / {objetivoTexto} · <b>{pct}%</b>
         </span>
       </div>
-      <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+      <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-superficie-2">
         <div
           className={`h-full rounded-full ${color} transition-all`}
           style={{ width: `${Math.min(100, pct)}%` }}

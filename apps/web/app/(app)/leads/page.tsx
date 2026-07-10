@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,6 +19,8 @@ import {
   Campo,
   Dialogo,
   Entrada,
+  EstadoVacio,
+  FilasEsqueleto,
   Insignia,
   Selector,
 } from "@/components/ui";
@@ -46,6 +48,15 @@ export default function PaginaLeads() {
     queryKey: ["leads", busqueda],
     queryFn: () => listarLeads(supabase, busqueda),
   });
+
+  // Acción rápida del botón flotante: /leads?crear=1 abre el formulario
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("crear") === "1") {
+      setLeadForm({ lead: null });
+      window.history.replaceState(null, "", "/leads");
+    }
+  }, []);
 
   const invalidar = () => {
     void queryClient.invalidateQueries({ queryKey: ["leads"] });
@@ -93,7 +104,7 @@ export default function PaginaLeads() {
             placeholder={es.comunes.buscar}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-56 rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-56 rounded-md border border-borde px-3 py-2 text-sm"
           />
           <Boton onClick={() => setLeadForm({ lead: null })}>
             + {es.crm.nuevoLead}
@@ -101,9 +112,9 @@ export default function PaginaLeads() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.crm.nombre}</th>
               <th className="px-4 py-3">{es.crm.empresa}</th>
@@ -115,26 +126,27 @@ export default function PaginaLeads() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                  {es.comunes.cargando}
-                </td>
-              </tr>
-            )}
+            {isLoading && <FilasEsqueleto columnas={7} />}
             {!isLoading && (leads?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                  {es.crm.sinLeads}
+                <td colSpan={7} className="p-4">
+                  <EstadoVacio
+                    titulo={es.crm.sinLeads}
+                    accion={
+                      <Boton variante="secundario" onClick={() => setLeadForm({ lead: null })}>
+                        + {es.crm.nuevoLead}
+                      </Boton>
+                    }
+                  />
                 </td>
               </tr>
             )}
             {leads?.map((lead) => (
-              <tr key={lead.id} className="border-t border-slate-100 hover:bg-slate-50">
+              <tr key={lead.id} className="border-t border-borde hover:bg-superficie-2">
                 <td className="px-4 py-3 font-medium">
                   <Link
                     href={`/leads/${lead.id}`}
-                    className="hover:text-[var(--color-diprem)] hover:underline"
+                    className="hover:text-primario hover:underline"
                   >
                     {lead.nombre}
                   </Link>
@@ -245,7 +257,7 @@ export default function PaginaLeads() {
             <AreaTexto name="notas" defaultValue={leadForm?.lead?.notas ?? ""} />
           </Campo>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <Boton type="button" variante="secundario" onClick={() => setLeadForm(null)}>

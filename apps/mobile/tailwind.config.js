@@ -5,10 +5,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Paleta corporativa provisoria (ajustar a manual de marca DIPREM)
+        // Paleta DIPREM (misma del sistema de diseño web: apps/web/app/globals.css)
         diprem: {
-          DEFAULT: "#0f4c81",
-          oscuro: "#0a3357",
+          DEFAULT: "#1d5b94",
+          oscuro: "#14456f",
+          navy: "#0f2b46",
         },
       },
     },

@@ -42,11 +42,11 @@ export default function PaginaLogin() {
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-[var(--color-diprem)]">
+      <div className="w-full max-w-sm rounded-xl border border-borde bg-superficie p-8 shadow-sm">
+        <h1 className="text-2xl font-bold text-primario">
           {es.app.nombre}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{es.app.lema}</p>
+        <p className="mt-1 text-sm text-tinta-suave">{es.app.lema}</p>
 
         <form onSubmit={ingresar} className="mt-6 space-y-4">
           <div>
@@ -59,7 +59,7 @@ export default function PaginaLogin() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-[var(--color-diprem)] focus:outline-none"
+              className="mt-1 w-full rounded-md border border-borde px-3 py-2 text-sm focus:border-primario focus:outline-none"
             />
           </div>
           <div>
@@ -72,12 +72,12 @@ export default function PaginaLogin() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-[var(--color-diprem)] focus:outline-none"
+              className="mt-1 w-full rounded-md border border-borde px-3 py-2 text-sm focus:border-primario focus:outline-none"
             />
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {error}
             </p>
           )}
@@ -85,7 +85,7 @@ export default function PaginaLogin() {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full rounded-md bg-[var(--color-diprem)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-diprem-oscuro)] disabled:opacity-60"
+            className="w-full rounded-md bg-primario px-4 py-2 text-sm font-semibold text-white hover:bg-primario-oscuro disabled:opacity-60"
           >
             {cargando ? es.auth.entrando : es.auth.entrar}
           </button>
