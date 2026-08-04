@@ -15,12 +15,15 @@ import type { SupabaseClient } from "@diprem/api";
  * es lo único que consume `@diprem/api`.
  */
 export function clienteNavegador(): SupabaseClient {
+  // El navegador habla con el proxy /api/auth del MISMO origen (no con el
+  // servidor de Neon Auth directo): así la cookie de sesión se fija en el
+  // dominio de la app y el middleware/gate del servidor la ven. Apuntar directo
+  // dejaría la cookie en otro dominio y rompería por CORS.
+  const origen = typeof window !== "undefined" ? window.location.origin : "";
   return createClient({
     auth: {
       adapter: SupabaseAuthAdapter(),
-      // El navegador habla con el proxy /api/auth para compartir la cookie de
-      // sesión con el servidor (middleware y gate). Ver route.ts + auth.ts.
-      url: process.env.NEXT_PUBLIC_NEON_AUTH_BASE_URL!,
+      url: `${origen}/api/auth`,
     },
     dataApi: {
       url: process.env.NEXT_PUBLIC_DATA_API_URL!,
