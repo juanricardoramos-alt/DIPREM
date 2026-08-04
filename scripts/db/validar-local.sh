@@ -51,8 +51,11 @@ comprobar() { # comprobar <descripcion> <esperado> <consulta>
 echo "— Estructura y seguridad base…"
 comprobar "25 tablas en public (24 app + _migraciones)" 25 \
   "select count(*) from pg_tables where schemaname='public'"
-comprobar "RLS habilitado en las 24 tablas de la app" 24 \
+comprobar "RLS habilitado en las 25 tablas (incluida _migraciones, 0013)" 25 \
   "select count(*) from pg_tables where schemaname='public' and rowsecurity"
+comprobar "_migraciones sin grants a authenticated/anonymous" 0 \
+  "select count(*) from information_schema.role_table_grants
+    where table_name='_migraciones' and grantee in ('authenticated','anonymous')"
 comprobar "92 políticas RLS (F1)" 92 \
   "select count(*) from pg_policies where schemaname='public'"
 comprobar "las 24 tablas tienen al menos una política" 24 \
