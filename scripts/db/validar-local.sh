@@ -3,8 +3,9 @@
 # Valida el set completo de migraciones (db/migrations) en un PostgreSQL local
 # desechable, sin tocar ninguna base remota. Verifica:
 #   1. Que las migraciones aplican limpias y el runner es idempotente.
-#   2. RLS habilitado en TODAS las tablas de la app (deny-all hasta la F1).
-#   3. Cero políticas y cero grants a `authenticated` en esta fase.
+#   2. RLS habilitado en TODAS las tablas y las 92 políticas de F1.
+#   3. Grants mínimos: anonymous en cero; authenticated según la matriz; y la
+#      simulación del registro abierto (intruso con JWT válido → 0 filas).
 #   4. Catálogos cargados; CERO usuarios/cuentas/datos operativos.
 #   5. Funciones de normalización, ventana caliente, clasificación de cargo y
 #      sello de etapa (con datos de prueba dentro de un ROLLBACK).
@@ -52,11 +53,37 @@ comprobar "25 tablas en public (24 app + _migraciones)" 25 \
   "select count(*) from pg_tables where schemaname='public'"
 comprobar "RLS habilitado en las 24 tablas de la app" 24 \
   "select count(*) from pg_tables where schemaname='public' and rowsecurity"
-comprobar "cero políticas RLS (llegan en F1)" 0 \
+comprobar "92 políticas RLS (F1)" 92 \
   "select count(*) from pg_policies where schemaname='public'"
-comprobar "cero grants a authenticated/anonymous" 0 \
-  "select count(*) from information_schema.role_table_grants
-    where grantee in ('authenticated','anonymous')"
+comprobar "las 24 tablas tienen al menos una política" 24 \
+  "select count(distinct tablename) from pg_policies where schemaname='public'"
+comprobar "anonymous: cero privilegios sobre tablas" 0 \
+  "select count(*) from pg_tables where schemaname='public'
+    and has_table_privilege('anonymous', format('%I.%I', schemaname, tablename),
+                            'select,insert,update,delete')"
+comprobar "authenticated: select en las 24 tablas" 24 \
+  "select count(*) from pg_tables
+    where schemaname='public' and tablename <> '_migraciones'
+      and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'select')"
+comprobar "authenticated: insert/update en 23 (sin auditoria)" 23 \
+  "select count(*) from pg_tables
+    where schemaname='public' and tablename <> '_migraciones'
+      and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'insert,update')"
+comprobar "authenticated: delete en 22 (sin auditoria ni importaciones)" 22 \
+  "select count(*) from pg_tables
+    where schemaname='public' and tablename <> '_migraciones'
+      and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'delete')"
+comprobar "anonymous sin usage en schema public" f \
+  "select has_schema_privilege('anonymous','public','usage')"
+comprobar "authenticated con usage en schema public" t \
+  "select has_schema_privilege('authenticated','public','usage')"
+comprobar "notificar_reporte_semanal NO ejecutable por clientes" f \
+  "select has_function_privilege('authenticated','public.notificar_reporte_semanal()','execute')"
+comprobar "importar_proyectos_mercado sí ejecutable (RPC)" t \
+  "select has_function_privilege('authenticated','public.importar_proyectos_mercado(jsonb)','execute')"
+comprobar "usuario_actual() es SECURITY DEFINER" t \
+  "select prosecdef from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.proname='usuario_actual'"
 
 echo "— Catálogos sí, datos operativos no…"
 comprobar "3 pilares" 3 "select count(*) from pilares"
@@ -128,6 +155,94 @@ echo "  ✔ triggers de etapa, normalización y clasificación"
 comprobar "el rollback no dejó rastro (usuarios)" 0 "select count(*) from usuarios"
 comprobar "el rollback tampoco dejó auditoría nueva" "$AUDITORIA_ANTES" \
   "select count(*) from auditoria"
+
+echo "— F1: simulación del registro abierto (stub de auth.user_id + rol authenticated)…"
+"$PGBIN/psql" "$DATABASE_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
+begin;
+-- Stub local de pg_session_jwt: en Neon lo provee la Data API.
+create schema auth;
+create function auth.user_id() returns text language sql stable as
+  $$ select nullif(current_setting('diprem.prueba_sub', true), '') $$;
+grant usage on schema auth to authenticated;
+grant execute on function auth.user_id() to authenticated;
+
+-- Datos de prueba (se revierten con el rollback)
+insert into equipos (id, nombre, pais)
+  values ('e0000000-0000-4000-8000-000000000001', 'Equipo Prueba', 'Chile');
+insert into usuarios (id, auth_id, nombre, email, rol, equipo_id) values
+  ('00000000-0000-4000-8000-0000000000ad', 'sub-admin', 'Admin Prueba',
+   'admin@prueba.local', 'admin', null),
+  ('00000000-0000-4000-8000-0000000000e1', 'sub-ejecutivo', 'Ejecutivo Prueba',
+   'ejecutivo@prueba.local', 'ejecutivo', 'e0000000-0000-4000-8000-000000000001');
+insert into cuentas (id, razon_social, propietario_id)
+  values ('c0000000-0000-4000-8000-000000000001', 'Cuenta Prueba',
+          '00000000-0000-4000-8000-0000000000e1');
+insert into contactos (cuenta_id, nombre, email)
+  values ('c0000000-0000-4000-8000-000000000001', 'Contacto Prueba', 'contacto@prueba.local');
+
+set local role authenticated;
+
+-- 1) Intruso: JWT válido (sub presente) pero SIN fila en usuarios → cero en todo
+select set_config('diprem.prueba_sub', 'sub-intruso-internet', true);
+do $$ begin
+  if (select count(*) from cuentas)   <> 0 then raise exception 'FALLO: intruso ve cuentas'; end if;
+  if (select count(*) from contactos) <> 0 then raise exception 'FALLO: intruso ve contactos'; end if;
+  if (select count(*) from usuarios)  <> 0 then raise exception 'FALLO: intruso ve usuarios'; end if;
+  if (select count(*) from pilares)   <> 0 then raise exception 'FALLO: intruso ve catálogos'; end if;
+  if (select count(*) from reglas_rol_contacto) <> 0 then raise exception 'FALLO: intruso ve reglas'; end if;
+end $$;
+do $$ begin
+  begin
+    insert into cuentas (razon_social, propietario_id)
+      values ('HACK', '00000000-0000-4000-8000-00000000dead');
+    raise exception 'FALLO: el intruso pudo escribir en cuentas';
+  exception when insufficient_privilege then
+    null; -- 42501: bloqueado por RLS, como corresponde
+  end;
+end $$;
+
+-- 2) Sin sesión (sub vacío) → también cero
+select set_config('diprem.prueba_sub', '', true);
+do $$ begin
+  if (select count(*) from cuentas) <> 0 then raise exception 'FALLO: sin sub ve cuentas'; end if;
+end $$;
+
+-- 3) Ejecutivo con perfil: ve lo suyo y los catálogos, no el mercado
+select set_config('diprem.prueba_sub', 'sub-ejecutivo', true);
+do $$ begin
+  if (select count(*) from cuentas)  <> 1 then raise exception 'FALLO: ejecutivo no ve su cuenta'; end if;
+  if (select count(*) from pilares)  <> 3 then raise exception 'FALLO: ejecutivo no ve catálogos'; end if;
+  if (select public.rol_actual()) <> 'ejecutivo' then raise exception 'FALLO: rol_actual'; end if;
+end $$;
+
+-- 4) Admin con perfil: ve todo
+select set_config('diprem.prueba_sub', 'sub-admin', true);
+do $$ begin
+  if (select count(*) from cuentas)  <> 1 then raise exception 'FALLO: admin no ve cuentas'; end if;
+  if (select count(*) from usuarios) <> 2 then raise exception 'FALLO: admin no ve usuarios'; end if;
+  if not public.es_admin() then raise exception 'FALLO: es_admin'; end if;
+end $$;
+
+rollback;
+SQL
+echo "  ✔ intruso con JWT: 0 filas y escritura bloqueada · ejecutivo/admin: acceso correcto"
+
+echo "— F1: rol anonymous sin acceso alguno…"
+"$PGBIN/psql" "$DATABASE_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
+begin;
+set local role anonymous;
+do $$ begin
+  begin
+    perform count(*) from public.pilares;
+    raise exception 'FALLO: anonymous puede leer pilares';
+  exception when insufficient_privilege or undefined_table then
+    null; -- sin usage/grants: denegado antes de evaluar RLS (42501 o 42P01,
+          -- según si el nombre siquiera resuelve sin usage del esquema)
+  end;
+end $$;
+rollback;
+SQL
+echo "  ✔ anonymous: denegado a nivel de grants"
 
 echo ""
 echo "✅ Validación local completa: migraciones aplican limpias, RLS activo en todo, cero datos."
