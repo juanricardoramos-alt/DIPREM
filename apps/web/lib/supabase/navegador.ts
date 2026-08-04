@@ -1,32 +1,59 @@
 "use client";
 
-import { createClient, SupabaseAuthAdapter } from "@neondatabase/neon-js";
+import { createAuthClient } from "@neondatabase/auth";
+import { SupabaseAuthAdapter } from "@neondatabase/auth/vanilla/adapters";
+import { NeonPostgrestClient, fetchWithToken } from "@neondatabase/postgrest-js";
 import type { SupabaseClient } from "@diprem/api";
 
 /**
- * Cliente de datos para componentes cliente (Neon Data API + Neon Auth).
- * El SupabaseAuthAdapter expone `auth.signInWithPassword` / `signOut` /
- * `getUser`, compatibles con el código de login/logout existente; el cliente
- * adjunta el JWT del usuario a cada request de la Data API automáticamente.
+ * Cliente del navegador (Neon Auth + Neon Data API).
  *
- * Se conserva la ruta de import `@/lib/supabase/navegador` (la usan ~30
- * componentes) cambiando solo el interior. El cast confina el reemplazo del
- * cliente a esta fábrica: el objeto expone `.from()`, `.rpc()` y `.auth`, que
- * es lo único que consume `@diprem/api`.
+ * Auth (login/logout/sesión) va por el cliente de Neon Auth apuntado al proxy
+ * /api/auth del MISMO origen, para que la cookie de sesión se fije en el dominio
+ * de la app y el middleware/gate del servidor la vean.
+ *
+ * Para los datos NO usamos el token automático de neon-js: su `getJWTToken()`
+ * lee `session.token` confiando en un hook que copia la cabecera `set-auth-jwt`,
+ * y ese hook no dispara de forma fiable a través del proxy. En su lugar leemos
+ * la cabecera `set-auth-jwt` directamente del `get-session` del proxy (mismo
+ * origen → JS puede leerla) y con ese JWT firmamos las llamadas a la Data API.
  */
 export function clienteNavegador(): SupabaseClient {
-  // El navegador habla con el proxy /api/auth del MISMO origen (no con el
-  // servidor de Neon Auth directo): así la cookie de sesión se fija en el
-  // dominio de la app y el middleware/gate del servidor la ven. Apuntar directo
-  // dejaría la cookie en otro dominio y rompería por CORS.
   const origen = typeof window !== "undefined" ? window.location.origin : "";
-  return createClient({
-    auth: {
-      adapter: SupabaseAuthAdapter(),
-      url: `${origen}/api/auth`,
-    },
-    dataApi: {
-      url: process.env.NEXT_PUBLIC_DATA_API_URL!,
+  const proxy = `${origen}/api/auth`;
+
+  const authClient = createAuthClient(proxy, { adapter: SupabaseAuthAdapter() });
+
+  // JWT de la Data API: se resuelve de forma perezosa por request, leyendo la
+  // cabecera set-auth-jwt que el proxy expone en get-session.
+  const obtenerJwt = async (): Promise<string | null> => {
+    try {
+      const res = await fetch(`${proxy}/get-session`, { credentials: "same-origin" });
+      const jwt = res.headers.get("set-auth-jwt");
+      if (jwt) return jwt;
+      // Respaldo: algunas respuestas traen el token en el cuerpo.
+      const cuerpo = (await res.json().catch(() => null)) as
+        | { session?: { token?: string }; token?: string }
+        | null;
+      return cuerpo?.session?.token ?? cuerpo?.token ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const datos = new NeonPostgrestClient({
+    dataApiUrl: process.env.NEXT_PUBLIC_DATA_API_URL!,
+    options: { global: { fetch: fetchWithToken(obtenerJwt) } },
+  });
+
+  // La app consume `.auth` (login/logout) y `.from()`/`.rpc()` (datos) desde el
+  // mismo objeto. Los combinamos: `.auth` → cliente de Neon Auth; el resto →
+  // cliente de la Data API (con métodos ligados a su instancia).
+  return new Proxy(datos, {
+    get(target, prop) {
+      if (prop === "auth") return authClient;
+      const valor = (target as unknown as Record<string | symbol, unknown>)[prop];
+      return typeof valor === "function" ? valor.bind(target) : valor;
     },
   }) as unknown as SupabaseClient;
 }
