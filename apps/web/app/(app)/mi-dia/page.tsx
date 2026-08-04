@@ -1,14 +1,19 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { rutaInicial } from "@diprem/core";
-import { obtenerPerfil } from "@diprem/api";
-import { clienteServidor } from "@/lib/supabase/servidor";
+import { usePerfil } from "@/lib/hooks";
 import { MiDiaCliente } from "@/components/mi-dia-cliente";
 
-export default async function PaginaMiDia() {
-  const supabase = await clienteServidor();
-  const perfil = await obtenerPerfil(supabase);
-  if (!perfil) redirect("/login");
-  if (perfil.rol === "lectura") redirect(rutaInicial(perfil.rol));
+export default function PaginaMiDia() {
+  const router = useRouter();
+  const { data: perfil } = usePerfil();
 
+  useEffect(() => {
+    if (perfil && perfil.rol === "lectura") router.replace(rutaInicial(perfil.rol));
+  }, [perfil, router]);
+
+  if (!perfil || perfil.rol === "lectura") return null;
   return <MiDiaCliente nombre={perfil.nombre} />;
 }

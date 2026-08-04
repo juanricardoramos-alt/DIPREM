@@ -1,17 +1,23 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { es, rutaInicial } from "@diprem/core";
-import { obtenerPerfil } from "@diprem/api";
-import { clienteServidor } from "@/lib/supabase/servidor";
+import { usePerfil } from "@/lib/hooks";
 import { EditorEtapas } from "@/components/editor-etapas";
 import { EditorMetas } from "@/components/editor-metas";
 import { PantallaPlaceholder } from "@/components/pantalla-placeholder";
 
-export default async function PaginaAdmin() {
-  const supabase = await clienteServidor();
-  const perfil = await obtenerPerfil(supabase);
-  if (!perfil) redirect("/login");
+export default function PaginaAdmin() {
+  const router = useRouter();
+  const { data: perfil } = usePerfil();
+
   // RBAC de UI: solo admin entra (la RLS de BD es la barrera de datos real)
-  if (perfil.rol !== "admin") redirect(rutaInicial(perfil.rol));
+  useEffect(() => {
+    if (perfil && perfil.rol !== "admin") router.replace(rutaInicial(perfil.rol));
+  }, [perfil, router]);
+
+  if (!perfil || perfil.rol !== "admin") return null;
 
   return (
     <div className="space-y-10">
