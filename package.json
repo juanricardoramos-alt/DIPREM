@@ -10,6 +10,8 @@
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
+    "db:migrate": "node scripts/db/migrate.mjs",
+    "db:validar": "bash scripts/db/validar-local.sh",
     "db:reset": "supabase db reset",
     "db:start": "supabase start"
   },
