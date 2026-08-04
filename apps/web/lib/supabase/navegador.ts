@@ -19,7 +19,14 @@ import type { SupabaseClient } from "@diprem/api";
  * origen → JS puede leerla) y con ese JWT firmamos las llamadas a la Data API.
  */
 export function clienteNavegador(): SupabaseClient {
-  const origen = typeof window !== "undefined" ? window.location.origin : "";
+  // En el navegador usamos el origen real (window.location.origin) → funciona
+  // igual en localhost y en Vercel, sin URL fija. Durante el render en el
+  // servidor (SSR) window no existe; ahí usamos un origen absoluto de relleno
+  // solo para que createAuthClient no falle por URL relativa: NUNCA se usa para
+  // peticiones, porque todas (login, get-session, Data API) ocurren en el
+  // navegador (event handlers / useEffect), donde el origen ya es el real.
+  const origen =
+    typeof window !== "undefined" ? window.location.origin : "https://localhost";
   const proxy = `${origen}/api/auth`;
 
   const authClient = createAuthClient(proxy, { adapter: SupabaseAuthAdapter() });
