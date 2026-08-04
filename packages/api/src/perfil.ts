@@ -2,19 +2,21 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Equipo, Usuario } from "@diprem/core";
 
 /**
- * Perfil del usuario autenticado (fila de `usuarios` para el auth.uid actual).
- * Devuelve null si no hay sesión o el perfil aún no existe.
+ * Perfil del usuario autenticado (su fila de `usuarios`).
+ * Resuelve la identidad con la función SQL `usuario_actual()` (SECURITY DEFINER,
+ * con grant execute a authenticated): devuelve el id de `usuarios` del portador
+ * del JWT, o null si el JWT no está en la allowlist. Funciona igual en servidor
+ * y navegador porque ambos clientes envían el JWT a la Data API.
+ * Devuelve null si no hay sesión o el perfil no está en la allowlist.
  */
 export async function obtenerPerfil(supabase: SupabaseClient): Promise<Usuario | null> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { data: miId, error: errorId } = await supabase.rpc("usuario_actual");
+  if (errorId || !miId) return null;
 
   const { data, error } = await supabase
     .from("usuarios")
     .select("id, nombre, email, rol, equipo_id, telefono, activo")
-    .eq("id", user.id)
+    .eq("id", miId as string)
     .maybeSingle();
 
   if (error || !data) return null;
