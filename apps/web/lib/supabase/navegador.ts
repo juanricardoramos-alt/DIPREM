@@ -31,21 +31,30 @@ export function clienteNavegador(): SupabaseClient {
 
   const authClient = createAuthClient(proxy, { adapter: SupabaseAuthAdapter() });
 
-  // JWT de la Data API: se resuelve de forma perezosa por request, leyendo la
-  // cabecera set-auth-jwt que el proxy expone en get-session.
+  // JWT de la Data API, resuelto de forma perezosa por request. El proxy filtra
+  // la cabecera set-auth-jwt de get-session, así que pedimos el JWT por el
+  // endpoint dedicado GET /token, que lo devuelve en el CUERPO (y el proxy sí
+  // reenvía cuerpos). Respaldo: la cabecera, por si el proxy la expone.
+  const esJwt = (t: unknown): t is string =>
+    typeof t === "string" && t.split(".").length === 3;
   const obtenerJwt = async (): Promise<string | null> => {
+    try {
+      const res = await fetch(`${proxy}/token`, { credentials: "same-origin" });
+      if (res.ok) {
+        const cuerpo = (await res.json().catch(() => null)) as { token?: string } | null;
+        if (esJwt(cuerpo?.token)) return cuerpo!.token!;
+      }
+    } catch {
+      /* sigue al respaldo */
+    }
     try {
       const res = await fetch(`${proxy}/get-session`, { credentials: "same-origin" });
       const jwt = res.headers.get("set-auth-jwt");
-      if (jwt) return jwt;
-      // Respaldo: algunas respuestas traen el token en el cuerpo.
-      const cuerpo = (await res.json().catch(() => null)) as
-        | { session?: { token?: string }; token?: string }
-        | null;
-      return cuerpo?.session?.token ?? cuerpo?.token ?? null;
+      if (esJwt(jwt)) return jwt;
     } catch {
-      return null;
+      /* sin token */
     }
+    return null;
   };
 
   const datos = new NeonPostgrestClient({
