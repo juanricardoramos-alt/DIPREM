@@ -49,30 +49,30 @@ comprobar() { # comprobar <descripcion> <esperado> <consulta>
 }
 
 echo "— Estructura y seguridad base…"
-comprobar "25 tablas en public (24 app + _migraciones)" 25 \
+comprobar "26 tablas en public (25 app + _migraciones)" 26 \
   "select count(*) from pg_tables where schemaname='public'"
-comprobar "RLS habilitado en las 25 tablas (incluida _migraciones, 0013)" 25 \
+comprobar "RLS habilitado en las 26 tablas (incluida _migraciones)" 26 \
   "select count(*) from pg_tables where schemaname='public' and rowsecurity"
 comprobar "_migraciones sin grants a authenticated/anonymous" 0 \
   "select count(*) from information_schema.role_table_grants
     where table_name='_migraciones' and grantee in ('authenticated','anonymous')"
-comprobar "92 políticas RLS (F1)" 92 \
+comprobar "96 políticas RLS (F1 + 0014)" 96 \
   "select count(*) from pg_policies where schemaname='public'"
-comprobar "las 24 tablas tienen al menos una política" 24 \
+comprobar "las 25 tablas de app tienen política" 25 \
   "select count(distinct tablename) from pg_policies where schemaname='public'"
 comprobar "anonymous: cero privilegios sobre tablas" 0 \
   "select count(*) from pg_tables where schemaname='public'
     and has_table_privilege('anonymous', format('%I.%I', schemaname, tablename),
                             'select,insert,update,delete')"
-comprobar "authenticated: select en las 24 tablas" 24 \
+comprobar "authenticated: select en las 25 tablas" 25 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'select')"
-comprobar "authenticated: insert/update en 23 (sin auditoria)" 23 \
+comprobar "authenticated: insert/update en 24 (sin auditoria)" 24 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'insert,update')"
-comprobar "authenticated: delete en 22 (sin auditoria ni importaciones)" 22 \
+comprobar "authenticated: delete en 23 (sin auditoria ni importaciones)" 23 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'delete')"
@@ -116,8 +116,16 @@ comprobar "clasificar cargo decisor" "gerente_proyecto" \
 comprobar "cargo desconocido queda sin_clasificar" "sin_clasificar" \
   "select clasificar_rol_contacto('Astrónomo')"
 
-comprobar "catálogos auditados (51 catálogo + 23 reglas)" 74 \
+comprobar "catálogos auditados (51 + 23 reglas cargo + 22 reglas mercado)" 96 \
   "select count(*) from auditoria"
+comprobar "etapa 'exploracion' existe en el enum (0014)" 1 \
+  "select count(*) from pg_enum e join pg_type t on t.oid=e.enumtypid
+    where t.typname='etapa_proyecto' and e.enumlabel='exploracion'"
+comprobar "22 reglas rol_mercado (0014)" 22 "select count(*) from reglas_rol_mercado"
+comprobar "clasificar_rol_mercado(mineria)=mandante" "mandante" \
+  "select clasificar_rol_mercado('MINERIA DEL COBRE')"
+comprobar "clasificar_rol_mercado(ingeniería)=epc" "epc" \
+  "select clasificar_rol_mercado('EMPRESAS DE SERVICIOS DE INGENIERIA')"
 
 echo "— Triggers con datos de prueba (transacción con ROLLBACK)…"
 AUDITORIA_ANTES=$(q "select count(*) from auditoria")

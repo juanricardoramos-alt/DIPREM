@@ -19,6 +19,12 @@ out/
 supabase/.branches/
 supabase/.temp/
 
+# datos fuente (personales / iMercados): NUNCA al repo — se cargan por script
+# desde una ruta fuera del árbol de trabajo (ver scripts/ingesta/).
+*.xls
+*.xlsx
+*.csv
+
 # sistema
 .DS_Store
 *.log
