@@ -1,12 +1,10 @@
-import { redirect } from "next/navigation";
-import { obtenerPerfil } from "@diprem/api";
-import { clienteServidor } from "@/lib/supabase/servidor";
+"use client";
+
+import { usePerfil } from "@/lib/hooks";
 import { ReportesCliente } from "@/components/reportes/reportes-cliente";
 
-export default async function PaginaReportes() {
-  const supabase = await clienteServidor();
-  const perfil = await obtenerPerfil(supabase);
-  if (!perfil) redirect("/login");
-
+export default function PaginaReportes() {
+  const { data: perfil } = usePerfil();
+  if (!perfil) return null;
   return <ReportesCliente rol={perfil.rol} usuarioId={perfil.id} />;
 }

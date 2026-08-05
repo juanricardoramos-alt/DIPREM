@@ -51,3 +51,177 @@ export async function recordarProyecto(
   const { error } = await sb.rpc("recordar_proyecto", { p_proyecto_id: proyectoId });
   lanzar(error);
 }
+
+// ---------------------------------------------------------------------------
+// Control por RESULTADO (vistas de la migración 0018) — no por actividad
+// ---------------------------------------------------------------------------
+
+export interface FilaCobertura {
+  usuario_id: string;
+  nombre: string;
+  rol: string;
+  equipo_id: string | null;
+  equipo: string | null;
+  cartera: number;
+  gestionadas_30d: number;
+  cobertura_pct: number | null;
+}
+
+/** Cobertura: % de la cartera con gestión en 30 días (peor primero). */
+export async function listarControlCobertura(sb: SupabaseClient): Promise<FilaCobertura[]> {
+  const { data, error } = await sb.from("v_control_cobertura").select("*");
+  lanzar(error);
+  return (data ?? []) as FilaCobertura[];
+}
+
+export interface FilaCritica {
+  cuenta_id: string;
+  razon_social: string;
+  rol_mercado: string | null;
+  propietario_id: string;
+  ejecutivo: string;
+  equipo_id: string | null;
+  ultima_gestion: string | null;
+  dias_sin_gestion: number;
+  n_proyectos: number;
+  capex_max: number | null;
+  score_max: number | null;
+}
+
+/** Cuentas asignadas con su tiempo sin gestión y el CAPEX vinculado. */
+export async function listarControlCriticas(sb: SupabaseClient): Promise<FilaCritica[]> {
+  const { data, error } = await sb.from("v_control_criticas").select("*").limit(5000);
+  lanzar(error);
+  return (data ?? []) as FilaCritica[];
+}
+
+export interface FilaAvanceDecisor {
+  cuenta_id: string;
+  razon_social: string;
+  propietario_id: string;
+  ejecutivo: string;
+  equipo_id: string | null;
+  logrado_en: string;
+  creado_por: string;
+  autor: string | null;
+}
+
+/** Cuentas cuyo PRIMER decisor técnico lo consiguió una persona. */
+export async function listarControlAvanceDecisor(
+  sb: SupabaseClient,
+): Promise<FilaAvanceDecisor[]> {
+  const { data, error } = await sb
+    .from("v_control_avance_decisor")
+    .select("*")
+    .order("logrado_en", { ascending: false })
+    .limit(1000);
+  lanzar(error);
+  return (data ?? []) as FilaAvanceDecisor[];
+}
+
+export interface FilaEmbudo {
+  oportunidad_id: string;
+  oportunidad: string;
+  monto: number;
+  moneda: string;
+  propietario_id: string;
+  ejecutivo: string | null;
+  movido_por_id: string | null;
+  movido_por: string | null;
+  movido_en: string;
+  de_etapa: string;
+  a_etapa: string;
+  avance: boolean;
+}
+
+/** Oportunidades que cambiaron de etapa (desde auditoría). */
+export async function listarControlEmbudo(
+  sb: SupabaseClient,
+  desdeIso?: string,
+): Promise<FilaEmbudo[]> {
+  let q = sb
+    .from("v_control_embudo")
+    .select("*")
+    .order("movido_en", { ascending: false })
+    .limit(1000);
+  if (desdeIso) q = q.gte("movido_en", desdeIso);
+  const { data, error } = await q;
+  lanzar(error);
+  return (data ?? []) as FilaEmbudo[];
+}
+
+export interface FilaHuerfana {
+  oportunidad_id: string;
+  oportunidad: string;
+  monto: number;
+  moneda: string;
+  cuenta_id: string;
+  razon_social: string;
+  propietario_id: string;
+  ejecutivo: string;
+  equipo_id: string | null;
+  etapa: string;
+  dias_sin_contacto: number;
+}
+
+/** Oportunidades abiertas SIN próximo paso con fecha: abandono. */
+export async function listarControlHuerfanas(sb: SupabaseClient): Promise<FilaHuerfana[]> {
+  const { data, error } = await sb
+    .from("v_control_huerfanas")
+    .select("*")
+    .order("dias_sin_contacto", { ascending: false })
+    .limit(1000);
+  lanzar(error);
+  return (data ?? []) as FilaHuerfana[];
+}
+
+export interface FilaRespuesta {
+  usuario_id: string;
+  ejecutivo: string;
+  equipo_id: string | null;
+  gestiones_30d: number;
+  con_respuesta: number;
+  sin_respuesta: number;
+  sin_registro: number;
+  tasa_pct: number | null;
+}
+
+/** Tasa de respuesta 30d: efectividad de la gestión, no conteo. */
+export async function listarControlRespuesta(sb: SupabaseClient): Promise<FilaRespuesta[]> {
+  const { data, error } = await sb.from("v_control_respuesta").select("*");
+  lanzar(error);
+  return (data ?? []) as FilaRespuesta[];
+}
+
+export interface GestionReciente {
+  id: string;
+  tipo: string;
+  asunto: string;
+  resultado: string | null;
+  con_respuesta: boolean | null;
+  completada_en: string;
+  propietario_id: string;
+  propietario: { nombre: string } | null;
+  cuenta: { razon_social: string } | null;
+}
+
+/** Gestiones completadas de las últimas N horas (reporte diario del dueño). */
+export async function listarGestionesRecientes(
+  sb: SupabaseClient,
+  horas = 48,
+): Promise<GestionReciente[]> {
+  const desde = new Date(Date.now() - horas * 3600_000).toISOString();
+  const { data, error } = await sb
+    .from("actividades")
+    .select(
+      "id, tipo, asunto, resultado, con_respuesta, completada_en, propietario_id," +
+        " propietario:usuarios!actividades_propietario_id_fkey(nombre)," +
+        " cuenta:cuentas!actividades_cuenta_id_fkey(razon_social)",
+    )
+    .eq("estado", "completada")
+    .gte("completada_en", desde)
+    .order("completada_en", { ascending: false })
+    .limit(300);
+  lanzar(error);
+  return (data ?? []) as unknown as GestionReciente[];
+}

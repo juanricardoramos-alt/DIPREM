@@ -1,9 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Fábrica de cliente Supabase compartida (móvil y scripts).
- * La app web usa @supabase/ssr directamente por el manejo de cookies del App
- * Router; ambos comparten los helpers de dominio de este paquete.
+ * Fábrica de cliente Supabase (móvil y scripts heredados).
+ * La app web ya migró a Neon Auth + Neon Data API (ver apps/web/lib/neon y
+ * lib/supabase/*); el móvil se migra en la Fase 2b. Los helpers de dominio de
+ * este paquete solo usan `.from()` / `.rpc()`, comunes a ambos clientes.
  */
 export function crearClienteSupabase(
   url: string,

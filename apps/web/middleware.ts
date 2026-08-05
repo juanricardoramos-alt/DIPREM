@@ -1,65 +1,37 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/lib/neon/auth";
 
 /**
- * Middleware de sesión: refresca el token de Supabase en cada request y
- * redirige a /login si no hay usuario (except rutas públicas).
+ * Middleware en dos puertas:
+ *
+ * 1. Basic-Auth OPCIONAL para el sitio completo (demo pública): se activa
+ *    solo si BASIC_AUTH_USUARIO y BASIC_AUTH_CLAVE están definidas en el
+ *    entorno (Vercel). Sin esas variables no interfiere — en local no cambia
+ *    nada. Se desactiva borrando las variables y redeployando.
+ * 2. Sesión de Neon Auth: protege las rutas y refresca la cookie en cada
+ *    request; redirige a /login si no hay sesión. El proxy de auth
+ *    (/api/auth/*) queda excluido para que el propio login no se bloquee.
  */
-export async function middleware(request: NextRequest) {
-  let respuesta = NextResponse.next({ request });
+const conSesion = auth.middleware({ loginUrl: "/login" });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(
-          cookiesToSet: {
-            name: string;
-            value: string;
-            options: Record<string, unknown>;
-          }[],
-        ) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          respuesta = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            respuesta.cookies.set(name, value, options),
-          );
-        },
-      },
-    },
-  );
-
-  // IMPORTANTE: getUser() valida el JWT contra Supabase (no confiar en getSession).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const esRutaPublica = request.nextUrl.pathname.startsWith("/login");
-
-  if (!user && !esRutaPublica) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+export default function middleware(req: NextRequest) {
+  const usuario = process.env.BASIC_AUTH_USUARIO;
+  const clave = process.env.BASIC_AUTH_CLAVE;
+  if (usuario && clave) {
+    const esperado = "Basic " + btoa(`${usuario}:${clave}`);
+    if (req.headers.get("authorization") !== esperado) {
+      return new NextResponse("Acceso restringido — DIPREM", {
+        status: 401,
+        headers: { "WWW-Authenticate": 'Basic realm="DIPREM", charset="UTF-8"' },
+      });
+    }
   }
-
-  if (user && esRutaPublica) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
-
-  return respuesta;
+  return conSesion(req);
 }
 
 export const config = {
   matcher: [
-    // Todo excepto estáticos e imágenes
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Todo excepto estáticos, imágenes y el propio proxy de auth
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -18,10 +18,15 @@ import {
   crearContacto,
   eliminarContacto,
   listarContactos,
+  listarContactosPuerta,
   listarEtapas,
   listarOportunidades,
   obtenerCuenta,
+  revelarContacto,
+  revelarContactos,
+  type ContactoRevelado,
 } from "@diprem/api";
+import { bucketDeRol } from "@diprem/core";
 import { useSupabase } from "@/lib/hooks";
 import {
   AreaTexto,
@@ -107,6 +112,68 @@ export default function PaginaDetalleCuenta({
       void queryClient.invalidateQueries({ queryKey: ["contactos", id] }),
   });
 
+  // Perímetro 0015: la PII (tel/correo/LinkedIn) no viene en el listado;
+  // se pide explícitamente y queda registrada (cuota diaria por rol).
+  const [pii, setPii] = useState<Record<string, ContactoRevelado>>({});
+  const [avisoRevelado, setAvisoRevelado] = useState<string | null>(null);
+  const revelar = useMutation({
+    mutationFn: () => revelarContactos(supabase, id),
+    onSuccess: (r) => {
+      setPii(Object.fromEntries(r.contactos.map((c) => [c.id, c])));
+      setAvisoRevelado(
+        r.omitidos_por_limite > 0
+          ? es.crm.limiteRevelaciones(r.omitidos_por_limite, r.limite_diario ?? 0)
+          : null,
+      );
+    },
+    onError: (e: Error) => setAvisoRevelado(e.message || es.comunes.errorGenerico),
+  });
+  const revelado = Object.keys(pii).length > 0;
+
+  // Acción de derivación: la cuenta tiene puerta de entrada pero NINGÚN
+  // decisor técnico → tarea concreta, con el mejor contacto puerta
+  // (ordenado por peso_decision) listo para llamar.
+  const sinDecisor =
+    (contactos?.length ?? 0) > 0 &&
+    !contactos!.some((c) => bucketDeRol(c.rol) === "decisor_tecnico");
+  const { data: puertas } = useQuery({
+    queryKey: ["contactos_puerta", id],
+    queryFn: () => listarContactosPuerta(supabase, id),
+    enabled: sinDecisor,
+  });
+
+  // Revelado INDIVIDUAL (0020): un contacto = 1 del tope diario, registrado
+  // igual que el global. Si el tope está copado, la BD lo dice y se muestra.
+  const revelarUno = useMutation({
+    mutationFn: (contactoId: string) => revelarContacto(supabase, contactoId),
+    onSuccess: (c) => {
+      setPii((prev) => ({ ...prev, [c.id]: c }));
+      setAvisoRevelado(null);
+    },
+    onError: (e: Error) => setAvisoRevelado(e.message || es.comunes.errorGenerico),
+  });
+
+  // Editar exige la PII actual (el formulario la trae precargada): si aún no
+  // se reveló, se revela SOLO ese contacto — la primera vez consume cuota.
+  const abrirEdicion = async (contacto: Contacto) => {
+    let datos: ContactoRevelado | undefined = pii[contacto.id];
+    if (!datos) {
+      try {
+        datos = await revelarUno.mutateAsync(contacto.id);
+      } catch {
+        return; // el error ya quedó en avisoRevelado
+      }
+    }
+    setContactoForm({
+      contacto: {
+        ...contacto,
+        telefono: datos?.telefono ?? null,
+        email: datos?.email ?? null,
+        linkedin: datos?.linkedin ?? null,
+      },
+    });
+  };
+
   if (isLoading) return <p className="py-16 text-center text-tinta-tenue">{es.comunes.cargando}</p>;
   if (!cuenta) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
@@ -150,22 +217,82 @@ export default function PaginaDetalleCuenta({
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         {/* Contactos */}
         <section>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{es.crm.contactos}</h2>
-            <Boton
-              variante="secundario"
-              onClick={() => setContactoForm({ contacto: null })}
-            >
-              + {es.crm.nuevoContacto}
-            </Boton>
+            <span className="flex items-center gap-1">
+              {(contactos?.length ?? 0) > 0 && !revelado && (
+                <Boton
+                  variante="fantasma"
+                  title={es.crm.revelacionRegistrada}
+                  onClick={() => revelar.mutate()}
+                  disabled={revelar.isPending}
+                >
+                  🔓 {revelar.isPending ? es.comunes.cargando : es.crm.mostrarDatosContacto}
+                </Boton>
+              )}
+              <Boton
+                variante="secundario"
+                onClick={() => setContactoForm({ contacto: null })}
+              >
+                + {es.crm.nuevoContacto}
+              </Boton>
+            </span>
           </div>
+          {avisoRevelado && (
+            <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+              {avisoRevelado}
+            </p>
+          )}
+          {sinDecisor && (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/50">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                🚪 {es.mercado.derivacionTitulo}
+              </p>
+              <p className="mt-1 text-xs text-amber-800 dark:text-amber-300">
+                {(puertas?.length ?? 0) > 0
+                  ? es.mercado.derivacionNota
+                  : es.mercado.derivacionSinPuerta}
+              </p>
+              {(puertas ?? []).slice(0, 3).map((p, i) => {
+                const revPuerta = pii[p.contacto_id];
+                return (
+                <p key={p.contacto_id} className="mt-1.5 text-sm text-amber-900 dark:text-amber-100">
+                  {i === 0 ? "→ " : "· "}
+                  <span className="font-medium">{p.nombre}</span>
+                  {p.cargo ? ` — ${p.cargo}` : ""}
+                  {revPuerta && !revPuerta.omitido && (
+                    <span className="ml-2">
+                      <EnlacesContacto
+                        telefono={revPuerta.telefono}
+                        email={revPuerta.email}
+                        compacto
+                      />
+                    </span>
+                  )}
+                </p>
+                );
+              })}
+              {(puertas?.length ?? 0) > 0 && !revelado && (
+                <Boton
+                  variante="secundario"
+                  className="mt-2"
+                  onClick={() => revelar.mutate()}
+                  disabled={revelar.isPending}
+                >
+                  🔓 {revelar.isPending ? es.comunes.cargando : es.crm.mostrarDatosContacto}
+                </Boton>
+              )}
+            </div>
+          )}
           <div className="mt-3 space-y-2">
             {(contactos?.length ?? 0) === 0 && (
               <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.crm.sinContactos}
               </p>
             )}
-            {contactos?.map((contacto) => (
+            {contactos?.map((contacto) => {
+              const revContacto = pii[contacto.id];
+              return (
               <div
                 key={contacto.id}
                 className="flex items-start justify-between rounded-lg border border-borde bg-superficie shadow-sm p-4"
@@ -183,11 +310,24 @@ export default function PaginaDetalleCuenta({
                   </p>
                   <p className="text-sm text-tinta-suave">{contacto.cargo ?? ""}</p>
                   <p className="mt-1 text-sm">
-                    <EnlacesContacto
-                      telefono={contacto.telefono}
-                      email={contacto.email}
-                      compacto
-                    />
+                    {revContacto?.opt_out || contacto.opt_out_en ? (
+                      <span className="text-xs text-red-700 dark:text-red-300">
+                        ⛔ {es.crm.optOutAviso}
+                      </span>
+                    ) : revContacto && !revContacto.omitido ? (
+                      <EnlacesContacto
+                        telefono={revContacto.telefono}
+                        email={revContacto.email}
+                        compacto
+                      />
+                    ) : (
+                      <span
+                        className="text-xs text-tinta-tenue"
+                        title={es.crm.revelacionRegistrada}
+                      >
+                        🔒 {es.crm.datosProtegidos}
+                      </span>
+                    )}
                   </p>
                   {contacto.canal_preferido && (
                     <p className="mt-0.5 text-xs text-tinta-tenue">
@@ -195,25 +335,54 @@ export default function PaginaDetalleCuenta({
                     </p>
                   )}
                 </div>
-                <div className="flex gap-1">
-                  <Boton
-                    variante="fantasma"
-                    onClick={() => setContactoForm({ contacto })}
-                  >
-                    {es.comunes.editar}
-                  </Boton>
-                  <Boton
-                    variante="fantasma"
-                    onClick={() => {
-                      if (confirm(es.comunes.confirmarEliminar))
-                        borrarContacto.mutate(contacto.id);
-                    }}
-                  >
-                    {es.comunes.eliminar}
-                  </Boton>
+                <div className="flex items-start gap-1">
+                  {/* Mostrar: revela SOLO este contacto (1 del tope diario,
+                      registrado). Revelado → el botón desaparece: re-ocultar
+                      sería teatro, la lectura ya quedó registrada. */}
+                  {!revContacto && !contacto.opt_out_en && (
+                    <Boton
+                      variante="fantasma"
+                      title={es.crm.revelacionRegistrada}
+                      disabled={revelarUno.isPending}
+                      onClick={() => revelarUno.mutate(contacto.id)}
+                    >
+                      🔓 {es.crm.mostrar}
+                    </Boton>
+                  )}
+                  <details className="relative">
+                    <summary
+                      className="cursor-pointer list-none rounded-md px-2.5 py-1.5 text-sm hover:bg-superficie-2"
+                      title={es.crm.masAcciones}
+                      aria-label={es.crm.masAcciones}
+                    >
+                      ⋯
+                    </summary>
+                    <div className="absolute right-0 z-10 mt-1 w-36 overflow-hidden rounded-md border border-borde bg-superficie shadow-lg">
+                      <button
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-superficie-2"
+                        onClick={(e) => {
+                          e.currentTarget.closest("details")?.removeAttribute("open");
+                          void abrirEdicion(contacto);
+                        }}
+                      >
+                        {es.comunes.editar}
+                      </button>
+                      <button
+                        className="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-superficie-2 dark:text-red-400"
+                        onClick={(e) => {
+                          e.currentTarget.closest("details")?.removeAttribute("open");
+                          if (confirm(es.comunes.confirmarEliminar))
+                            borrarContacto.mutate(contacto.id);
+                        }}
+                      >
+                        {es.comunes.eliminar}
+                      </button>
+                    </div>
+                  </details>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

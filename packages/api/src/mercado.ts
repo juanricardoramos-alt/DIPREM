@@ -105,6 +105,52 @@ export async function asignarProyectosMercado(
   return fila as ResultadoAsignacion;
 }
 
+/** Cambia la etapa de un proyecto del radar (editable: el dato de origen
+ *  envejece). El trigger de la BD re-sella score/cubeta y audita el cambio. */
+export async function actualizarEtapaProyecto(
+  sb: SupabaseClient,
+  proyectoId: string,
+  etapa: string | null,
+): Promise<void> {
+  const { error } = await sb
+    .from("proyectos_mercado")
+    .update({ etapa, es_watchlist: false })
+    .eq("id", proyectoId);
+  lanzar(error);
+}
+
+/** Recalcula el scoring completo del radar (admin/gerente). */
+export async function recalcularScores(sb: SupabaseClient): Promise<number> {
+  const { data, error } = await sb.rpc("recalcular_scores_mercado");
+  lanzar(error);
+  return Number(data ?? 0);
+}
+
+export interface ContactoPuerta {
+  cuenta_id: string;
+  contacto_id: string;
+  nombre: string;
+  cargo: string | null;
+  es_principal: boolean;
+  peso_decision: number;
+}
+
+/** Contactos puerta de entrada de una cuenta, ordenados por peso de decisión
+ *  (la acción de derivación: a quién pedirle llegar al gerente de proyecto). */
+export async function listarContactosPuerta(
+  sb: SupabaseClient,
+  cuentaId: string,
+): Promise<ContactoPuerta[]> {
+  const { data, error } = await sb
+    .from("v_contactos_puerta")
+    .select("*")
+    .eq("cuenta_id", cuentaId)
+    .order("peso_decision", { ascending: false })
+    .order("es_principal", { ascending: false });
+  lanzar(error);
+  return (data ?? []) as ContactoPuerta[];
+}
+
 /** Ejecutivos a los que se puede asignar (la RLS de usuarios limita al equipo del gerente). */
 export async function listarEjecutivosAsignables(
   sb: SupabaseClient,

@@ -1,6 +1,7 @@
 export * from "./cliente";
 export * from "./perfil";
 export * from "./crm";
+export * from "./perimetro";
 export * from "./actividades";
 export * from "./metricas";
 export * from "./mercado";

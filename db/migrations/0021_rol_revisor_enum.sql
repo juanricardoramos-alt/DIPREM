@@ -1,0 +1,11 @@
+-- ============================================================================
+-- DIPREM CRM — Migración 0021 (Neon): rol 'revisor' (enum)
+-- Rol de revisión (aprobado 2026-08-05): ve Control, Reportes, Mercado,
+-- Cuentas, Oportunidades, Actividades y Propuestas; NO ve Administración y
+-- no escribe nada (ni liberar carteras, ni borrar cuentas, ni editar
+-- contactos, ni PII). Pensado para mostrar la plataforma a un tercero.
+--
+-- Va en migración propia: un valor de enum nuevo no puede usarse en la misma
+-- transacción (la 0022 lo usa en políticas y seeds).
+-- ============================================================================
+alter type rol_usuario add value if not exists 'revisor' before 'lectura';
