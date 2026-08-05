@@ -51,6 +51,18 @@ export async function revelarContactos(
   return data as RevelacionContactos;
 }
 
+/** PII de UN contacto (botón "Mostrar" de la tarjeta): consume 1 del tope
+ *  diario y queda registrado igual que el revelado de cuenta completa.
+ *  Si el tope está copado, lanza error con el mensaje de la BD. */
+export async function revelarContacto(
+  sb: SupabaseClient,
+  contactoId: string,
+): Promise<ContactoRevelado & { usadas_hoy?: number; limite_diario?: number | null }> {
+  const { data, error } = await sb.rpc("revelar_contacto", { p_contacto_id: contactoId });
+  lanzar(error);
+  return data as ContactoRevelado & { usadas_hoy?: number; limite_diario?: number | null };
+}
+
 // ---------------------------------------------------------------------------
 // Directorio del pool (sin PII) + reclamo / liberación
 // ---------------------------------------------------------------------------

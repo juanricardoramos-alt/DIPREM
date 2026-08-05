@@ -22,6 +22,7 @@ import {
   listarEtapas,
   listarOportunidades,
   obtenerCuenta,
+  revelarContacto,
   revelarContactos,
   type ContactoRevelado,
 } from "@diprem/api";
@@ -141,14 +142,24 @@ export default function PaginaDetalleCuenta({
     enabled: sinDecisor,
   });
 
+  // Revelado INDIVIDUAL (0020): un contacto = 1 del tope diario, registrado
+  // igual que el global. Si el tope está copado, la BD lo dice y se muestra.
+  const revelarUno = useMutation({
+    mutationFn: (contactoId: string) => revelarContacto(supabase, contactoId),
+    onSuccess: (c) => {
+      setPii((prev) => ({ ...prev, [c.id]: c }));
+      setAvisoRevelado(null);
+    },
+    onError: (e: Error) => setAvisoRevelado(e.message || es.comunes.errorGenerico),
+  });
+
   // Editar exige la PII actual (el formulario la trae precargada): si aún no
-  // se reveló, se revela primero — la primera vez consume cuota, luego es libre.
+  // se reveló, se revela SOLO ese contacto — la primera vez consume cuota.
   const abrirEdicion = async (contacto: Contacto) => {
     let datos: ContactoRevelado | undefined = pii[contacto.id];
     if (!datos) {
       try {
-        const r = await revelar.mutateAsync();
-        datos = r.contactos.find((c) => c.id === contacto.id);
+        datos = await revelarUno.mutateAsync(contacto.id);
       } catch {
         return; // el error ya quedó en avisoRevelado
       }
@@ -324,22 +335,50 @@ export default function PaginaDetalleCuenta({
                     </p>
                   )}
                 </div>
-                <div className="flex gap-1">
-                  <Boton
-                    variante="fantasma"
-                    onClick={() => void abrirEdicion(contacto)}
-                  >
-                    {es.comunes.editar}
-                  </Boton>
-                  <Boton
-                    variante="fantasma"
-                    onClick={() => {
-                      if (confirm(es.comunes.confirmarEliminar))
-                        borrarContacto.mutate(contacto.id);
-                    }}
-                  >
-                    {es.comunes.eliminar}
-                  </Boton>
+                <div className="flex items-start gap-1">
+                  {/* Mostrar: revela SOLO este contacto (1 del tope diario,
+                      registrado). Revelado → el botón desaparece: re-ocultar
+                      sería teatro, la lectura ya quedó registrada. */}
+                  {!revContacto && !contacto.opt_out_en && (
+                    <Boton
+                      variante="fantasma"
+                      title={es.crm.revelacionRegistrada}
+                      disabled={revelarUno.isPending}
+                      onClick={() => revelarUno.mutate(contacto.id)}
+                    >
+                      🔓 {es.crm.mostrar}
+                    </Boton>
+                  )}
+                  <details className="relative">
+                    <summary
+                      className="cursor-pointer list-none rounded-md px-2.5 py-1.5 text-sm hover:bg-superficie-2"
+                      title={es.crm.masAcciones}
+                      aria-label={es.crm.masAcciones}
+                    >
+                      ⋯
+                    </summary>
+                    <div className="absolute right-0 z-10 mt-1 w-36 overflow-hidden rounded-md border border-borde bg-superficie shadow-lg">
+                      <button
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-superficie-2"
+                        onClick={(e) => {
+                          e.currentTarget.closest("details")?.removeAttribute("open");
+                          void abrirEdicion(contacto);
+                        }}
+                      >
+                        {es.comunes.editar}
+                      </button>
+                      <button
+                        className="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-superficie-2 dark:text-red-400"
+                        onClick={(e) => {
+                          e.currentTarget.closest("details")?.removeAttribute("open");
+                          if (confirm(es.comunes.confirmarEliminar))
+                            borrarContacto.mutate(contacto.id);
+                        }}
+                      >
+                        {es.comunes.eliminar}
+                      </button>
+                    </div>
+                  </details>
                 </div>
               </div>
               );

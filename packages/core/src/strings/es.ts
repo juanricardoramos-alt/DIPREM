@@ -113,6 +113,8 @@ export const es = {
     fichaContacto: "Ficha de contacto",
     verFicha: "Ver ficha",
     // Perímetro 0015: PII solo por revelación (con registro y cuota diaria)
+    mostrar: "Mostrar",
+    masAcciones: "Más acciones",
     mostrarDatosContacto: "Mostrar datos de contacto",
     datosProtegidos: "Datos protegidos",
     revelacionRegistrada: "La revelación queda registrada (Ley 21.719)",

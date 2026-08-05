@@ -415,7 +415,14 @@ begin
   exception when insufficient_privilege then null;
   end;
 
-  -- Revelación: entrega PII, registra, y repetir es libre
+  -- Revelado INDIVIDUAL (0020): un contacto = 1 del cupo, registrado
+  r := public.revelar_contacto('a0000000-0000-4000-8000-000000000002');
+  if r->>'email' is null then raise exception 'FALLO: revelar_contacto sin PII'; end if;
+  if (r->>'usadas_hoy')::int <> 1 then raise exception 'FALLO: cupo individual'; end if;
+  r := public.revelar_contacto('a0000000-0000-4000-8000-000000000002');
+  if (r->>'usadas_hoy')::int <> 1 then raise exception 'FALLO: re-ver individual no es libre'; end if;
+
+  -- Revelación de cuenta completa: entrega PII, registra, y repetir es libre
   r := public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
   if (r->>'omitidos_por_limite')::int <> 0 then raise exception 'FALLO: no debía omitir'; end if;
   if (r->>'usadas_hoy')::int <> 2 then raise exception 'FALLO: usadas_hoy=2'; end if;
@@ -497,6 +504,12 @@ do $$ begin
   begin
     perform public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
     raise exception 'FALLO: lectura pudo revelar';
+  exception when others then
+    if sqlerrm not like '%solo lectura%' then raise; end if;
+  end;
+  begin
+    perform public.revelar_contacto('a0000000-0000-4000-8000-000000000001');
+    raise exception 'FALLO: lectura pudo revelar individual';
   exception when others then
     if sqlerrm not like '%solo lectura%' then raise; end if;
   end;
