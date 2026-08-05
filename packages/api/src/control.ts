@@ -192,3 +192,36 @@ export async function listarControlRespuesta(sb: SupabaseClient): Promise<FilaRe
   lanzar(error);
   return (data ?? []) as FilaRespuesta[];
 }
+
+export interface GestionReciente {
+  id: string;
+  tipo: string;
+  asunto: string;
+  resultado: string | null;
+  con_respuesta: boolean | null;
+  completada_en: string;
+  propietario_id: string;
+  propietario: { nombre: string } | null;
+  cuenta: { razon_social: string } | null;
+}
+
+/** Gestiones completadas de las últimas N horas (reporte diario del dueño). */
+export async function listarGestionesRecientes(
+  sb: SupabaseClient,
+  horas = 48,
+): Promise<GestionReciente[]> {
+  const desde = new Date(Date.now() - horas * 3600_000).toISOString();
+  const { data, error } = await sb
+    .from("actividades")
+    .select(
+      "id, tipo, asunto, resultado, con_respuesta, completada_en, propietario_id," +
+        " propietario:usuarios!actividades_propietario_id_fkey(nombre)," +
+        " cuenta:cuentas!actividades_cuenta_id_fkey(razon_social)",
+    )
+    .eq("estado", "completada")
+    .gte("completada_en", desde)
+    .order("completada_en", { ascending: false })
+    .limit(300);
+  lanzar(error);
+  return (data ?? []) as unknown as GestionReciente[];
+}

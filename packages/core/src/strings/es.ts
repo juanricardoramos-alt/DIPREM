@@ -194,6 +194,26 @@ export const es = {
     huerfanasTitulo: "Oportunidades huérfanas",
     huerfanasNota:
       "Abiertas SIN próximo paso con fecha: eso es abandono, no gestión",
+    // Reporte diario del dueño (móvil primero, legible sin zoom)
+    diarioTitulo: "Reporte diario",
+    diarioAbrir: "📱 Reporte diario",
+    diarioSubtitulo: "Las últimas 48 horas de gestión, para leer desde el celular",
+    diarioResumen: "El día en una línea",
+    diarioGestiones: (n: number) => (n === 1 ? "1 gestión" : `${n} gestiones`),
+    diarioConRespuesta: (n: number) => `${n} con respuesta`,
+    diarioDecisores: (n: number) =>
+      n === 1 ? "1 decisor conseguido" : `${n} decisores conseguidos`,
+    diarioEmbudo: (n: number) => (n === 1 ? "1 avance de embudo" : `${n} avances de embudo`),
+    diarioPorEjecutivo: "Por ejecutivo",
+    diarioSinGestiones: "Sin gestiones en las últimas 48 horas.",
+    diarioDecisoresTitulo: "🎯 Decisores conseguidos",
+    diarioEmbudoTitulo: "📈 Embudo en movimiento",
+    diarioAlertas: "🔴 Requiere tu intervención",
+    diarioAcaparadas: (n: number, umbral: number) =>
+      `${n} cuenta(s) reclamadas con más de ${umbral} días sin gestión`,
+    diarioHuerfanas: (n: number) => `${n} oportunidad(es) sin próximo paso con fecha`,
+    diarioSinAlertas: "Sin alertas hoy. 🎉",
+    diarioVolverControl: "← Panel de Control",
     avancesTitulo: "Decisores conseguidos (30 días)",
     avancesNota:
       "Cuentas que pasaron de solo-puerta a decisor técnico identificado — la métrica que importa",

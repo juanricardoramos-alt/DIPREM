@@ -187,11 +187,19 @@ export function ControlCliente() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">{es.control.titulo}</h1>
-        <p className="mt-0.5 max-w-2xl text-sm text-tinta-suave">
-          {es.control.descripcion}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">{es.control.titulo}</h1>
+          <p className="mt-0.5 max-w-2xl text-sm text-tinta-suave">
+            {es.control.descripcion}
+          </p>
+        </div>
+        <Link
+          href="/control/diario"
+          className="rounded-md border border-borde bg-superficie px-3 py-2 text-sm hover:bg-superficie-2"
+        >
+          {es.control.diarioAbrir}
+        </Link>
       </div>
 
       {errorCarga && (
