@@ -10,7 +10,7 @@ export default function PaginaReporteDiario() {
   const router = useRouter();
   const { data: perfil } = usePerfil();
   // RBAC de UI: solo admin y gerente (las vistas heredan la RLS real)
-  const permitido = !!perfil && (perfil.rol === "admin" || perfil.rol === "gerente");
+  const permitido = !!perfil && (perfil.rol === "admin" || perfil.rol === "gerente" || perfil.rol === "revisor");
 
   useEffect(() => {
     if (perfil && !permitido) router.replace(rutaInicial(perfil.rol));

@@ -4,7 +4,7 @@
  * `supabase gen types` en Fase 1; estos tipos manuales cubren lo que usa la Fase 0.
  */
 
-export type RolUsuario = "ejecutivo" | "gerente" | "admin" | "lectura";
+export type RolUsuario = "ejecutivo" | "gerente" | "admin" | "revisor" | "lectura";
 
 export type VerticalCuenta =
   | "mineria"

@@ -10,7 +10,7 @@ export default function PaginaMercado() {
   const router = useRouter();
   const { data: perfil } = usePerfil();
   // RBAC de UI: solo admin y gerente (la RLS de proyectos_mercado es la barrera real)
-  const permitido = !!perfil && (perfil.rol === "admin" || perfil.rol === "gerente");
+  const permitido = !!perfil && (perfil.rol === "admin" || perfil.rol === "gerente" || perfil.rol === "revisor");
 
   useEffect(() => {
     if (perfil && !permitido) router.replace(rutaInicial(perfil.rol));

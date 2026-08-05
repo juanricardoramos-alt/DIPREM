@@ -2,71 +2,66 @@
 
 Plataforma de gestión comercial + CRM para **DIPREM** (servicios industriales:
 gestión de proyectos + QA/QC, SSO y medio ambiente, control de contratistas).
-Web (Next.js) + móvil (Expo) sobre Supabase, en un monorepo Turborepo.
+Web (Next.js) + móvil (Expo) sobre **Neon** (Postgres + Neon Auth + Data API),
+en un monorepo Turborepo.
 
 | Documento | Contenido |
 |---|---|
 | [`CLAUDE.md`](./CLAUDE.md) | Especificación funcional completa (memoria del proyecto) |
 | [`docs/CONTEXTO-DIPREM.md`](./docs/CONTEXTO-DIPREM.md) | Contexto de negocio extraído de los brochures oficiales |
 | [`docs/PLAN-ARQUITECTURA.md`](./docs/PLAN-ARQUITECTURA.md) | Plan técnico aprobado: stack, carpetas, esquema SQL, fases |
-| [`docs/DEPLOY.md`](./docs/DEPLOY.md) | Guía paso a paso para publicar el entorno de prueba (Vercel + Supabase) |
+| [`docs/RADAR-PROYECTOS.md`](./docs/RADAR-PROYECTOS.md) | Radar de Proyectos: score, mapeo etapa→pilar, requisitos |
+| [`docs/DEUDA-TECNICA.md`](./docs/DEUDA-TECNICA.md) | Riesgos aceptados a sabiendas (revisar antes de publicar) |
+| [`docs/DEPLOY.md`](./docs/DEPLOY.md) | Publicar en Vercel leyendo una rama de Neon |
 
-**Estado:** ✅ Fase 3 — Metas y dashboards: dashboard del dueño/gerente
-(resumen, ranking con semáforo, estancadas >14 días, embudo agregado),
-dashboard del ejecutivo (avance vs meta, KPIs, comparativa), metas por
-mes configurables y reportes exportables (Excel/PDF).
-⚠️ Proyectos ya desplegados: correr `supabase/deploy/actualizacion_fase3.sql`
-en el SQL Editor de Supabase. *(Push pendiente para una fase posterior.)*
+**Estado:** Fase 8 — motor comercial sobre Neon: perímetro anti-extracción
+(RLS + PII por columna + cuotas), carga iMercados (4.520 cuentas / 422
+proyectos / 11.317 contactos), scoring con desglose auditable, Radar de
+Proyectos, Control por resultado y demo de gestión sembrada (rama Neon
+`demo`).
 
 ---
 
 ## Estructura
 
 ```
-apps/web       → Next.js 15 (PC / navegador)
-apps/mobile    → Expo SDK 53 (iOS / Android)
-packages/core  → tipos, Zod, strings es, navegación RBAC
-packages/api   → cliente Supabase + helpers de dominio
-supabase/      → migraciones SQL, RLS, seed DIPREM
+apps/web        → Next.js 15 (PC / navegador)
+apps/mobile     → Expo SDK 53 (iOS / Android)
+packages/core   → tipos, Zod, strings es, navegación RBAC, lógica de dominio
+packages/api    → cliente de datos (Neon Data API) + helpers de dominio
+db/migrations   → migraciones SQL (fuente de verdad del esquema + RLS)
+scripts/db      → runner de migraciones (Node), aplicador de SQL, validador local
+scripts/ingesta → dry-run y generador de la carga iMercados (datos fuera del repo)
+scripts/demo    → siembra de la demo (solo rama Neon demo)
 ```
 
 ## Cómo correr en local
 
-Requisitos: Node 20+, pnpm 10, Docker y [Supabase CLI](https://supabase.com/docs/guides/local-development).
+Requisitos: Node 20+, pnpm 10 y un proyecto Neon (rama `dev`).
 
 ```bash
 pnpm install
 
-# 1. Base de datos local (aplica migraciones + seed automáticamente)
-supabase start
-supabase db reset
-
-# 2. Variables de entorno (la anon key la muestra `supabase status`)
+# 1. Variables de entorno (valores reales de la consola Neon, rama dev)
 cp apps/web/.env.example apps/web/.env.local
-cp apps/mobile/.env.example apps/mobile/.env
 
-# 3. Web → http://localhost:3000
+# 2. Migraciones contra la rama que corresponda (la cadena NUNCA va al repo)
+DATABASE_URL='postgresql://…' pnpm db:migrate
+
+# 3. Web → https://localhost:3000 (HTTPS: la cookie de sesión lo exige)
 pnpm --filter @diprem/web dev
-
-# 4. Móvil (Expo Go; usa la IP LAN en EXPO_PUBLIC_SUPABASE_URL)
-pnpm --filter @diprem/mobile dev
 ```
 
-### Usuarios demo (solo local — contraseña: `diprem123`)
-
-| Email | Rol | Equipo |
-|---|---|---|
-| `admin@diprem.local` | Administrador | — |
-| `gerente.cl@diprem.local` | Gerente | Chile — Santiago |
-| `ejecutivo.cl@diprem.local` | Ejecutivo | Chile — Santiago |
-| `gerente.ar@diprem.local` | Gerente | Argentina — Buenos Aires |
-| `ejecutivo.ar@diprem.local` | Ejecutivo (cartera minera demo) | Argentina — Buenos Aires |
-| `lectura@diprem.local` | Solo lectura | — |
+Los usuarios se crean por **allowlist**: el registro público de Neon Auth no
+otorga acceso a datos; un admin crea el perfil en `usuarios` y lo enlaza al
+`auth_id`. No existen usuarios ni contraseñas de prueba en el repositorio.
 
 ### Comandos útiles
 
 ```bash
-pnpm typecheck   # typecheck de todo el monorepo
-pnpm build       # build de producción
-pnpm db:reset    # reaplicar migraciones + seed
+pnpm typecheck    # typecheck de todo el monorepo
+pnpm build        # build de producción
+pnpm db:migrate   # aplicar migraciones pendientes (usa DATABASE_URL del entorno)
+pnpm db:aplicar   # aplicar archivos .sql sueltos (p. ej. la carga iMercados)
+pnpm db:validar   # suite completa en un Postgres local desechable
 ```

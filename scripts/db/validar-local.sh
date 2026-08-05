@@ -124,8 +124,9 @@ comprobar "clasificar cargo decisor" "gerente_proyecto" \
 comprobar "cargo desconocido queda sin_clasificar" "sin_clasificar" \
   "select clasificar_rol_contacto('Astrónomo')"
 
-# 101 de 0015 + 23 DELETE (reglas 0011) + 93 INSERT (reglas 0017) = 217
-comprobar "catálogos auditados (incl. recambio de reglas 0017)" 217 \
+# 101 de 0015 + 23 DELETE (reglas 0011) + 93 INSERT (reglas 0017)
+# + 1 (limites_rol del revisor, 0022) = 218
+comprobar "catálogos auditados (incl. reglas 0017 y revisor 0022)" 218 \
   "select count(*) from auditoria"
 comprobar "etapa 'exploracion' existe en el enum (0014)" 1 \
   "select count(*) from pg_enum e join pg_type t on t.oid=e.enumtypid
@@ -192,6 +193,9 @@ comprobar "limites_rol: 4 filas (80/25 ejecutivo aprobado)" 1 \
 comprobar "limites_rol: lectura en 0/0" 1 \
   "select count(*) from limites_rol
     where rol='lectura' and max_cartera=0 and max_revelaciones_dia=0"
+comprobar "limites_rol: revisor en 0/0 (0022)" 1 \
+  "select count(*) from limites_rol
+    where rol='revisor' and max_cartera=0 and max_revelaciones_dia=0"
 comprobar "contactos.email NO seleccionable (PII por columna)" f \
   "select has_column_privilege('authenticated','public.contactos','email','select')"
 comprobar "contactos.telefono NO seleccionable" f \
@@ -369,7 +373,8 @@ insert into usuarios (id, auth_id, nombre, email, rol, equipo_id) values
   ('00000000-0000-4000-8000-0000000000a2', 'sub-admin',  'Admin P',  'admin.p@prueba.local',  'admin',  null),
   ('00000000-0000-4000-8000-0000000000b2', 'sub-ger',    'Gerente P','ger.p@prueba.local',    'gerente','e0000000-0000-4000-8000-000000000002'),
   ('00000000-0000-4000-8000-0000000000c2', 'sub-eje',    'Eje P',    'eje.p@prueba.local',    'ejecutivo','e0000000-0000-4000-8000-000000000002'),
-  ('00000000-0000-4000-8000-0000000000d2', 'sub-lec',    'Lectura P','lec.p@prueba.local',    'lectura', null);
+  ('00000000-0000-4000-8000-0000000000d2', 'sub-lec',    'Lectura P','lec.p@prueba.local',    'lectura', null),
+  ('00000000-0000-4000-8000-0000000000e2', 'sub-rev',    'Revisor P','rev.p@prueba.local',    'revisor', null);
 
 -- Pool: 3 cuentas del cargador (propietario = usuario de sistema)
 insert into cuentas (id, razon_social, propietario_id, rol_mercado, giro, region) values
@@ -519,6 +524,44 @@ do $$ begin
   exception when others then
     if sqlerrm not like '%solo lectura%' then raise; end if;
   end;
+end $$;
+
+-- 4b) Revisor (0022): consulta amplia, escritura y PII jamás
+select set_config('diprem.prueba_sub', 'sub-rev', true);
+do $$ begin
+  if (select count(*) from cuentas) <> 3 then raise exception 'FALLO: revisor debe ver las cuentas'; end if;
+  if (select count(*) from contactos) < 3 then raise exception 'FALLO: revisor debe ver filas de contactos'; end if;
+  begin
+    perform email from contactos limit 1;
+    raise exception 'FALLO: revisor lee PII por columna';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
+    raise exception 'FALLO: revisor pudo revelar';
+  exception when others then
+    if sqlerrm not like '%solo lectura%' then raise; end if;
+  end;
+  begin
+    perform public.reclamar_cuenta('c0000000-0000-4000-8000-000000000012');
+    raise exception 'FALLO: revisor pudo reclamar';
+  exception when others then
+    if sqlerrm not like '%solo lectura%' then raise; end if;
+  end;
+  begin
+    perform public.liberar_cuenta('c0000000-0000-4000-8000-000000000011');
+    raise exception 'FALLO: revisor pudo liberar';
+  exception when others then
+    if sqlerrm not like '%solo lectura%' then raise; end if;
+  end;
+  begin
+    update contactos set cargo = 'X' where nombre = 'Contacto Uno';
+    if found then raise exception 'FALLO: revisor editó contactos'; end if;
+  exception when insufficient_privilege then null;
+  end;
+  if (select count(*) from auditoria) = 0 then
+    raise exception 'FALLO: revisor sin auditoría (embudo de Control)';
+  end if;
 end $$;
 
 -- 5) Alta de leads: dedup contra el pool + base de licitud obligatoria

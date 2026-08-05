@@ -38,6 +38,7 @@ export const es = {
     ejecutivo: "Ejecutivo Comercial",
     gerente: "Gerente Comercial",
     admin: "Administrador",
+    revisor: "Revisión",
     lectura: "Solo lectura",
   },
   shell: {
