@@ -1,5 +1,26 @@
 # Radar de Proyectos — requisitos aprobados
 
+## Score y mapeo etapa → pilar (aprobados 2026-08-05, migración 0018)
+
+Pesos: **etapa 40 · CAPEX 20 · sector 15 · contactabilidad 15 · historial 10**
+(etapa > CAPEX: USD 150M en construcción vale más que USD 2.000M en
+factibilidad — el primero compra ahora). Desglose completo por factor en
+`score_detalle` (jsonb auditable). Recalcular: `recalcular_scores_mercado()`
+(admin/gerente) — necesario tras cargar contactos nuevos.
+
+| Etapa | Cubeta (pilar primario) | Secundarios |
+|---|---|---|
+| perfil / prefactibilidad / factibilidad | **P2** (SEIA, permisos — segmento ACTIVO, no siembra) | fact.: P1 ingeniería |
+| ingeniería básica / detalle | **P1** (QA/QC fabricación, ingeniería) | P3 control documental |
+| en licitación | **P3** (evaluación de proveedores antes de contratar) | P1 auditoría técnica |
+| construcción / comisionamiento | **P1** (peak: supervisión, QAQC, precom/PEM) | P2 obra · P3 contratistas |
+| operación | **P2 recurrente** (asesoría mensual, SSO) | P1 O&M · P3 |
+| exploración / paralizado / cerrado | descarte (exploración/rechazado = watchlist reversible) | — |
+
+Regla aprobada: en ventana caliente la contactabilidad **no penaliza** el
+score — sin contactos el proyecto va al segmento Prospección con su score
+intacto (es urgente, no malo).
+
 > Pantalla de gestión sobre la cartera iMercados (Fase 8b). Se construye SOBRE
 > los datos reales ya cargados, no sobre maqueta (decisión 2026-08-05).
 > Mockup de referencia: artefacto "Radar de Proyectos" (sesión 2026-08-04).

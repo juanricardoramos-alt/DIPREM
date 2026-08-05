@@ -392,6 +392,9 @@ order by 1;
         kb = os.path.getsize(ruta) // 1024
         print(f"  {nombre}  ({kb} KB)")
     print("\n⚠️  El SQL contiene datos personales: NO subirlo al repo ni a git.")
+    print("ℹ️  El score se sella al insertar el PROYECTO: si esta carga trae contactos")
+    print("   nuevos, ejecutar después `select recalcular_scores_mercado();` para que")
+    print("   la contactabilidad quede al día (la 0018 ya lo hace al migrar).")
 
 if __name__ == "__main__":
     main()

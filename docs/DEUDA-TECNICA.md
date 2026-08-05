@@ -55,6 +55,17 @@
 - **Revisar si:** los leads llegan a cargarse por lotes; en ese caso deben
   entrar como contactos del pool, no como leads.
 
+## DT-006 · Alerta push del acaparador diferida a F5
+
+- **Estado:** aceptada 2026-08-05.
+- **Qué es:** "cuenta reclamada X días sin gestión" existe como **lista viva**
+  en Control (`v_control_criticas`, arriba y en rojo), pero la notificación
+  push/email programada al dueño requiere un scheduler que en Neon aún no
+  está cableado (mismo caso que `alertar_proyectos_vencidos` y
+  `notificar_reporte_semanal`).
+- **Cuándo:** F5 (Vercel cron u otro scheduler) — una sola pieza para las
+  tres funciones programadas.
+
 ## DT-005 · Revelado móvil pendiente
 
 - **Estado:** aceptada (la app móvil está en fase de esqueleto).

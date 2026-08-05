@@ -159,6 +159,28 @@ comprobar "bucket_rol(contratos) → gestor_compra" "gestor_compra" \
 comprobar "índice único de id_externo (re-importar sin duplicar)" 1 \
   "select count(*) from pg_indexes where indexname='proyectos_mercado_idexterno_unico'"
 
+echo "— Scoring y control (0018)…"
+comprobar "cubeta(en_licitacion) → P3 (evaluación de proveedores)" "objetivo_pilar_3" \
+  "select cubeta_de_etapa('en_licitacion')"
+comprobar "cubeta(operacion) → om_hse_recurrente" "om_hse_recurrente" \
+  "select cubeta_de_etapa('operacion')"
+comprobar "cubeta(factibilidad) → P2 (SEIA activo)" "objetivo_pilar_2" \
+  "select cubeta_de_etapa('factibilidad')"
+comprobar "recalcular_scores_mercado ejecutable (RPC)" t \
+  "select has_function_privilege('authenticated','public.recalcular_scores_mercado()','execute')"
+comprobar "calcular_score_mercado NO ejecutable por clientes" f \
+  "select has_function_privilege('authenticated',
+     'public.calcular_score_mercado(etapa_proyecto,numeric,vertical_cuenta,uuid)','execute')"
+comprobar "actividades.con_respuesta existe (tasa de respuesta)" 1 \
+  "select count(*) from information_schema.columns
+    where table_name='actividades' and column_name='con_respuesta'"
+comprobar "6 vistas de control con grant" 6 \
+  "select count(*) from information_schema.role_table_grants
+    where grantee='authenticated' and privilege_type='SELECT'
+      and table_name in ('v_control_cobertura','v_control_avance_decisor',
+                         'v_control_embudo','v_control_huerfanas',
+                         'v_control_criticas','v_control_respuesta')"
+
 echo "— Perímetro 0015: estructura…"
 comprobar "limites_rol: 4 filas (80/25 ejecutivo aprobado)" 1 \
   "select count(*) from limites_rol
@@ -195,6 +217,20 @@ insert into proyectos_mercado (nombre, empresa, etapa, importado_por)
 do $$ begin
   if (select etapa_cambiada_en from proyectos_mercado where nombre='Proyecto Prueba') is null then
     raise exception 'FALLO: sellar_cambio_etapa no selló en el insert';
+  end if;
+  -- 0018: score sellado en el insert (construccion 40 + capex s/d 2 + sector
+  -- s/d 5 + contactabilidad ventana 15 + historial 0 = 62; cubeta P1)
+  if (select score from proyectos_mercado where nombre='Proyecto Prueba') <> 62 then
+    raise exception 'FALLO: score esperado 62, hay %',
+      (select score from proyectos_mercado where nombre='Proyecto Prueba');
+  end if;
+  if (select cubeta from proyectos_mercado where nombre='Proyecto Prueba')
+     <> 'objetivo_pilar_1' then
+    raise exception 'FALLO: cubeta de construccion debía ser objetivo_pilar_1';
+  end if;
+  if (select score_detalle->'factores'->'etapa'->>'puntos'
+        from proyectos_mercado where nombre='Proyecto Prueba') <> '40' then
+    raise exception 'FALLO: score_detalle sin desglose por factor';
   end if;
 end $$;
 insert into cuentas (razon_social, tax_id, propietario_id)
@@ -388,6 +424,27 @@ begin
   if (select telefono from v_gestion_contactos
        where entidad='cuenta' and entidad_id='c0000000-0000-4000-8000-000000000011') is null
     then raise exception 'FALLO: v_gestion_contactos sin tel del principal'; end if;
+
+  -- 0018: creado_por lo sella el TRIGGER — el intento de falsificarlo
+  -- (atribuírselo al admin) queda sobrescrito con el usuario real
+  insert into contactos (cuenta_id, nombre, cargo, creado_por)
+    values ('c0000000-0000-4000-8000-000000000011', 'Decisor Conseguido',
+            'Gerente de Proyectos', '00000000-0000-4000-8000-0000000000a2');
+  if (select creado_por from contactos where nombre='Decisor Conseguido')
+     <> '00000000-0000-4000-8000-0000000000c2' then
+    raise exception 'FALLO: creado_por falsificable (no lo selló el trigger)';
+  end if;
+  -- El avance-a-decisor NO cuenta aquí: el PRIMER decisor de la cuenta fue
+  -- importado (creado_por null) — solo cuenta pasar de "sin decisor" a tenerlo
+  if (select count(*) from v_control_avance_decisor
+       where cuenta_id='c0000000-0000-4000-8000-000000000011') <> 0 then
+    raise exception 'FALLO: avance_decisor contó una cuenta con decisor importado';
+  end if;
+  -- Cobertura: la cartera del ejecutivo aparece con su % (1 cuenta, 0 gestionadas)
+  if (select cartera from v_control_cobertura
+       where usuario_id='00000000-0000-4000-8000-0000000000c2') <> 1 then
+    raise exception 'FALLO: v_control_cobertura no ve la cartera del ejecutivo';
+  end if;
 end $$;
 
 -- 2) Cuota diaria y tope de cartera (bajamos límites como owner y reintentamos)
