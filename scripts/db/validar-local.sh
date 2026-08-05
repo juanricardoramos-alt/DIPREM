@@ -3,12 +3,14 @@
 # Valida el set completo de migraciones (db/migrations) en un PostgreSQL local
 # desechable, sin tocar ninguna base remota. Verifica:
 #   1. Que las migraciones aplican limpias y el runner es idempotente.
-#   2. RLS habilitado en TODAS las tablas y las 92 políticas de F1.
+#   2. RLS habilitado en TODAS las tablas y las políticas de F1 + 0014 + 0015.
 #   3. Grants mínimos: anonymous en cero; authenticated según la matriz; y la
 #      simulación del registro abierto (intruso con JWT válido → 0 filas).
-#   4. Catálogos cargados; CERO usuarios/cuentas/datos operativos.
+#   4. Catálogos cargados; CERO datos operativos (solo el usuario de sistema).
 #   5. Funciones de normalización, ventana caliente, clasificación de cargo y
 #      sello de etapa (con datos de prueba dentro de un ROLLBACK).
+#   6. Perímetro anti-extracción (0015): pool invisible, PII por columna,
+#      reclamo con tope, revelación con cuota, directorio sin PII.
 # Uso: bash scripts/db/validar-local.sh   (requiere PostgreSQL 16 local)
 # ============================================================================
 set -euo pipefail
@@ -49,30 +51,31 @@ comprobar() { # comprobar <descripcion> <esperado> <consulta>
 }
 
 echo "— Estructura y seguridad base…"
-comprobar "26 tablas en public (25 app + _migraciones)" 26 \
+comprobar "28 tablas en public (27 app + _migraciones)" 28 \
   "select count(*) from pg_tables where schemaname='public'"
-comprobar "RLS habilitado en las 26 tablas (incluida _migraciones)" 26 \
+comprobar "RLS habilitado en las 28 tablas (incluida _migraciones)" 28 \
   "select count(*) from pg_tables where schemaname='public' and rowsecurity"
 comprobar "_migraciones sin grants a authenticated/anonymous" 0 \
   "select count(*) from information_schema.role_table_grants
     where table_name='_migraciones' and grantee in ('authenticated','anonymous')"
-comprobar "96 políticas RLS (F1 + 0014)" 96 \
+comprobar "99 políticas RLS (F1 + 0014 + 0015)" 99 \
   "select count(*) from pg_policies where schemaname='public'"
-comprobar "las 25 tablas de app tienen política" 25 \
+comprobar "las 27 tablas de app tienen política" 27 \
   "select count(distinct tablename) from pg_policies where schemaname='public'"
 comprobar "anonymous: cero privilegios sobre tablas" 0 \
   "select count(*) from pg_tables where schemaname='public'
     and has_table_privilege('anonymous', format('%I.%I', schemaname, tablename),
                             'select,insert,update,delete')"
-comprobar "authenticated: select en las 25 tablas" 25 \
+# contactos ya no cuenta: su select es por COLUMNA (PII revocada) → 26 de 27
+comprobar "authenticated: select de tabla completa en 26 (contactos por columna)" 26 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'select')"
-comprobar "authenticated: insert/update en 24 (sin auditoria)" 24 \
+comprobar "authenticated: insert/update en 25 (sin auditoria ni lecturas_sensibles)" 25 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'insert,update')"
-comprobar "authenticated: delete en 23 (sin auditoria ni importaciones)" 23 \
+comprobar "authenticated: delete en 23 (sin auditoria/importaciones/limites/lecturas)" 23 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'delete')"
@@ -95,7 +98,11 @@ comprobar "29 servicios" 29 "select count(*) from servicios"
 comprobar "7 etapas de embudo" 7 "select count(*) from etapas_embudo"
 comprobar "7 motivos de pérdida" 7 "select count(*) from motivos_perdida"
 comprobar "23 reglas de clasificación" 23 "select count(*) from reglas_rol_contacto"
-comprobar "cero usuarios" 0 "select count(*) from usuarios"
+comprobar "1 usuario: solo el de sistema (pool 0015)" 1 "select count(*) from usuarios"
+comprobar "el usuario de sistema no puede iniciar sesión" 1 \
+  "select count(*) from usuarios where es_sistema and not activo and auth_id is null"
+comprobar "usuario_pool() lo encuentra" t \
+  "select usuario_pool() = (select id from usuarios where es_sistema)"
 comprobar "cero equipos" 0 "select count(*) from equipos"
 comprobar "cero cuentas" 0 "select count(*) from cuentas"
 comprobar "cero oportunidades" 0 "select count(*) from oportunidades"
@@ -116,7 +123,7 @@ comprobar "clasificar cargo decisor" "gerente_proyecto" \
 comprobar "cargo desconocido queda sin_clasificar" "sin_clasificar" \
   "select clasificar_rol_contacto('Astrónomo')"
 
-comprobar "catálogos auditados (51 + 23 reglas cargo + 22 reglas mercado)" 96 \
+comprobar "catálogos auditados (51+23 cargo+22 mercado+1 pool+4 limites)" 101 \
   "select count(*) from auditoria"
 comprobar "etapa 'exploracion' existe en el enum (0014)" 1 \
   "select count(*) from pg_enum e join pg_type t on t.oid=e.enumtypid
@@ -126,6 +133,30 @@ comprobar "clasificar_rol_mercado(mineria)=mandante" "mandante" \
   "select clasificar_rol_mercado('MINERIA DEL COBRE')"
 comprobar "clasificar_rol_mercado(ingeniería)=epc" "epc" \
   "select clasificar_rol_mercado('EMPRESAS DE SERVICIOS DE INGENIERIA')"
+
+echo "— Perímetro 0015: estructura…"
+comprobar "limites_rol: 4 filas (80/25 ejecutivo aprobado)" 1 \
+  "select count(*) from limites_rol
+    where rol='ejecutivo' and max_cartera=80 and max_revelaciones_dia=25"
+comprobar "limites_rol: lectura en 0/0" 1 \
+  "select count(*) from limites_rol
+    where rol='lectura' and max_cartera=0 and max_revelaciones_dia=0"
+comprobar "contactos.email NO seleccionable (PII por columna)" f \
+  "select has_column_privilege('authenticated','public.contactos','email','select')"
+comprobar "contactos.telefono NO seleccionable" f \
+  "select has_column_privilege('authenticated','public.contactos','telefono','select')"
+comprobar "contactos.email_normalizado NO seleccionable" f \
+  "select has_column_privilege('authenticated','public.contactos','email_normalizado','select')"
+comprobar "contactos.linkedin NO seleccionable" f \
+  "select has_column_privilege('authenticated','public.contactos','linkedin','select')"
+comprobar "contactos.nombre sí seleccionable" t \
+  "select has_column_privilege('authenticated','public.contactos','nombre','select')"
+comprobar "contactos.cargo sí seleccionable" t \
+  "select has_column_privilege('authenticated','public.contactos','cargo','select')"
+comprobar "revelar_contactos ejecutable (RPC)" t \
+  "select has_function_privilege('authenticated','public.revelar_contactos(uuid)','execute')"
+comprobar "usuario_pool NO ejecutable por clientes" f \
+  "select has_function_privilege('authenticated','public.usuario_pool()','execute')"
 
 echo "— Triggers con datos de prueba (transacción con ROLLBACK)…"
 AUDITORIA_ANTES=$(q "select count(*) from auditoria")
@@ -163,7 +194,8 @@ rollback;
 SQL
 echo "  ✔ triggers de etapa, normalización y clasificación"
 
-comprobar "el rollback no dejó rastro (usuarios)" 0 "select count(*) from usuarios"
+comprobar "el rollback no dejó rastro (solo queda el usuario de sistema)" 1 \
+  "select count(*) from usuarios"
 comprobar "el rollback tampoco dejó auditoría nueva" "$AUDITORIA_ANTES" \
   "select count(*) from auditoria"
 
@@ -226,11 +258,11 @@ do $$ begin
   if (select public.rol_actual()) <> 'ejecutivo' then raise exception 'FALLO: rol_actual'; end if;
 end $$;
 
--- 4) Admin con perfil: ve todo
+-- 4) Admin con perfil: ve todo (2 de prueba + el usuario de sistema del pool)
 select set_config('diprem.prueba_sub', 'sub-admin', true);
 do $$ begin
   if (select count(*) from cuentas)  <> 1 then raise exception 'FALLO: admin no ve cuentas'; end if;
-  if (select count(*) from usuarios) <> 2 then raise exception 'FALLO: admin no ve usuarios'; end if;
+  if (select count(*) from usuarios) <> 3 then raise exception 'FALLO: admin no ve usuarios'; end if;
   if not public.es_admin() then raise exception 'FALLO: es_admin'; end if;
 end $$;
 
@@ -255,5 +287,181 @@ rollback;
 SQL
 echo "  ✔ anonymous: denegado a nivel de grants"
 
+echo "— 0015: perímetro anti-extracción (pool, reclamo, cuota, directorio)…"
+"$PGBIN/psql" "$DATABASE_URL" -X -q -v ON_ERROR_STOP=1 <<'SQL'
+begin;
+-- Stub local de pg_session_jwt (en Neon lo provee la Data API)
+create schema auth;
+create function auth.user_id() returns text language sql stable as
+  $$ select nullif(current_setting('diprem.prueba_sub', true), '') $$;
+grant usage on schema auth to authenticated;
+grant execute on function auth.user_id() to authenticated;
+
+-- Datos de prueba (se revierten con el rollback)
+insert into equipos (id, nombre, pais)
+  values ('e0000000-0000-4000-8000-000000000002', 'Equipo Norte', 'Chile');
+insert into usuarios (id, auth_id, nombre, email, rol, equipo_id) values
+  ('00000000-0000-4000-8000-0000000000a2', 'sub-admin',  'Admin P',  'admin.p@prueba.local',  'admin',  null),
+  ('00000000-0000-4000-8000-0000000000b2', 'sub-ger',    'Gerente P','ger.p@prueba.local',    'gerente','e0000000-0000-4000-8000-000000000002'),
+  ('00000000-0000-4000-8000-0000000000c2', 'sub-eje',    'Eje P',    'eje.p@prueba.local',    'ejecutivo','e0000000-0000-4000-8000-000000000002'),
+  ('00000000-0000-4000-8000-0000000000d2', 'sub-lec',    'Lectura P','lec.p@prueba.local',    'lectura', null);
+
+-- Pool: 3 cuentas del cargador (propietario = usuario de sistema)
+insert into cuentas (id, razon_social, propietario_id, rol_mercado, giro, region) values
+  ('c0000000-0000-4000-8000-000000000011', 'Minera Norte SpA',
+   public.usuario_pool(), 'mandante', 'MINERIA DEL COBRE', 'Antofagasta'),
+  ('c0000000-0000-4000-8000-000000000012', 'Constructora Sur Ltda',
+   public.usuario_pool(), 'contratista', 'CONSTRUCCION', 'Biobio'),
+  ('c0000000-0000-4000-8000-000000000013', 'Energia Andina SA',
+   public.usuario_pool(), 'mandante', 'GENERACION DE ENERGIA', 'Antofagasta');
+insert into contactos (id, cuenta_id, nombre, cargo, telefono, email, es_principal) values
+  ('a0000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000011',
+   'Contacto Uno', 'Gerente de Proyecto', '+56911111111', 'uno@minera.cl', true),
+  ('a0000000-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000011',
+   'Contacto Dos', 'Jefe de Contratos', null, 'dos@minera.cl', false),
+  ('a0000000-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000013',
+   'Contacto Tres', null, '+56933333333', null, false);
+
+set local role authenticated;
+
+-- 1) Ejecutivo: el pool es INVISIBLE por tabla, visible SOLO vía directorio sin PII
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-eje', true); end $$;
+do $$
+declare r jsonb;
+begin
+  if (select count(*) from cuentas)   <> 0 then raise exception 'FALLO: ejecutivo ve el pool'; end if;
+  if (select count(*) from contactos) <> 0 then raise exception 'FALLO: ejecutivo ve contactos del pool'; end if;
+  if (select count(*) from public.directorio_prospectos()) <> 2
+    then raise exception 'FALLO: directorio por defecto debe ocultar proveedores (2)'; end if;
+  if (select count(*) from public.directorio_prospectos(p_incluir_proveedores => true)) <> 3
+    then raise exception 'FALLO: directorio con proveedores debe dar 3'; end if;
+  if (select n_contactos from public.directorio_prospectos(p_busqueda => 'minera norte')) <> 2
+    then raise exception 'FALLO: n_contactos del directorio'; end if;
+  if (select esta_asignada from public.directorio_prospectos(p_busqueda => 'minera norte'))
+    then raise exception 'FALLO: pool debe figurar sin asignar'; end if;
+
+  -- Reclamo: entra a la cartera y las FILAS aparecen, pero la PII sigue cerrada
+  perform public.reclamar_cuenta('c0000000-0000-4000-8000-000000000011');
+  if (select count(*) from cuentas) <> 1 then raise exception 'FALLO: reclamo no asignó'; end if;
+  if (select count(*) from contactos) <> 2 then raise exception 'FALLO: contactos de cuenta propia'; end if;
+  begin
+    perform email from contactos limit 1;
+    raise exception 'FALLO: email legible sin revelar';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- Revelación: entrega PII, registra, y repetir es libre
+  r := public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
+  if (r->>'omitidos_por_limite')::int <> 0 then raise exception 'FALLO: no debía omitir'; end if;
+  if (r->>'usadas_hoy')::int <> 2 then raise exception 'FALLO: usadas_hoy=2'; end if;
+  if (select count(*) from jsonb_array_elements(r->'contactos') c
+       where c->>'email' is not null) <> 2 then raise exception 'FALLO: PII no entregada'; end if;
+  r := public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
+  if (r->>'usadas_hoy')::int <> 2 then raise exception 'FALLO: re-ver no es libre'; end if;
+
+  -- Mi Día: el contacto principal de la cuenta propia llega a la vista
+  if (select telefono from v_gestion_contactos
+       where entidad='cuenta' and entidad_id='c0000000-0000-4000-8000-000000000011') is null
+    then raise exception 'FALLO: v_gestion_contactos sin tel del principal'; end if;
+end $$;
+
+-- 2) Cuota diaria y tope de cartera (bajamos límites como owner y reintentamos)
+reset role;
+update limites_rol set max_revelaciones_dia = 2, max_cartera = 2 where rol = 'ejecutivo';
+set local role authenticated;
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-eje', true); end $$;
+do $$
+declare r jsonb;
+begin
+  perform public.reclamar_cuenta('c0000000-0000-4000-8000-000000000013');
+  r := public.revelar_contactos('c0000000-0000-4000-8000-000000000013');
+  if (r->>'omitidos_por_limite')::int <> 1 then raise exception 'FALLO: cuota no omitió'; end if;
+  if (select count(*) from jsonb_array_elements(r->'contactos') c
+       where c->>'telefono' is not null) <> 0 then raise exception 'FALLO: PII sobre cuota'; end if;
+  begin
+    perform public.reclamar_cuenta('c0000000-0000-4000-8000-000000000012');
+    raise exception 'FALLO: tope de cartera no aplicó';
+  exception when others then
+    if sqlerrm not like 'Tope de cartera%' then raise; end if;
+  end;
+  -- liberar devuelve al pool y abre cupo
+  perform public.liberar_cuenta('c0000000-0000-4000-8000-000000000013');
+  if (select count(*) from cuentas) <> 1 then raise exception 'FALLO: liberar no devolvió'; end if;
+end $$;
+
+-- 3) Gerente: revela sobre la cartera de su equipo (cuota propia)
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-ger', true); end $$;
+do $$
+declare r jsonb;
+begin
+  if (select count(*) from cuentas) < 1 then raise exception 'FALLO: gerente no ve equipo'; end if;
+  r := public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
+  if (select count(*) from jsonb_array_elements(r->'contactos') c
+       where c->>'email' is not null) <> 2 then raise exception 'FALLO: gerente sin PII de su equipo'; end if;
+end $$;
+
+-- 4) Solo-lectura: nombres de empresa sí; personas y PII jamás
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-lec', true); end $$;
+do $$ begin
+  if (select count(*) from cuentas) <> 3 then raise exception 'FALLO: lectura debe ver las cuentas'; end if;
+  if (select count(*) from contactos) <> 0 then raise exception 'FALLO: lectura ve contactos'; end if;
+  if (select telefono from v_gestion_contactos
+       where entidad='cuenta' and entidad_id='c0000000-0000-4000-8000-000000000011') is not null
+    then raise exception 'FALLO: lectura recibe tel por la vista'; end if;
+  begin
+    perform public.revelar_contactos('c0000000-0000-4000-8000-000000000011');
+    raise exception 'FALLO: lectura pudo revelar';
+  exception when others then
+    if sqlerrm not like '%solo lectura%' then raise; end if;
+  end;
+  begin
+    perform public.reclamar_cuenta('c0000000-0000-4000-8000-000000000012');
+    raise exception 'FALLO: lectura pudo reclamar';
+  exception when others then
+    if sqlerrm not like '%solo lectura%' then raise; end if;
+  end;
+end $$;
+
+-- 5) Alta de leads: dedup contra el pool + base de licitud obligatoria
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-eje', true); end $$;
+do $$
+declare r jsonb;
+begin
+  r := public.alta_lead('Persona Nueva', 'Constructora Sur Limitada',
+                        p_base_licitud => 'interes_legitimo');
+  if r->>'resultado' <> 'empresa_existente' then raise exception 'FALLO: dedup vs pool'; end if;
+  if not (r->>'en_pool')::boolean then raise exception 'FALLO: debía marcar en_pool'; end if;
+  begin
+    r := public.alta_lead('Persona Nueva', 'Empresa Inexistente XY');
+    raise exception 'FALLO: alta sin base de licitud';
+  exception when others then
+    if sqlerrm not like '%base de licitud%' then raise; end if;
+  end;
+  r := public.alta_lead('Persona Nueva', 'Empresa Inexistente XY',
+                        p_email => 'pn@xy.cl', p_base_licitud => 'consentimiento',
+                        p_origen_dato => 'prueba validación');
+  if r->>'resultado' <> 'creado' then raise exception 'FALLO: alta limpia'; end if;
+  r := public.alta_lead('Persona Nueva', 'Empresa Inexistente XY',
+                        p_email => 'pn@xy.cl', p_base_licitud => 'consentimiento');
+  if r->>'resultado' <> 'lead_duplicado' then raise exception 'FALLO: dedup de lead'; end if;
+end $$;
+
+-- 6) Intruso con JWT válido: el directorio también le da cero
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-intruso', true); end $$;
+do $$ begin
+  if (select count(*) from public.directorio_prospectos(p_incluir_proveedores => true)) <> 0
+    then raise exception 'FALLO: intruso ve el directorio'; end if;
+end $$;
+
+rollback;
+SQL
+echo "  ✔ pool invisible · PII solo por revelación con cuota · topes y dedup activos"
+
+comprobar "el rollback del perímetro no dejó rastro (lecturas)" 0 \
+  "select count(*) from lecturas_sensibles"
+comprobar "limites_rol volvió a 80/25" 1 \
+  "select count(*) from limites_rol
+    where rol='ejecutivo' and max_cartera=80 and max_revelaciones_dia=25"
+
 echo ""
-echo "✅ Validación local completa: migraciones aplican limpias, RLS activo en todo, cero datos."
+echo "✅ Validación local completa: migraciones aplican limpias, RLS activo en todo, perímetro cerrado."

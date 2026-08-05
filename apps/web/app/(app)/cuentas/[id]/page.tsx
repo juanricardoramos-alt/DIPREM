@@ -21,6 +21,8 @@ import {
   listarEtapas,
   listarOportunidades,
   obtenerCuenta,
+  revelarContactos,
+  type ContactoRevelado,
 } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import {
@@ -107,6 +109,46 @@ export default function PaginaDetalleCuenta({
       void queryClient.invalidateQueries({ queryKey: ["contactos", id] }),
   });
 
+  // Perímetro 0015: la PII (tel/correo/LinkedIn) no viene en el listado;
+  // se pide explícitamente y queda registrada (cuota diaria por rol).
+  const [pii, setPii] = useState<Record<string, ContactoRevelado>>({});
+  const [avisoRevelado, setAvisoRevelado] = useState<string | null>(null);
+  const revelar = useMutation({
+    mutationFn: () => revelarContactos(supabase, id),
+    onSuccess: (r) => {
+      setPii(Object.fromEntries(r.contactos.map((c) => [c.id, c])));
+      setAvisoRevelado(
+        r.omitidos_por_limite > 0
+          ? es.crm.limiteRevelaciones(r.omitidos_por_limite, r.limite_diario ?? 0)
+          : null,
+      );
+    },
+    onError: (e: Error) => setAvisoRevelado(e.message || es.comunes.errorGenerico),
+  });
+  const revelado = Object.keys(pii).length > 0;
+
+  // Editar exige la PII actual (el formulario la trae precargada): si aún no
+  // se reveló, se revela primero — la primera vez consume cuota, luego es libre.
+  const abrirEdicion = async (contacto: Contacto) => {
+    let datos: ContactoRevelado | undefined = pii[contacto.id];
+    if (!datos) {
+      try {
+        const r = await revelar.mutateAsync();
+        datos = r.contactos.find((c) => c.id === contacto.id);
+      } catch {
+        return; // el error ya quedó en avisoRevelado
+      }
+    }
+    setContactoForm({
+      contacto: {
+        ...contacto,
+        telefono: datos?.telefono ?? null,
+        email: datos?.email ?? null,
+        linkedin: datos?.linkedin ?? null,
+      },
+    });
+  };
+
   if (isLoading) return <p className="py-16 text-center text-tinta-tenue">{es.comunes.cargando}</p>;
   if (!cuenta) return <p className="text-tinta-tenue">{es.comunes.sinResultados}</p>;
 
@@ -150,22 +192,41 @@ export default function PaginaDetalleCuenta({
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         {/* Contactos */}
         <section>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{es.crm.contactos}</h2>
-            <Boton
-              variante="secundario"
-              onClick={() => setContactoForm({ contacto: null })}
-            >
-              + {es.crm.nuevoContacto}
-            </Boton>
+            <span className="flex items-center gap-1">
+              {(contactos?.length ?? 0) > 0 && !revelado && (
+                <Boton
+                  variante="fantasma"
+                  title={es.crm.revelacionRegistrada}
+                  onClick={() => revelar.mutate()}
+                  disabled={revelar.isPending}
+                >
+                  🔓 {revelar.isPending ? es.comunes.cargando : es.crm.mostrarDatosContacto}
+                </Boton>
+              )}
+              <Boton
+                variante="secundario"
+                onClick={() => setContactoForm({ contacto: null })}
+              >
+                + {es.crm.nuevoContacto}
+              </Boton>
+            </span>
           </div>
+          {avisoRevelado && (
+            <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+              {avisoRevelado}
+            </p>
+          )}
           <div className="mt-3 space-y-2">
             {(contactos?.length ?? 0) === 0 && (
               <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
                 {es.crm.sinContactos}
               </p>
             )}
-            {contactos?.map((contacto) => (
+            {contactos?.map((contacto) => {
+              const revContacto = pii[contacto.id];
+              return (
               <div
                 key={contacto.id}
                 className="flex items-start justify-between rounded-lg border border-borde bg-superficie shadow-sm p-4"
@@ -183,11 +244,24 @@ export default function PaginaDetalleCuenta({
                   </p>
                   <p className="text-sm text-tinta-suave">{contacto.cargo ?? ""}</p>
                   <p className="mt-1 text-sm">
-                    <EnlacesContacto
-                      telefono={contacto.telefono}
-                      email={contacto.email}
-                      compacto
-                    />
+                    {revContacto?.opt_out || contacto.opt_out_en ? (
+                      <span className="text-xs text-red-700 dark:text-red-300">
+                        ⛔ {es.crm.optOutAviso}
+                      </span>
+                    ) : revContacto && !revContacto.omitido ? (
+                      <EnlacesContacto
+                        telefono={revContacto.telefono}
+                        email={revContacto.email}
+                        compacto
+                      />
+                    ) : (
+                      <span
+                        className="text-xs text-tinta-tenue"
+                        title={es.crm.revelacionRegistrada}
+                      >
+                        🔒 {es.crm.datosProtegidos}
+                      </span>
+                    )}
                   </p>
                   {contacto.canal_preferido && (
                     <p className="mt-0.5 text-xs text-tinta-tenue">
@@ -198,7 +272,7 @@ export default function PaginaDetalleCuenta({
                 <div className="flex gap-1">
                   <Boton
                     variante="fantasma"
-                    onClick={() => setContactoForm({ contacto })}
+                    onClick={() => void abrirEdicion(contacto)}
                   >
                     {es.comunes.editar}
                   </Boton>
@@ -213,7 +287,8 @@ export default function PaginaDetalleCuenta({
                   </Boton>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

@@ -1,15 +1,19 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { Clock, Linkedin, Lock, Printer } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Clock, Linkedin, Lock, Printer, Unlock } from "lucide-react";
 import {
   ETIQUETAS_CANAL,
   enlaceLinkedIn,
   es,
 } from "@diprem/core";
-import { obtenerContacto } from "@diprem/api";
+import {
+  obtenerContacto,
+  revelarContactos,
+  type ContactoRevelado,
+} from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import { Boton, Esqueleto, Insignia } from "@/components/ui";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
@@ -31,6 +35,24 @@ export default function PaginaFichaContacto({
   const { data: contacto, isLoading } = useQuery({
     queryKey: ["contacto", id],
     queryFn: () => obtenerContacto(supabase, id),
+  });
+
+  // Perímetro 0015: la PII no viene en la ficha; se revela a pedido
+  // (queda registrado; la primera vez consume cuota diaria, después es libre).
+  const [rev, setRev] = useState<ContactoRevelado | null>(null);
+  const [errorRevelado, setErrorRevelado] = useState<string | null>(null);
+  const revelar = useMutation({
+    mutationFn: () => revelarContactos(supabase, contacto!.cuenta_id),
+    onSuccess: (r) => {
+      const propio = r.contactos.find((c) => c.id === id) ?? null;
+      setRev(propio);
+      setErrorRevelado(
+        propio?.omitido
+          ? es.crm.limiteRevelaciones(r.omitidos_por_limite, r.limite_diario ?? 0)
+          : null,
+      );
+    },
+    onError: (e: Error) => setErrorRevelado(e.message || es.comunes.errorGenerico),
   });
 
   if (isLoading) {
@@ -70,18 +92,43 @@ export default function PaginaFichaContacto({
               .join(" · ") || "—"}
           </p>
 
-          {/* Datos accionables: WhatsApp / llamada / correo / LinkedIn */}
+          {/* Datos accionables: WhatsApp / llamada / correo / LinkedIn.
+              La PII llega solo al revelarla (perímetro 0015). */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <EnlacesContacto telefono={contacto.telefono} email={contacto.email} />
-            {contacto.linkedin && (
-              <a
-                href={enlaceLinkedIn(contacto.linkedin)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-borde bg-superficie px-2.5 py-1.5 text-sm text-[#0a66c2] hover:bg-superficie-2 dark:text-[#78b1e2]"
+            {rev?.opt_out || contacto.opt_out_en ? (
+              <span className="text-sm text-red-700 dark:text-red-300">
+                ⛔ {es.crm.optOutAviso}
+              </span>
+            ) : rev && !rev.omitido ? (
+              <>
+                <EnlacesContacto telefono={rev.telefono} email={rev.email} />
+                {rev.linkedin && (
+                  <a
+                    href={enlaceLinkedIn(rev.linkedin)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-borde bg-superficie px-2.5 py-1.5 text-sm text-[#0a66c2] hover:bg-superficie-2 dark:text-[#78b1e2]"
+                  >
+                    <Linkedin className="h-4 w-4" /> {es.crm.linkedin}
+                  </a>
+                )}
+              </>
+            ) : (
+              <Boton
+                variante="secundario"
+                className="print:hidden"
+                title={es.crm.revelacionRegistrada}
+                onClick={() => revelar.mutate()}
+                disabled={revelar.isPending}
               >
-                <Linkedin className="h-4 w-4" /> {es.crm.linkedin}
-              </a>
+                <Unlock className="h-4 w-4" />{" "}
+                {revelar.isPending ? es.comunes.cargando : es.crm.mostrarDatosContacto}
+              </Boton>
+            )}
+            {errorRevelado && (
+              <span className="text-xs text-amber-700 dark:text-amber-300">
+                {errorRevelado}
+              </span>
             )}
           </div>
         </div>

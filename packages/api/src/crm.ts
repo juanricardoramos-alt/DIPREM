@@ -115,28 +115,35 @@ export async function actualizarCuenta(
   lanzar(error);
 }
 
+// Perímetro 0015: columnas explícitas — la Data API rechaza `*` sobre
+// contactos porque la PII (telefono/email/linkedin) es privilegio por columna.
+// La PII se obtiene aparte con revelarContactos() (ver perimetro.ts).
+const COLUMNAS_CONTACTO =
+  "id, cuenta_id, nombre, cargo, canal_preferido, es_principal, creado_en," +
+  " mejor_horario, notas_privadas, rol, opt_out_en";
+
 export async function obtenerContacto(
   sb: SupabaseClient,
   id: string,
 ): Promise<Contacto | null> {
   const { data, error } = await sb
     .from("contactos")
-    .select("*, cuenta:cuentas!contactos_cuenta_id_fkey(razon_social)")
+    .select(`${COLUMNAS_CONTACTO}, cuenta:cuentas!contactos_cuenta_id_fkey(razon_social)`)
     .eq("id", id)
     .maybeSingle();
   lanzar(error);
-  return data as Contacto | null;
+  return data as unknown as Contacto | null;
 }
 
 export async function listarContactos(sb: SupabaseClient, cuentaId: string): Promise<Contacto[]> {
   const { data, error } = await sb
     .from("contactos")
-    .select("*")
+    .select(COLUMNAS_CONTACTO)
     .eq("cuenta_id", cuentaId)
     .order("es_principal", { ascending: false })
     .order("nombre");
   lanzar(error);
-  return (data ?? []) as Contacto[];
+  return (data ?? []) as unknown as Contacto[];
 }
 
 export async function crearContacto(

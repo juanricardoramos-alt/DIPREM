@@ -54,23 +54,74 @@ def clase_email(e):
         return "invalido"
     return "personal" if m.group(1).split(".")[0] in PERSONALES else "corporativo"
 
-# 23 reglas de clasificación de cargo (migración 0011)
-REGLAS_CARGO = [
- ("gerente de proyecto","gerente_proyecto"),("director de proyecto","gerente_proyecto"),
- ("project manager","gerente_proyecto"),("jefe de proyecto","gerente_proyecto"),
- ("gerente de construccion","gerente_construccion"),("construction manager","gerente_construccion"),
- ("superintendente de construccion","gerente_construccion"),("jefe de terreno","gerente_construccion"),
- ("contrato","contratos_abastecimiento"),("abastecimiento","contratos_abastecimiento"),
- ("procurement","contratos_abastecimiento"),("compras","contratos_abastecimiento"),
- ("calidad","calidad_qaqc"),("qa/qc","calidad_qaqc"),("qaqc","calidad_qaqc"),("qc","calidad_qaqc"),
- ("quality","calidad_qaqc"),("hse","hse"),("prevencion","hse"),("ssoma","hse"),
- ("seguridad","hse"),("medio ambiente","hse"),("gerente general","otro"),
+# Clasificación de cargo en 3 BUCKETS (aprobados): decisor_tecnico /
+# gestor_compra / puerta_entrada. Conservadora a propósito: mejor 60% bien
+# clasificado que 85% con errores — los cargos genéricos de contribuidor
+# individual (ingeniero, geólogo, analista…) quedan sin_clasificar.
+# La primera regla que calza gana (las específicas van primero).
+REGLAS_BUCKET = [
+ # -- administrador de contrato: dirige el contrato en faena → decisor DIPREM
+ ("administrador de contrato","decisor_tecnico"),("administradora de contrato","decisor_tecnico"),
+ # -- gestor de compra: contratos / abastecimiento / licitaciones
+ ("contrato","gestor_compra"),("abastecimiento","gestor_compra"),
+ ("procurement","gestor_compra"),("compras","gestor_compra"),
+ ("comprador","gestor_compra"),("adquisic","gestor_compra"),
+ ("licitac","gestor_compra"),("supply","gestor_compra"),("subcontrat","gestor_compra"),
+ # -- decisor técnico: dirección de proyectos / construcción / operaciones /
+ #    ingeniería / calidad / HSE / mantenimiento / planta
+ ("gerente de proyecto","decisor_tecnico"),("director de proyecto","decisor_tecnico"),
+ ("jefe de proyecto","decisor_tecnico"),("project manager","decisor_tecnico"),
+ ("gerente de construccion","decisor_tecnico"),("construction manager","decisor_tecnico"),
+ ("jefe de construccion","decisor_tecnico"),("director de construccion","decisor_tecnico"),
+ ("superintendente","decisor_tecnico"),("jefe de terreno","decisor_tecnico"),
+ ("jefe de obra","decisor_tecnico"),("administrador de obra","decisor_tecnico"),
+ ("gerente de operaciones","decisor_tecnico"),("gerente operaciones","decisor_tecnico"),
+ ("jefe de operaciones","decisor_tecnico"),("director de operaciones","decisor_tecnico"),
+ ("de ingenieria","decisor_tecnico"),("constructibilidad","decisor_tecnico"),
+ ("gerente tecnico","decisor_tecnico"),("director tecnico","decisor_tecnico"),
+ ("jefe tecnico","decisor_tecnico"),("gerencia tecnica","decisor_tecnico"),
+ ("calidad","decisor_tecnico"),("qa qc","decisor_tecnico"),("qaqc","decisor_tecnico"),
+ ("quality","decisor_tecnico"),
+ ("hse","decisor_tecnico"),("hseq","decisor_tecnico"),("ssoma","decisor_tecnico"),
+ ("prevencion","decisor_tecnico"),("seguridad","decisor_tecnico"),
+ ("salud ocupacional","decisor_tecnico"),("medio ambiente","decisor_tecnico"),
+ ("medioambient","decisor_tecnico"),("sustentabilidad","decisor_tecnico"),
+ ("sostenibilidad","decisor_tecnico"),
+ ("gerente de mantenimiento","decisor_tecnico"),("jefe de mantenimiento","decisor_tecnico"),
+ ("jefe de mantencion","decisor_tecnico"),
+ ("gerente de planta","decisor_tecnico"),("jefe de planta","decisor_tecnico"),
+ ("gerente de faena","decisor_tecnico"),
+ ("puesta en marcha","decisor_tecnico"),("comisionamiento","decisor_tecnico"),
+ ("commissioning","decisor_tecnico"),
+ # -- puerta de entrada: gerencia general / comercial / legal / asistencia
+ ("gerente general","puerta_entrada"),("director general","puerta_entrada"),
+ ("general manager","puerta_entrada"),("managing director","puerta_entrada"),
+ ("country manager","puerta_entrada"),("ceo","puerta_entrada"),
+ ("presidente","puerta_entrada"),  # cubre vicepresidente
+ ("socio","puerta_entrada"),("fundador","puerta_entrada"),("founder","puerta_entrada"),
+ ("dueno","puerta_entrada"),("propietario","puerta_entrada"),
+ ("representante legal","puerta_entrada"),("apoderado","puerta_entrada"),
+ ("comercial","puerta_entrada"),("ventas","puerta_entrada"),("sales","puerta_entrada"),
+ ("negocio","puerta_entrada"),("business development","puerta_entrada"),
+ ("marketing","puerta_entrada"),("kam","puerta_entrada"),("key account","puerta_entrada"),
+ ("asistente","puerta_entrada"),("secretaria","puerta_entrada"),
+ ("recepcion","puerta_entrada"),("administrativ","puerta_entrada"),
+ ("finanzas","puerta_entrada"),
+ # genéricos de gerencia al final (todo lo específico ya calzó arriba)
+ ("gerente","puerta_entrada"),("subgerente","puerta_entrada"),
+ ("gerencia","puerta_entrada"),("director","puerta_entrada"),
+ ("manager","puerta_entrada"),
 ]
-def clasificar_cargo(cargo):
+def clasificar_bucket(cargo):
     c = nrm(cargo)
-    for pat, rol in REGLAS_CARGO:
-        if nrm(pat) in c:
-            return rol
+    if not c:
+        return "sin_clasificar"
+    for pat, bucket in REGLAS_BUCKET:
+        if len(pat) <= 4:
+            if re.search(r"\b" + re.escape(pat) + r"\b", c):
+                return bucket
+        elif pat in c:
+            return bucket
     return "sin_clasificar"
 
 # Reglas de rol_mercado por giro (migración 0014)
@@ -157,7 +208,9 @@ def main():
     wb = openpyxl.load_workbook(f_cont, read_only=True, data_only=True); ws = wb.active
     c_total=0; c_emp=Counter(); dedup=set()
     c_entran=0; c_revision=0; c_descarte=0; c_dup=0
-    email_personal_desc=0; sin_clasif=0
+    email_personal_desc=0
+    buckets=Counter(); cargos_por_bucket={b:Counter() for b in
+        ("decisor_tecnico","gestor_compra","puerta_entrada","sin_clasificar")}
     cont_por_empresa=Counter()
     for row in ws.iter_rows(min_row=2, values_only=True):
         if all(v is None for v in row): continue
@@ -171,7 +224,6 @@ def main():
         if (corp_c=="personal") or (pers_c=="personal"): email_personal_desc+=1
         tiene_tel = bool(tel1 or tel2)
         prof = bool(email_corp) or tiene_tel        # ≥1 dato profesional
-        if clasificar_cargo(cargo)=="sin_clasificar": sin_clasif+=1
         # categorías dry-run
         if not prof:
             c_descarte+=1; continue
@@ -181,6 +233,9 @@ def main():
         key=(emp, str(email_corp).strip().lower()) if email_corp else (emp, "p:"+nrm(persona))
         if key in dedup: c_dup+=1; continue
         dedup.add(key); c_entran+=1
+        # bucket de cargo SOLO sobre los que entran (lo que se cargará clasificado)
+        b = clasificar_bucket(cargo)
+        buckets[b]+=1; cargos_por_bucket[b][nrm(cargo) or "(vacío)"]+=1
 
     # empresas de contactos que NO están en el spine (cuentas nuevas / revisión)
     comp_contactos = set(cont_por_empresa)
@@ -244,8 +299,24 @@ def main():
     print(f"  🗑  DESCARTE (sin dato profesional): {c_descarte}")
     print(f"     · suma: {c_entran+c_dup+c_revision+c_descarte} de {c_total}")
     print(f"  ⚠️  Correos personales descartados : {email_personal_desc}  (Ley 21.719)")
-    print(f"  🏷  Cargos sin_clasificar (23 reglas): {sin_clasif}  (afinable antes de cargar)")
     print(f"  🏢 Empresas de contactos fuera del spine: {len(comp_fuera_spine)}  → cuentas nuevas / revisión")
+
+    print(f"\n── CARGOS de los {c_entran} que entran → 3 buckets ──")
+    clasificados = c_entran - buckets["sin_clasificar"]
+    for b, etiqueta in (("decisor_tecnico","🎯 Decisor técnico"),
+                        ("gestor_compra","🛒 Gestor de compra"),
+                        ("puerta_entrada","🚪 Puerta de entrada"),
+                        ("sin_clasificar","❔ Sin clasificar")):
+        pct = 100*buckets[b]/c_entran if c_entran else 0
+        print(f"  {etiqueta:22s}: {buckets[b]:>6d}  ({pct:4.1f}%)")
+    print(f"  Cobertura clasificada: {clasificados} de {c_entran} "
+          f"({100*clasificados/c_entran:.1f}%)")
+
+    print("\n── MUESTRA: 20 cargos más frecuentes con su bucket ──")
+    print(f"  {'CARGO':46s} {'N':>5s}  BUCKET")
+    for b in ("decisor_tecnico","gestor_compra","puerta_entrada","sin_clasificar"):
+        for cargo, n in cargos_por_bucket[b].most_common(5):
+            print(f"  {cargo:46.46s} {n:>5d}  {b}")
     print("\n(NO se escribió nada. Números para decidir; la carga real es un paso aparte.)")
 
 if __name__ == "__main__":

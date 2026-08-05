@@ -112,6 +112,14 @@ export const es = {
     notasPrivadasAyuda: "Internas DIPREM: no salen en la ficha PDF.",
     fichaContacto: "Ficha de contacto",
     verFicha: "Ver ficha",
+    // Perímetro 0015: PII solo por revelación (con registro y cuota diaria)
+    mostrarDatosContacto: "Mostrar datos de contacto",
+    datosProtegidos: "Datos protegidos",
+    revelacionRegistrada: "La revelación queda registrada (Ley 21.719)",
+    limiteRevelaciones: (omitidos: number, limite: number) =>
+      `Límite diario de revelaciones alcanzado (${limite}): ${omitidos} contacto(s) quedan ocultos hasta mañana.`,
+    optOutAviso:
+      "Esta persona se opuso al tratamiento de sus datos (Ley 21.719): no debe ser contactada.",
     exportarPdf: "Ficha en PDF",
     historialContacto: "Historial con este contacto",
     historialContactoNota:

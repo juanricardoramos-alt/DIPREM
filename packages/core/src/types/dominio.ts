@@ -94,15 +94,24 @@ export interface Contacto {
   cuenta_id: string;
   nombre: string;
   cargo: string | null;
-  telefono: string | null;
-  email: string | null;
+  /**
+   * PII (0015): la Data API ya NO entrega telefono/email/linkedin en ningún
+   * SELECT (privilegios por columna). Se obtienen con revelarContactos()
+   * — cuota diaria por rol + registro en lecturas_sensibles.
+   */
+  telefono?: string | null;
+  email?: string | null;
+  linkedin?: string | null;
   canal_preferido: CanalContacto | null;
   es_principal: boolean;
   creado_en?: string;
   /** Desde la migración 0008 (perfil enriquecido); antes vienen undefined. */
-  linkedin?: string | null;
   mejor_horario?: string | null;
   notas_privadas?: string | null;
+  /** Ley 21.719: si no es null, la persona se opuso — no contactar. */
+  opt_out_en?: string | null;
+  /** Rol decisor clasificado (0011). */
+  rol?: string;
   /** join opcional */
   cuenta?: { razon_social: string } | null;
 }
