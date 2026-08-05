@@ -97,7 +97,8 @@ comprobar "5 líneas de servicio" 5 "select count(*) from lineas_servicio"
 comprobar "29 servicios" 29 "select count(*) from servicios"
 comprobar "7 etapas de embudo" 7 "select count(*) from etapas_embudo"
 comprobar "7 motivos de pérdida" 7 "select count(*) from motivos_perdida"
-comprobar "23 reglas de clasificación" 23 "select count(*) from reglas_rol_contacto"
+comprobar "93 reglas de clasificación de cargo (0017)" 93 \
+  "select count(*) from reglas_rol_contacto"
 comprobar "1 usuario: solo el de sistema (pool 0015)" 1 "select count(*) from usuarios"
 comprobar "el usuario de sistema no puede iniciar sesión" 1 \
   "select count(*) from usuarios where es_sistema and not activo and auth_id is null"
@@ -123,7 +124,8 @@ comprobar "clasificar cargo decisor" "gerente_proyecto" \
 comprobar "cargo desconocido queda sin_clasificar" "sin_clasificar" \
   "select clasificar_rol_contacto('Astrónomo')"
 
-comprobar "catálogos auditados (51+23 cargo+22 mercado+1 pool+4 limites)" 101 \
+# 101 de 0015 + 23 DELETE (reglas 0011) + 93 INSERT (reglas 0017) = 217
+comprobar "catálogos auditados (incl. recambio de reglas 0017)" 217 \
   "select count(*) from auditoria"
 comprobar "etapa 'exploracion' existe en el enum (0014)" 1 \
   "select count(*) from pg_enum e join pg_type t on t.oid=e.enumtypid
@@ -133,6 +135,29 @@ comprobar "clasificar_rol_mercado(mineria)=mandante" "mandante" \
   "select clasificar_rol_mercado('MINERIA DEL COBRE')"
 comprobar "clasificar_rol_mercado(ingeniería)=epc" "epc" \
   "select clasificar_rol_mercado('EMPRESAS DE SERVICIOS DE INGENIERIA')"
+
+echo "— Buckets de cargo con contexto (0016/0017)…"
+comprobar "enum rol_decisor: decisor_tecnico y puerta_entrada" 2 \
+  "select count(*) from pg_enum e join pg_type t on t.oid=e.enumtypid
+    where t.typname='rol_decisor' and e.enumlabel in ('decisor_tecnico','puerta_entrada')"
+comprobar "gerente comercial en mandante → puerta_entrada" "puerta_entrada" \
+  "select clasificar_rol_contacto('Gerente Comercial','mandante')"
+comprobar "gerente comercial en contratista → sin_clasificar (terminal)" "sin_clasificar" \
+  "select clasificar_rol_contacto('Gerente Comercial','contratista')"
+comprobar "director comercial en epc → sin_clasificar" "sin_clasificar" \
+  "select clasificar_rol_contacto('Director Comercial','epc')"
+comprobar "gerente general en contratista sigue siendo puerta" "puerta_entrada" \
+  "select clasificar_rol_contacto('Gerente General','contratista')"
+comprobar "ingeniero civil de minas → decisor_tecnico" "decisor_tecnico" \
+  "select clasificar_rol_contacto('Ingeniero Civil de Minas')"
+comprobar "geologo queda sin_clasificar" "sin_clasificar" \
+  "select clasificar_rol_contacto('Geólogo')"
+comprobar "bucket_rol(hse) → decisor_tecnico" "decisor_tecnico" \
+  "select bucket_rol('hse')"
+comprobar "bucket_rol(contratos) → gestor_compra" "gestor_compra" \
+  "select bucket_rol('contratos_abastecimiento')"
+comprobar "índice único de id_externo (re-importar sin duplicar)" 1 \
+  "select count(*) from pg_indexes where indexname='proyectos_mercado_idexterno_unico'"
 
 echo "— Perímetro 0015: estructura…"
 comprobar "limites_rol: 4 filas (80/25 ejecutivo aprobado)" 1 \

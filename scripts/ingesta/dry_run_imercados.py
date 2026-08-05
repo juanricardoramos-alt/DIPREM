@@ -93,10 +93,14 @@ REGLAS_BUCKET = [
  ("gerente de faena","decisor_tecnico"),
  ("puesta en marcha","decisor_tecnico"),("comisionamiento","decisor_tecnico"),
  ("commissioning","decisor_tecnico"),
+ # aprobado 2026-08-05: ingeniero de minas es técnico (geólogo NO: exploración)
+ ("ingeniero civil de minas","decisor_tecnico"),("ingeniero civil en minas","decisor_tecnico"),
+ ("ingeniero de minas","decisor_tecnico"),("ingeniero en minas","decisor_tecnico"),
  # -- puerta de entrada: gerencia general / comercial / legal / asistencia
  ("gerente general","puerta_entrada"),("director general","puerta_entrada"),
  ("general manager","puerta_entrada"),("managing director","puerta_entrada"),
- ("country manager","puerta_entrada"),("ceo","puerta_entrada"),
+ ("country manager","puerta_entrada"),("chief executive","puerta_entrada"),
+ ("ceo","puerta_entrada"),
  ("presidente","puerta_entrada"),  # cubre vicepresidente
  ("socio","puerta_entrada"),("fundador","puerta_entrada"),("founder","puerta_entrada"),
  ("dueno","puerta_entrada"),("propietario","puerta_entrada"),
@@ -112,17 +116,25 @@ REGLAS_BUCKET = [
  ("gerencia","puerta_entrada"),("director","puerta_entrada"),
  ("manager","puerta_entrada"),
 ]
-def clasificar_bucket(cargo):
+# Familia comercial-ventas: puerta de entrada SOLO en cuentas mandante/otro.
+# En un proveedor (epc/contratista) es quien nos vende, no quien nos compra
+# → sin_clasificar TERMINAL (no cae a los genéricos de gerencia).
+# Aprobado 2026-08-05. Espejo de reglas_rol_contacto.solo_mandante (0017).
+CONDICIONADAS = {"comercial","ventas","sales","negocio","business development",
+                 "marketing","kam","key account"}
+
+def clasificar_bucket(cargo, rol_mercado_empresa=None):
     c = nrm(cargo)
     if not c:
-        return "sin_clasificar"
+        return "sin_clasificar", False
     for pat, bucket in REGLAS_BUCKET:
-        if len(pat) <= 4:
-            if re.search(r"\b" + re.escape(pat) + r"\b", c):
-                return bucket
-        elif pat in c:
-            return bucket
-    return "sin_clasificar"
+        calza = (re.search(r"\b" + re.escape(pat) + r"\b", c) if len(pat) <= 4
+                 else pat in c)
+        if calza:
+            if pat in CONDICIONADAS and rol_mercado_empresa in ("epc","contratista"):
+                return "sin_clasificar", True   # terminal: demotado por contexto
+            return bucket, False
+    return "sin_clasificar", False
 
 # Reglas de rol_mercado por giro (migración 0014)
 REGLAS_MERCADO = [
@@ -208,7 +220,7 @@ def main():
     wb = openpyxl.load_workbook(f_cont, read_only=True, data_only=True); ws = wb.active
     c_total=0; c_emp=Counter(); dedup=set()
     c_entran=0; c_revision=0; c_descarte=0; c_dup=0
-    email_personal_desc=0
+    email_personal_desc=0; comercial_demotados=0
     buckets=Counter(); cargos_por_bucket={b:Counter() for b in
         ("decisor_tecnico","gestor_compra","puerta_entrada","sin_clasificar")}
     cont_por_empresa=Counter()
@@ -234,7 +246,8 @@ def main():
         if key in dedup: c_dup+=1; continue
         dedup.add(key); c_entran+=1
         # bucket de cargo SOLO sobre los que entran (lo que se cargará clasificado)
-        b = clasificar_bucket(cargo)
+        b, demotado = clasificar_bucket(cargo, rol_mercado.get(emp))
+        if demotado: comercial_demotados+=1
         buckets[b]+=1; cargos_por_bucket[b][nrm(cargo) or "(vacío)"]+=1
 
     # empresas de contactos que NO están en el spine (cuentas nuevas / revisión)
@@ -311,6 +324,8 @@ def main():
         print(f"  {etiqueta:22s}: {buckets[b]:>6d}  ({pct:4.1f}%)")
     print(f"  Cobertura clasificada: {clasificados} de {c_entran} "
           f"({100*clasificados/c_entran:.1f}%)")
+    print(f"  🔻 Comerciales de proveedores excluidos de puerta: {comercial_demotados}"
+          f"  (cuentan en sin_clasificar)")
 
     print("\n── MUESTRA: 20 cargos más frecuentes con su bucket ──")
     print(f"  {'CARGO':46s} {'N':>5s}  BUCKET")
