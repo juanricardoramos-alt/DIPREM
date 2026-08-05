@@ -180,6 +180,10 @@ comprobar "6 vistas de control con grant" 6 \
       and table_name in ('v_control_cobertura','v_control_avance_decisor',
                          'v_control_embudo','v_control_huerfanas',
                          'v_control_criticas','v_control_respuesta')"
+comprobar "v_contactos_puerta con grant (0019)" 1 \
+  "select count(*) from information_schema.role_table_grants
+    where grantee='authenticated' and privilege_type='SELECT'
+      and table_name='v_contactos_puerta'"
 
 echo "— Perímetro 0015: estructura…"
 comprobar "limites_rol: 4 filas (80/25 ejecutivo aprobado)" 1 \

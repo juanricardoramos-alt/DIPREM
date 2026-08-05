@@ -162,7 +162,44 @@ export const es = {
   control: {
     titulo: "Panel de Control",
     descripcion:
-      "Visión en tiempo real de la operación comercial: qué se asignó, quién lo está trabajando y dónde intervenir.",
+      "Resultado, no actividad: cobertura de cartera, decisores conseguidos, embudo en movimiento y dónde intervenir hoy.",
+    // Acaparador: arriba y en rojo, imposible de ignorar
+    acaparadorTitulo: "Cuentas reclamadas sin gestión",
+    acaparadorNota: (umbral: number) =>
+      `Reclamadas hace más de ${umbral} días sin ninguna gestión — cartera acaparada, no trabajada`,
+    acaparadorVacio: "Ninguna cuenta reclamada supera el umbral. 🎉",
+    umbralDias: "Umbral",
+    liberarAlPool: "Liberar al pool",
+    liberando: "Liberando…",
+    liberada: "Cuenta devuelta al pool",
+    confirmarLiberar: (cuenta: string) =>
+      `¿Devolver "${cuenta}" al pool? El ejecutivo la perderá de su cartera.`,
+    // Cuadro por ejecutivo — RESULTADO (el peor de cobertura arriba)
+    resultadoTitulo: "Resultado por ejecutivo (30 días)",
+    resultadoNota:
+      "Ordenado por cobertura: el que menos cartera trabaja, primero. Las actividades no rankean.",
+    colCobertura: "Cobertura 30d",
+    colCarteraCorta: "Cartera",
+    colDecisores: "Decisores conseguidos",
+    colEmbudo: "Embudo movido",
+    colHuerfanas: "Huérfanas",
+    colTasaRespuesta: "Tasa respuesta",
+    sinDatoTasa: "s/registro",
+    verDetalle: "Ver detalle",
+    // Drill-down por ejecutivo
+    detalleDe: (nombre: string) => `Detalle de ${nombre}`,
+    detalleCartera: (n: number, pct: string) => `Cartera: ${n} cuentas · cobertura ${pct}`,
+    detalleSinCriticas: "Sin cuentas críticas sobre el umbral.",
+    detalleSinHuerfanas: "Sin oportunidades huérfanas. ✓",
+    huerfanasTitulo: "Oportunidades huérfanas",
+    huerfanasNota:
+      "Abiertas SIN próximo paso con fecha: eso es abandono, no gestión",
+    avancesTitulo: "Decisores conseguidos (30 días)",
+    avancesNota:
+      "Cuentas que pasaron de solo-puerta a decisor técnico identificado — la métrica que importa",
+    sinAvances: "Nadie ha conseguido un decisor nuevo en 30 días.",
+    embudoTitulo: "Movimiento de embudo (30 días)",
+    retroceso: "retroceso",
     metricaProyectos: "Proyectos asignados",
     metricaProyectosNota: (trabajados: number) =>
       `${trabajados} trabajados esta semana`,
@@ -219,9 +256,64 @@ export const es = {
     notasDeOportunidad: (nombre: string) => `Notas internas — ${nombre}`,
   },
   mercado: {
-    titulo: "Mercado nacional",
+    titulo: "Radar de Proyectos",
     descripcion:
-      "Base de proyectos del mercado. Importa desde Excel/CSV y asigna proyectos a tus ejecutivos como leads.",
+      "La cartera de proyectos del mercado, priorizada por score. Asigna a tus ejecutivos lo que hay que trabajar ahora.",
+    // Segmentos del Radar (aprobados)
+    segmentos: {
+      pipeline: "🔥 Pipeline activo",
+      prospeccion: "🔎 Prospección",
+      activo_p2: "🌿 Activo P2 (SEIA)",
+      om_hse: "♻️ O&M / HSE",
+      watchlist: "👁 Watchlist",
+      por_clasificar: "⏳ Por clasificar",
+      descarte: "🗑 Descarte",
+    },
+    segmentosNota: {
+      pipeline: "Ventana caliente con empresa y contacto: listos para trabajar",
+      prospeccion:
+        "Ventana caliente SIN contacto: urgente conseguir a la persona, el score no castiga",
+      activo_p2: "Estudios (perfil→factibilidad): compran SEIA y permisos ahora",
+      om_hse: "Operando: asesoría ambiental mensual y SSO recurrente",
+      watchlist: "Exploración / rechazado: vigilado, reversible (editar etapa lo reactiva)",
+      por_clasificar: "Sin etapa en la fuente — clasificar a mano (rediseñado = prioridad alta)",
+      descarte: "Desistidos y suspendidos",
+    },
+    score: "Score",
+    porQuePuntuo: "Por qué puntuó así",
+    factorEtapa: "Etapa",
+    factorCapex: "CAPEX",
+    factorSector: "Sector",
+    factorContactabilidad: "Contactabilidad",
+    factorHistorial: "Cliente histórico",
+    pilarPrimario: "Pilar primario",
+    pilaresSecundarios: "También aplica",
+    etapaEditable: "Etapa (editable)",
+    etapaSinClasificar: "— por clasificar —",
+    etapaActualizada: "Etapa actualizada (score recalculado)",
+    capexCorto: "CAPEX (MUSD)",
+    construccionCorta: "Constr.",
+    pemCorta: "PEM",
+    ultimaGestion: "Última gestión",
+    sinGestionNunca: "sin gestión",
+    diasCorto: (d: number) => `${d} d`,
+    contactosCuenta: "Contactos",
+    contactosEstado: {
+      decisor: "✅ Decisor",
+      gestor: "🛒 Gestor compra",
+      puerta: "🚪 Solo puerta",
+      ninguno: "⚠️ Sin contactos",
+    },
+    pedirDerivacion: "Pedir derivación",
+    derivacionTitulo: "Pedir derivación al decisor técnico",
+    derivacionNota:
+      "La cuenta tiene puerta de entrada pero ningún decisor técnico identificado. Llama al mejor contacto puerta y pide que te derive al gerente de proyecto / operaciones:",
+    derivacionSinPuerta:
+      "Sin contactos puerta en la cuenta: consigue el primer contacto por prospección directa.",
+    filtroEjecutivo: "Ejecutivo",
+    sinAsignarFiltro: "Sin asignar",
+    recalcular: "Recalcular scores",
+    recalculado: (n: number) => `${n} proyectos recalculados`,
     importar: "Importar proyectos",
     importarTitulo: "Importar proyectos del mercado",
     seleccionarArchivo: "Selecciona un archivo Excel (.xlsx) o CSV",

@@ -4,6 +4,7 @@ import type {
   EstadoActividad,
   EstadoCuenta,
   EstadoLead,
+  EtapaProyecto,
   FuenteLead,
   ModalidadContrato,
   PrioridadProyecto,
@@ -101,4 +102,19 @@ export const ORDEN_PRIORIDAD: Record<PrioridadProyecto, number> = {
   alta: 0,
   media: 1,
   baja: 2,
+};
+
+export const ETIQUETAS_ETAPA_PROYECTO: Record<EtapaProyecto, string> = {
+  exploracion: "Exploración",
+  perfil: "Perfil",
+  prefactibilidad: "Prefactibilidad",
+  factibilidad: "Factibilidad",
+  ingenieria_basica: "Ingeniería básica",
+  ingenieria_detalle: "Ingeniería de detalle",
+  en_licitacion: "En licitación",
+  construccion: "Construcción",
+  comisionamiento: "Comisionamiento",
+  operacion: "Operación",
+  paralizado: "Paralizado",
+  cerrado: "Cerrado",
 };

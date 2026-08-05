@@ -226,6 +226,41 @@ export interface Oportunidad {
 export type EstadoProyectoMercado = "sin_asignar" | "asignado" | "convertido";
 export type PrioridadProyecto = "alta" | "media" | "baja";
 
+/** Ciclo de vida de un proyecto industrial (Fase 8; 'exploracion' desde 0014). */
+export type EtapaProyecto =
+  | "exploracion"
+  | "perfil"
+  | "prefactibilidad"
+  | "factibilidad"
+  | "ingenieria_basica"
+  | "ingenieria_detalle"
+  | "en_licitacion"
+  | "construccion"
+  | "comisionamiento"
+  | "operacion"
+  | "paralizado"
+  | "cerrado";
+
+export type CubetaScoring =
+  | "objetivo_pilar_1"
+  | "objetivo_pilar_2"
+  | "objetivo_pilar_3"
+  | "om_hse_recurrente"
+  | "descarte";
+
+/** Desglose auditable del score (0018): por qué puntuó lo que puntuó. */
+export interface ScoreDetalle {
+  version: string;
+  total: number;
+  cubeta: CubetaScoring | null;
+  pilar_primario: string | null;
+  pilares_secundarios: string[];
+  factores: Record<
+    "etapa" | "capex" | "sector" | "contactabilidad" | "cliente_historico",
+    { puntos: number; max: number; detalle: string }
+  >;
+}
+
 export interface ProyectoMercado {
   id: string;
   nombre: string;
@@ -250,6 +285,19 @@ export interface ProyectoMercado {
   fecha_limite_contacto?: string | null;
   nota_asignacion?: string | null;
   dias_alerta_sin_gestion?: number;
+  /** Fase 8 (0011/0014/0018): radar con scoring. */
+  etapa?: EtapaProyecto | null;
+  cuenta_id?: string | null;
+  capex_musd?: number | null;
+  sector?: string | null;
+  subsector?: string | null;
+  es_watchlist?: boolean;
+  motivo_descarte?: string | null;
+  inicio_construccion?: string | null;
+  puesta_en_marcha?: string | null;
+  score?: number | null;
+  score_detalle?: ScoreDetalle | null;
+  cubeta?: CubetaScoring | null;
   /** join opcional */
   asignado?: { nombre: string } | null;
 }

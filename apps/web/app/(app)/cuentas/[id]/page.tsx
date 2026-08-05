@@ -18,12 +18,14 @@ import {
   crearContacto,
   eliminarContacto,
   listarContactos,
+  listarContactosPuerta,
   listarEtapas,
   listarOportunidades,
   obtenerCuenta,
   revelarContactos,
   type ContactoRevelado,
 } from "@diprem/api";
+import { bucketDeRol } from "@diprem/core";
 import { useSupabase } from "@/lib/hooks";
 import {
   AreaTexto,
@@ -127,6 +129,18 @@ export default function PaginaDetalleCuenta({
   });
   const revelado = Object.keys(pii).length > 0;
 
+  // Acción de derivación: la cuenta tiene puerta de entrada pero NINGÚN
+  // decisor técnico → tarea concreta, con el mejor contacto puerta
+  // (ordenado por peso_decision) listo para llamar.
+  const sinDecisor =
+    (contactos?.length ?? 0) > 0 &&
+    !contactos!.some((c) => bucketDeRol(c.rol) === "decisor_tecnico");
+  const { data: puertas } = useQuery({
+    queryKey: ["contactos_puerta", id],
+    queryFn: () => listarContactosPuerta(supabase, id),
+    enabled: sinDecisor,
+  });
+
   // Editar exige la PII actual (el formulario la trae precargada): si aún no
   // se reveló, se revela primero — la primera vez consume cuota, luego es libre.
   const abrirEdicion = async (contacto: Contacto) => {
@@ -217,6 +231,47 @@ export default function PaginaDetalleCuenta({
             <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
               {avisoRevelado}
             </p>
+          )}
+          {sinDecisor && (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/50">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                🚪 {es.mercado.derivacionTitulo}
+              </p>
+              <p className="mt-1 text-xs text-amber-800 dark:text-amber-300">
+                {(puertas?.length ?? 0) > 0
+                  ? es.mercado.derivacionNota
+                  : es.mercado.derivacionSinPuerta}
+              </p>
+              {(puertas ?? []).slice(0, 3).map((p, i) => {
+                const revPuerta = pii[p.contacto_id];
+                return (
+                <p key={p.contacto_id} className="mt-1.5 text-sm text-amber-900 dark:text-amber-100">
+                  {i === 0 ? "→ " : "· "}
+                  <span className="font-medium">{p.nombre}</span>
+                  {p.cargo ? ` — ${p.cargo}` : ""}
+                  {revPuerta && !revPuerta.omitido && (
+                    <span className="ml-2">
+                      <EnlacesContacto
+                        telefono={revPuerta.telefono}
+                        email={revPuerta.email}
+                        compacto
+                      />
+                    </span>
+                  )}
+                </p>
+                );
+              })}
+              {(puertas?.length ?? 0) > 0 && !revelado && (
+                <Boton
+                  variante="secundario"
+                  className="mt-2"
+                  onClick={() => revelar.mutate()}
+                  disabled={revelar.isPending}
+                >
+                  🔓 {revelar.isPending ? es.comunes.cargando : es.crm.mostrarDatosContacto}
+                </Boton>
+              )}
+            </div>
           )}
           <div className="mt-3 space-y-2">
             {(contactos?.length ?? 0) === 0 && (
