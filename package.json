@@ -11,11 +11,13 @@
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "db:migrate": "node scripts/db/migrate.mjs",
+    "db:aplicar": "node scripts/db/aplicar-sql.mjs",
     "db:validar": "bash scripts/db/validar-local.sh",
     "db:reset": "supabase db reset",
     "db:start": "supabase start"
   },
   "devDependencies": {
+    "pg": "^8.22.0",
     "turbo": "^2.5.0"
   },
   "pnpm": {
