@@ -28,3 +28,6 @@ supabase/.temp/
 # sistema
 .DS_Store
 *.log
+
+# python
+__pycache__/
