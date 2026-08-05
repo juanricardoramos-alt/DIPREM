@@ -129,14 +129,14 @@ export default function PaginaOportunidades() {
       )}
 
       {!isLoading && (
-      <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
+      <div className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 md:snap-none">
         {etapasActivas.map((etapa) => {
           const deEtapa =
             oportunidades?.filter((o) => o.etapa_id === etapa.id) ?? [];
           return (
             <div
               key={etapa.id}
-              className={`w-72 shrink-0 rounded-xl border bg-superficie-2/60 ${
+              className={`w-[85vw] max-w-72 shrink-0 snap-start rounded-xl border bg-superficie-2/60 sm:w-72 ${
                 arrastrando ? "border-dashed border-primario" : "border-borde"
               }`}
               onDragOver={(e) => e.preventDefault()}

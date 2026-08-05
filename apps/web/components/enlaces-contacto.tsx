@@ -47,11 +47,11 @@ export function EnlacesContacto({
       )}
       {email && (
         <a
-          className={`${clase} text-primario`}
+          className={`${clase} min-w-0 max-w-full text-primario`}
           href={enlaceCorreo(email)}
           title={es.gestion.escribirCorreo}
         >
-          ✉️ {email}
+          ✉️ <span className="break-all">{email}</span>
         </a>
       )}
     </span>

@@ -40,7 +40,41 @@ export default function PaginaCuentas() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
+      {/* Móvil: tarjetas apiladas */}
+      <div className="mt-6 space-y-2 md:hidden">
+        {isLoading && (
+          <div className="rounded-xl border border-borde bg-superficie p-4 text-sm text-tinta-tenue">
+            {es.comunes.cargando}
+          </div>
+        )}
+        {!isLoading && (cuentas?.length ?? 0) === 0 && (
+          <EstadoVacio titulo={es.crm.sinCuentas} />
+        )}
+        {cuentas?.map((cuenta) => (
+          <Link
+            key={cuenta.id}
+            href={`/cuentas/${cuenta.id}`}
+            className="block rounded-xl border border-borde bg-superficie p-3.5 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 font-semibold leading-snug text-primario">
+                {cuenta.razon_social}
+              </p>
+              <Insignia tono={TONO_ESTADO[cuenta.estado]}>
+                {ETIQUETAS_ESTADO_CUENTA[cuenta.estado]}
+              </Insignia>
+            </div>
+            <p className="mt-1 text-xs text-tinta-suave">
+              {ETIQUETAS_VERTICAL[cuenta.vertical]}
+              {cuenta.pais ? ` · ${cuenta.pais}` : ""}
+              {cuenta.propietario?.nombre ? ` · ${cuenta.propietario.nombre}` : ""}
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      {/* Escritorio: tabla */}
+      <div className="mt-6 hidden overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm md:block">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>

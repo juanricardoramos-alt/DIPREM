@@ -161,7 +161,7 @@ export function FormularioOportunidad({
           )}
         </Campo>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Campo etiqueta={`${es.crm.pilar} (${es.comunes.opcional})`}>
             <Selector
               value={pilarId}
@@ -208,7 +208,7 @@ export function FormularioOportunidad({
           </Campo>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Campo etiqueta={es.crm.monto}>
             <Entrada
               name="monto"

@@ -39,9 +39,12 @@ export function ShellApp({ children }: { children: React.ReactNode }) {
   if (!perfil || !perfil.activo) return null;
 
   return (
-    <div className="min-h-screen lg:flex">
+    // overflow-x-clip: la PÁGINA jamás se mueve de lado — lo ancho scrollea
+    // dentro de su propio contenedor (clip no crea scroll container, así que
+    // la sidebar sticky y los overflow-x-auto internos siguen funcionando)
+    <div className="min-h-screen overflow-x-clip lg:flex">
       <BarraLateral rol={perfil.rol} />
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-clip">
         <Encabezado usuario={perfil} />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-28 lg:px-8 lg:py-8 print:pb-4">
           {children}

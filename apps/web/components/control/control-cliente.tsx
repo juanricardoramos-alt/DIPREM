@@ -304,7 +304,73 @@ export function ControlCliente() {
       <section>
         <h2 className="text-lg font-semibold">{es.control.resultadoTitulo}</h2>
         <p className="text-sm text-tinta-suave">{es.control.resultadoNota}</p>
-        <div className="mt-3 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
+
+        {/* Móvil: tarjetas apiladas (la tabla no cabe legible en un teléfono) */}
+        <div className="mt-3 space-y-2 md:hidden">
+          {filasCobertura.map((fila) => {
+            const extra = porEjecutivo.get(fila.usuario_id);
+            const resp = respuestaPor.get(fila.usuario_id);
+            const pct = fila.cobertura_pct != null ? Number(fila.cobertura_pct) : null;
+            return (
+              <div
+                key={fila.usuario_id}
+                className="rounded-xl border border-borde bg-superficie p-3.5 shadow-sm"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="font-semibold">{fila.nombre}</p>
+                  <button
+                    className="text-sm text-primario"
+                    onClick={() => setDetalleDe(fila)}
+                  >
+                    {es.control.verDetalle}
+                  </button>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-superficie-2">
+                    <div
+                      className={`h-full rounded-full ${
+                        (pct ?? 0) < 30
+                          ? "bg-red-500"
+                          : (pct ?? 0) < 60
+                            ? "bg-amber-400"
+                            : "bg-emerald-500"
+                      }`}
+                      style={{ width: `${pct ?? 0}%` }}
+                    />
+                  </div>
+                  <span
+                    className={`text-sm font-bold tabular-nums ${
+                      (pct ?? 0) < 30 ? "text-red-600 dark:text-red-400" : ""
+                    }`}
+                  >
+                    {pct != null ? `${pct}%` : "—"}
+                  </span>
+                  <span className="text-xs text-tinta-tenue">
+                    {fila.gestionadas_30d}/{fila.cartera} {es.control.colCarteraCorta.toLowerCase()}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm text-tinta-suave">
+                  🎯 {extra?.avances ?? 0} ·{" "}
+                  <span className="text-emerald-700 dark:text-emerald-300">
+                    ↑{extra?.subidas ?? 0}
+                  </span>
+                  <span className="text-tinta-tenue">↓{extra?.bajadas ?? 0}</span> ·{" "}
+                  {extra?.huerfanas ? (
+                    <span className="font-semibold text-red-600 dark:text-red-400">
+                      {extra.huerfanas} huérf.
+                    </span>
+                  ) : (
+                    <span>0 huérf.</span>
+                  )}{" "}
+                  ·{" "}
+                  {resp?.tasa != null ? `${resp.tasa}% resp.` : es.control.sinDatoTasa}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 hidden overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm md:block">
           <table className="w-full text-sm">
             <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
               <tr>

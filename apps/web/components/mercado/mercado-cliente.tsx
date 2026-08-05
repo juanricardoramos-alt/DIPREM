@@ -294,8 +294,103 @@ export function MercadoCliente() {
         )}
       </div>
 
-      {/* Tabla del segmento */}
-      <div className="mt-4 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
+      {/* Móvil: tarjetas apiladas (la tabla del radar no cabe legible) */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {isLoading && (
+          <div className="rounded-xl border border-borde bg-superficie p-4 text-sm text-tinta-tenue">
+            {es.comunes.cargando}
+          </div>
+        )}
+        {!isLoading && !errorCarga && filtrados.length === 0 && (
+          <EstadoVacio titulo={es.mercado.sinProyectos} />
+        )}
+        {filtrados.map((p) => {
+          const contactos = contactosDelProyecto(p);
+          const gestion = p.cuenta_id ? gestionPorCuenta.get(p.cuenta_id) : undefined;
+          return (
+            <div key={p.id} className="rounded-xl border border-borde bg-superficie p-3.5 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="min-w-0 font-semibold leading-snug">
+                  {enVentanaCaliente(p.etapa) && "🔥 "}
+                  {p.prioridad === "alta" && !p.etapa && "⚠️ "}
+                  {p.nombre}
+                </p>
+                <button
+                  onClick={() => setDetalleScore(p)}
+                  title={es.mercado.porQuePuntuo}
+                  className={`shrink-0 rounded-md px-2 py-1 text-sm font-bold tabular-nums ${
+                    (p.score ?? 0) >= 75
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                      : (p.score ?? 0) >= 50
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                        : "bg-superficie-2 text-tinta-suave"
+                  }`}
+                >
+                  {p.score ?? "—"}
+                </button>
+              </div>
+              <p className="mt-0.5 text-xs text-tinta-suave">
+                {p.empresa}
+                {p.region ? ` · ${p.region}` : ""}
+              </p>
+              <p className="mt-1.5 text-xs text-tinta-suave">
+                {p.capex_musd != null && (
+                  <>💰 {Number(p.capex_musd).toLocaleString("es-CL")} MUSD · </>
+                )}
+                🏗 {p.inicio_construccion ? formatearFechaCorta(p.inicio_construccion) : "—"} · ▶{" "}
+                {p.puesta_en_marcha ? formatearFechaCorta(p.puesta_en_marcha) : "—"}
+                {gestion?.ultima_gestion
+                  ? ` · ⏱ ${es.mercado.diasCorto(gestion.dias_sin_gestion)}`
+                  : gestion
+                    ? ` · ⏱ ${es.mercado.sinGestionNunca}`
+                    : ""}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <Insignia tono={TONO_CONTACTOS[contactos]}>
+                  {es.mercado.contactosEstado[contactos]}
+                </Insignia>
+                {p.estado === "sin_asignar" ? (
+                  <Insignia tono="ambar">{es.mercado.estados.sin_asignar}</Insignia>
+                ) : (
+                  <Insignia tono={p.estado === "convertido" ? "verde" : "azul"}>
+                    {p.asignado?.nombre ?? es.mercado.estados[p.estado]}
+                  </Insignia>
+                )}
+                <span className="ml-auto flex items-center gap-1.5">
+                  <select
+                    className="rounded-md border border-borde bg-superficie px-1.5 py-1 text-xs"
+                    value={p.etapa ?? ""}
+                    onChange={(e) =>
+                      cambiarEtapa.mutate({ id: p.id, etapa: e.target.value || null })
+                    }
+                  >
+                    <option value="">{es.mercado.etapaSinClasificar}</option>
+                    {ETAPAS.map((etapa) => (
+                      <option key={etapa} value={etapa}>
+                        {ETIQUETAS_ETAPA_PROYECTO[etapa]}
+                      </option>
+                    ))}
+                  </select>
+                  {p.estado === "sin_asignar" && (
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        setSeleccion(new Set([p.id]));
+                        setAsignando(true);
+                      }}
+                    >
+                      {es.mercado.asignar}
+                    </Boton>
+                  )}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Escritorio: tabla del segmento */}
+      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm md:block">
         <table className="w-full text-sm">
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
