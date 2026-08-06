@@ -43,7 +43,7 @@ import {
   Selector,
   TarjetasEsqueleto,
 } from "@/components/ui";
-import { FiltroCargo } from "@/components/filtro-cargo";
+import { BarraFiltroContactos, filtrarContactos } from "@/components/filtro-cargo";
 
 const ROLES_VINCULABLES = ["epc", "contratista", "proveedor", "mandante"] as const;
 const TONO_VINCULO = {
@@ -75,6 +75,7 @@ export default function PaginaFichaProyecto() {
   const puedeAbrirEmpresa = perfil?.rol === "admin" || perfil?.rol === "revisor";
 
   const [bucket, setBucket] = useState<BucketContacto | "">("");
+  const [busquedaContacto, setBusquedaContacto] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [rolVinculo, setRolVinculo] = useState<(typeof ROLES_VINCULABLES)[number]>("epc");
   const [error, setError] = useState<string | null>(null);
@@ -140,13 +141,10 @@ export default function PaginaFichaProyecto() {
     onError: (e: Error) => setError(mensajeError(e)),
   });
 
-  // Contactos filtrados por bucket (mismo criterio que la pantalla Empresas)
+  // Contactos filtrados por bucket + texto (misma barra que la ficha de empresa)
   const contactosFiltrados = useMemo(
-    () =>
-      (contactos ?? []).filter(
-        (c) => !bucket || bucketDeRol(c.rol) === bucket,
-      ),
-    [contactos, bucket],
+    () => filtrarContactos(contactos ?? [], bucket, busquedaContacto),
+    [contactos, bucket, busquedaContacto],
   );
   const conteos = useMemo(
     () => conteosPorBucket((contactos ?? []).map((c) => c.rol)),
@@ -332,7 +330,13 @@ export default function PaginaFichaProyecto() {
         <h2 className="text-lg font-semibold">{es.mercado.contactosClaveTitulo}</h2>
         <p className="text-sm text-tinta-suave">{es.mercado.contactosClaveNota}</p>
         <div className="mt-3">
-          <FiltroCargo valor={bucket} onCambiar={setBucket} conteos={conteos} />
+          <BarraFiltroContactos
+            bucket={bucket}
+            onBucket={setBucket}
+            busqueda={busquedaContacto}
+            onBusqueda={setBusquedaContacto}
+            conteos={conteos}
+          />
         </div>
         <div className="mt-3 space-y-1.5">
           {contactosFiltrados.length === 0 && !errorContactos && (

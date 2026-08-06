@@ -27,7 +27,8 @@ import {
   revelarContactos,
   type ContactoRevelado,
 } from "@diprem/api";
-import { bucketDeRol } from "@diprem/core";
+import { bucketDeRol, conteosPorBucket, type BucketContacto } from "@diprem/core";
+import { BarraFiltroContactos, filtrarContactos } from "@/components/filtro-cargo";
 import { useSupabase } from "@/lib/hooks";
 import {
   AreaTexto,
@@ -56,6 +57,10 @@ export default function PaginaDetalleCuenta({
   const avisar = useAvisar();
 
   const [editando, setEditando] = useState(false);
+  // Filtro de contactos: misma barra que la ficha de proyecto (chips + texto)
+  const [bucketContactos, setBucketContactos] = useState<BucketContacto | "">("");
+  const [busquedaContacto, setBusquedaContacto] = useState("");
+  const [verTodosContactos, setVerTodosContactos] = useState(false);
   const [contactoForm, setContactoForm] = useState<
     { contacto: Contacto | null } | null
   >(null);
@@ -147,6 +152,31 @@ export default function PaginaDetalleCuenta({
     queryFn: () => listarContactosPuerta(supabase, id),
     enabled: sinDecisor,
   });
+
+  // Filtro + jerarquía: con más de 10 contactos y sin filtro activo, primero
+  // los clave (decisor/gestor/puerta) y el resto detrás de "Ver los N restantes"
+  const MUCHOS_CONTACTOS = 10;
+  const conteosContactos = conteosPorBucket((contactos ?? []).map((c) => c.rol));
+  const contactosFiltrados = filtrarContactos(
+    contactos ?? [],
+    bucketContactos,
+    busquedaContacto,
+  );
+  const filtroContactosActivo =
+    Boolean(bucketContactos) || busquedaContacto.trim().length > 0;
+  const colapsarContactos =
+    !filtroContactosActivo &&
+    !verTodosContactos &&
+    (contactos?.length ?? 0) > MUCHOS_CONTACTOS;
+  const contactosClave = contactosFiltrados.filter(
+    (c) => bucketDeRol(c.rol) !== "sin_clasificar",
+  );
+  const contactosVisibles = colapsarContactos
+    ? contactosClave.length > 0
+      ? contactosClave
+      : contactosFiltrados.slice(0, MUCHOS_CONTACTOS)
+    : contactosFiltrados;
+  const contactosRestantes = contactosFiltrados.length - contactosVisibles.length;
 
   // Revelado INDIVIDUAL (0020): un contacto = 1 del tope diario, registrado
   // igual que el global. Si el tope está copado, la BD lo dice y se muestra.
@@ -290,11 +320,25 @@ export default function PaginaDetalleCuenta({
               )}
             </div>
           )}
+          {(contactos?.length ?? 0) > 0 && (
+            <div className="mt-3">
+              <BarraFiltroContactos
+                bucket={bucketContactos}
+                onBucket={setBucketContactos}
+                busqueda={busquedaContacto}
+                onBusqueda={setBusquedaContacto}
+                conteos={conteosContactos}
+              />
+            </div>
+          )}
           <div className="mt-3 space-y-2">
             {(contactos?.length ?? 0) === 0 && (
               <EstadoVacio titulo={es.crm.sinContactos} />
             )}
-            {contactos?.map((contacto) => {
+            {(contactos?.length ?? 0) > 0 && contactosFiltrados.length === 0 && (
+              <EstadoVacio titulo={es.comunes.sinResultados} />
+            )}
+            {contactosVisibles.map((contacto) => {
               const revContacto = pii[contacto.id];
               return (
               <div
@@ -387,6 +431,23 @@ export default function PaginaDetalleCuenta({
               </div>
               );
             })}
+            {contactosRestantes > 0 && (
+              <button
+                onClick={() => setVerTodosContactos(true)}
+                className="w-full rounded-lg border border-dashed border-borde py-2 text-center text-sm font-medium text-primario hover:bg-superficie-2"
+              >
+                {es.crm.verRestantesContactos(contactosRestantes)}
+              </button>
+            )}
+            {verTodosContactos && !filtroContactosActivo &&
+              (contactos?.length ?? 0) > MUCHOS_CONTACTOS && (
+                <button
+                  onClick={() => setVerTodosContactos(false)}
+                  className="w-full rounded-lg py-1.5 text-center text-xs font-medium text-tinta-suave hover:bg-superficie-2"
+                >
+                  {es.crm.verMenosContactos}
+                </button>
+              )}
           </div>
         </section>
 

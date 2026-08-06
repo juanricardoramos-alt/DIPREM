@@ -7,7 +7,8 @@
  * Nunca muestra ni necesita PII: trabaja solo con la columna `rol`.
  */
 
-import { conteosPorBucket, es, type BucketContacto } from "@diprem/core";
+import { bucketDeRol, conteosPorBucket, es, type BucketContacto } from "@diprem/core";
+import { Entrada } from "@/components/ui";
 
 const BUCKETS: readonly BucketContacto[] = [
   "decisor_tecnico",
@@ -55,6 +56,63 @@ export function FiltroCargo({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/** Minúsculas y sin tildes, para que "María" calce con "maria". */
+function normalizarBusqueda(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+/**
+ * Filtra una lista de contactos por bucket + texto libre (nombre o cargo).
+ * Misma lógica en la ficha de empresa y la ficha de proyecto.
+ */
+export function filtrarContactos<
+  T extends { nombre: string; cargo?: string | null; rol?: string | null },
+>(contactos: T[], bucket: BucketContacto | "", busqueda: string): T[] {
+  const texto = normalizarBusqueda(busqueda.trim());
+  return contactos.filter((contacto) => {
+    if (bucket && bucketDeRol(contacto.rol) !== bucket) return false;
+    if (!texto) return true;
+    return (
+      normalizarBusqueda(contacto.nombre).includes(texto) ||
+      (contacto.cargo ? normalizarBusqueda(contacto.cargo).includes(texto) : false)
+    );
+  });
+}
+
+/**
+ * Barra completa de filtro de contactos: chips por cargo + búsqueda por texto.
+ * EL componente compartido — ficha de empresa y ficha de proyecto usan este
+ * mismo bloque, no implementaciones propias.
+ */
+export function BarraFiltroContactos({
+  bucket,
+  onBucket,
+  busqueda,
+  onBusqueda,
+  conteos,
+}: {
+  bucket: BucketContacto | "";
+  onBucket: (bucket: BucketContacto | "") => void;
+  busqueda: string;
+  onBusqueda: (texto: string) => void;
+  conteos?: Partial<Record<BucketContacto, number>>;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <FiltroCargo valor={bucket} onCambiar={onBucket} conteos={conteos} />
+      <Entrada
+        placeholder={es.crm.buscarContactoPlaceholder}
+        value={busqueda}
+        onChange={(e) => onBusqueda(e.target.value)}
+        className="w-full rounded-md border border-borde bg-superficie px-3 py-1.5 text-sm sm:w-56"
+      />
     </div>
   );
 }
