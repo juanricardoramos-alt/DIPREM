@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MoreHorizontal, X } from "lucide-react";
-import { es, itemsParaRol, type RolUsuario } from "@diprem/core";
+import { es, itemsParaRol, rutaActiva, type RolUsuario } from "@diprem/core";
 import { ICONOS_RUTA } from "@/components/shell/iconos-navegacion";
 
 const MAX_TABS = 4; // + "Más"
@@ -15,9 +15,10 @@ export function TabBarMovil({ rol }: { rol: RolUsuario }) {
   const [masAbierto, setMasAbierto] = useState(false);
 
   const items = itemsParaRol(rol);
+  const activa = rutaActiva(pathname, items);
   const principales = items.slice(0, MAX_TABS);
   const restantes = items.slice(MAX_TABS);
-  const activoEnRestantes = restantes.some((i) => pathname.startsWith(i.ruta));
+  const activoEnRestantes = restantes.some((i) => i.ruta === activa);
 
   return (
     <>
@@ -25,7 +26,7 @@ export function TabBarMovil({ rol }: { rol: RolUsuario }) {
         <div className="grid auto-cols-fr grid-flow-col">
           {principales.map((item) => {
             const Icono = ICONOS_RUTA[item.ruta];
-            const activo = pathname.startsWith(item.ruta);
+            const activo = item.ruta === activa;
             return (
               <Link
                 key={item.ruta}
@@ -73,7 +74,7 @@ export function TabBarMovil({ rol }: { rol: RolUsuario }) {
             <div className="grid grid-cols-3 gap-2">
               {restantes.map((item) => {
                 const Icono = ICONOS_RUTA[item.ruta];
-                const activo = pathname.startsWith(item.ruta);
+                const activo = item.ruta === activa;
                 return (
                   <Link
                     key={item.ruta}

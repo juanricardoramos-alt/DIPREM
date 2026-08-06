@@ -7,6 +7,7 @@ import {
   ETIQUETAS_PRIORIDAD,
   ETIQUETAS_TIPO_ACTIVIDAD,
   ICONOS_TIPO_ACTIVIDAD,
+  accionesDeHoy,
   calcularRacha,
   es,
   esFinDeDia,
@@ -24,7 +25,9 @@ import {
   periodoActual,
   proyectosPrioritarios,
   sugerenciasManana,
+  type AccionDeHoy,
   type Actividad,
+  type RazonAccion,
   type TipoActividad,
 } from "@diprem/core";
 import {
@@ -109,9 +112,20 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
     ? metaSemanalDerivada(Number(metaActividades.objetivo))
     : null;
   const prioritarios = proyectosPrioritarios(leadsActivos ?? []);
-  const idsPrioritarios = new Set(prioritarios.map((p) => p.lead.id));
+
+  // Qué hacer hoy: una sola lista ordenada por urgencia (Fase D)
+  const acciones = accionesDeHoy({
+    vencidas: agenda?.vencidas ?? [],
+    agendaPendiente: agenda?.agenda.filter((a) => a.estado === "pendiente") ?? [],
+    prioritarios,
+    leadsNuevos: leadsNuevos ?? [],
+    seguimientos,
+  });
+  const idsLeadsEnAcciones = new Set(
+    acciones.flatMap((a) => (a.hacer.tipo === "gestionar_lead" ? [a.hacer.lead.id] : [])),
+  );
   const leadsNuevosRestantes = ordenarLeadsPorPrioridad(leadsNuevos ?? []).filter(
-    (l) => !idsPrioritarios.has(l.id),
+    (l) => !idsLeadsEnAcciones.has(l.id),
   );
   const sugerencias = sugerenciasManana(
     seguimientos,
@@ -146,6 +160,38 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           </span>
         </div>
       </div>
+
+      {/* ⭐ Qué hacer hoy: la lista única ordenada por urgencia (Fase D) */}
+      <section className="mt-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <h2 className="text-lg font-semibold">🎯 {es.miDia.queHacerHoy}</h2>
+          <p className="text-xs text-tinta-tenue">{es.miDia.queHacerHoyNota}</p>
+        </div>
+        {cargandoAgenda || cargandoSeguimientos ? (
+          <div className="mt-3">
+            <TarjetasEsqueleto />
+          </div>
+        ) : acciones.length === 0 ? (
+          <p className="mt-3 rounded-xl border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
+            {es.miDia.sinAccionesHoy}
+          </p>
+        ) : (
+          <ol className="mt-3 space-y-2">
+            {acciones.map((accion, indice) => (
+              <li key={accion.clave}>
+                <TarjetaAccion
+                  numero={indice + 1}
+                  accion={accion}
+                  onCompletar={(actividad) => setCompletando(actividad)}
+                  onGestionar={(destino) =>
+                    setFormulario({ tipo: "llamada", rapido: true, ...destino })
+                  }
+                />
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
 
       {/* Racha de gestión + semana vs meta */}
       <div className="mt-4 flex flex-wrap gap-3">
@@ -219,78 +265,6 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
               ))}
             </ol>
           )}
-        </section>
-      )}
-
-      {/* Proyectos prioritarios de hoy */}
-      {prioritarios.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-lg font-semibold">🎯 {es.miDia.prioritarios}</h2>
-          <p className="text-sm text-tinta-suave">{es.miDia.prioritariosNota}</p>
-          <div className="mt-3 grid gap-2 lg:grid-cols-3">
-            {prioritarios.map(({ lead, limiteVencido }) => {
-              const asignacion = infoAsignacionLead(lead);
-              return (
-                <div
-                  key={lead.id}
-                  className={`rounded-xl border-2 p-4 ${
-                    limiteVencido || asignacion?.prioridad === "alta"
-                      ? "border-red-300 dark:border-red-900 bg-superficie"
-                      : "border-primario/40 bg-superficie"
-                  }`}
-                >
-                  <p className="flex flex-wrap items-center gap-1.5">
-                    <Link
-                      href={`/leads/${lead.id}`}
-                      className="font-semibold hover:text-primario hover:underline"
-                    >
-                      {asignacion?.proyecto_nombre ?? lead.nombre}
-                    </Link>
-                    {asignacion?.prioridad && (
-                      <Insignia
-                        tono={
-                          asignacion.prioridad === "alta"
-                            ? "rojo"
-                            : asignacion.prioridad === "media"
-                              ? "ambar"
-                              : "gris"
-                        }
-                      >
-                        {ETIQUETAS_PRIORIDAD[asignacion.prioridad]}
-                      </Insignia>
-                    )}
-                  </p>
-                  <p className="truncate text-sm text-tinta-suave">
-                    {lead.nombre}
-                    {lead.empresa ? ` · ${lead.empresa}` : ""}
-                  </p>
-                  {asignacion?.fecha_limite_contacto && (
-                    <p className="mt-1">
-                      <Insignia tono={limiteVencido ? "rojo" : "azul"}>
-                        ⏰ {es.control.fechaLimiteCorta}:{" "}
-                        {formatearFechaCorta(asignacion.fecha_limite_contacto)}
-                        {limiteVencido && ` · ${es.control.vencido}`}
-                      </Insignia>
-                    </p>
-                  )}
-                  <div className="mt-2">
-                    <Boton
-                      variante="secundario"
-                      onClick={() =>
-                        setFormulario({
-                          tipo: "llamada",
-                          rapido: true,
-                          lead: { id: lead.id, nombre: lead.nombre },
-                        })
-                      }
-                    >
-                      {es.miDia.registrarGestion}
-                    </Boton>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </section>
       )}
 
@@ -510,6 +484,97 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
         />
       )}
       <DialogoCompletar actividad={completando} onCerrar={() => setCompletando(null)} />
+    </div>
+  );
+}
+
+function textoRazon(razon: RazonAccion): string {
+  switch (razon.tipo) {
+    case "limite_vencido":
+      return es.miDia.razonLimiteVencido;
+    case "primer_contacto":
+      return es.miDia.razonPrimerContacto;
+    case "tarea_vencida":
+      return es.miDia.razonTareaVencida;
+    case "agendada":
+      return es.miDia.razonAgendada(razon.hora);
+    case "sin_contacto":
+      return es.miDia.razonSinContacto(razon.dias);
+  }
+}
+
+/** Tarjeta numerada de "Qué hacer hoy": una acción principal grande por fila. */
+function TarjetaAccion({
+  numero,
+  accion,
+  onCompletar,
+  onGestionar,
+}: {
+  numero: number;
+  accion: AccionDeHoy<Actividad>;
+  onCompletar: (actividad: Actividad) => void;
+  onGestionar: (destino: {
+    lead?: { id: string; nombre: string };
+    oportunidad?: { id: string; nombre: string; cuenta_id: string };
+  }) => void;
+}) {
+  const { hacer } = accion;
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-xl border-2 bg-superficie p-3.5 shadow-sm ${
+        accion.urgente ? "border-red-300 dark:border-red-900" : "border-borde"
+      }`}
+    >
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+          accion.urgente
+            ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+            : "bg-primario-suave text-primario"
+        }`}
+      >
+        {numero}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-semibold">
+          {hacer.tipo === "completar" && (
+            <span className="mr-1">{ICONOS_TIPO_ACTIVIDAD[hacer.actividad.tipo]}</span>
+          )}
+          {accion.ruta ? (
+            <Link href={accion.ruta} className="hover:text-primario hover:underline">
+              {accion.titulo}
+            </Link>
+          ) : (
+            accion.titulo
+          )}
+        </p>
+        {accion.detalle && (
+          <p className="truncate text-sm text-tinta-suave">{accion.detalle}</p>
+        )}
+        <p
+          className={`truncate text-xs ${
+            accion.urgente ? "text-red-600 dark:text-red-400" : "text-tinta-tenue"
+          }`}
+        >
+          {textoRazon(accion.razon)}
+        </p>
+      </div>
+      {hacer.tipo === "completar" ? (
+        <Boton onClick={() => onCompletar(hacer.actividad)}>
+          ✓ {es.miDia.completar}
+        </Boton>
+      ) : (
+        <Boton
+          onClick={() =>
+            onGestionar(
+              hacer.tipo === "gestionar_lead"
+                ? { lead: hacer.lead }
+                : { oportunidad: hacer.oportunidad },
+            )
+          }
+        >
+          {es.miDia.registrarGestion}
+        </Boton>
+      )}
     </div>
   );
 }

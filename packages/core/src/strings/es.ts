@@ -24,6 +24,7 @@ export const es = {
   },
   nav: {
     control: "Control",
+    reporteDiario: "Reporte diario",
     miDia: "Mi Día",
     cuentas: "Empresas",
     oportunidades: "Oportunidades",
@@ -401,6 +402,19 @@ export const es = {
     escribirCorreo: "Escribir correo",
   },
   miDia: {
+    // Qué hacer hoy: la lista única ordenada por urgencia (Fase D)
+    queHacerHoy: "Qué hacer hoy",
+    queHacerHoyNota: "Tus próximas acciones en orden de urgencia. Parte por la primera.",
+    sinAccionesHoy: "Nada urgente pendiente. Suma gestión con el registro rápido. 🎉",
+    razonLimiteVencido: "Fecha límite de primer contacto vencida",
+    razonPrimerContacto: "Esperando tu primer contacto",
+    razonTareaVencida: "Quedó pendiente de días anteriores",
+    razonAgendada: (hora: string | null) =>
+      hora ? `Agendada hoy a las ${hora}` : "Agendada para hoy",
+    razonSinContacto: (dias: number) =>
+      dias === 1
+        ? "1 día sin contacto — que no se enfríe"
+        : `${dias} días sin contacto — que no se enfríe`,
     agendaHoy: "Agenda de hoy",
     vencidas: "Vencidas",
     sinAgenda: "Nada agendado para hoy. Usa el registro rápido para sumar gestión.",

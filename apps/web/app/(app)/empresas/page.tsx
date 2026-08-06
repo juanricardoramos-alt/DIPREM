@@ -76,20 +76,19 @@ export default function PaginaCuentas() {
       {/* Escritorio: tabla */}
       <div className="mt-6 hidden overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm md:block">
         <table className="w-full text-sm">
+          {/* Menos columnas por defecto (Fase D): el detalle vive en la ficha */}
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.crm.razonSocial}</th>
-              <th className="px-4 py-3">{es.crm.vertical}</th>
-              <th className="px-4 py-3">{es.crm.pais}</th>
               <th className="px-4 py-3">{es.crm.propietario}</th>
               <th className="px-4 py-3">{es.crm.estado}</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <FilasEsqueleto columnas={5} />}
+            {isLoading && <FilasEsqueleto columnas={3} />}
             {!isLoading && (cuentas?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={5} className="p-4">
+                <td colSpan={3} className="p-4">
                   <EstadoVacio
                     titulo={es.crm.sinCuentas}
                     accion={
@@ -110,9 +109,11 @@ export default function PaginaCuentas() {
                   >
                     {cuenta.razon_social}
                   </Link>
+                  <p className="text-xs text-tinta-tenue">
+                    {ETIQUETAS_VERTICAL[cuenta.vertical]}
+                    {cuenta.pais ? ` · ${cuenta.pais}` : ""}
+                  </p>
                 </td>
-                <td className="px-4 py-3">{ETIQUETAS_VERTICAL[cuenta.vertical]}</td>
-                <td className="px-4 py-3">{cuenta.pais ?? "—"}</td>
                 <td className="px-4 py-3">{cuenta.propietario?.nombre ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Insignia tono={TONO_ESTADO[cuenta.estado]}>

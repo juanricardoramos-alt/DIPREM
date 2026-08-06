@@ -1,5 +1,7 @@
-import type { Actividad, Lead } from "../types/dominio";
+import type { Actividad, Lead, Moneda } from "../types/dominio";
 import { fechaLimiteVencida, infoAsignacionLead } from "./control";
+import { formatearHora } from "./fechas";
+import { formatearMonto } from "./moneda";
 import type { NivelAlerta } from "./seguimientos";
 
 /**
@@ -85,6 +87,148 @@ export function proyectosPrioritarios<
         new Date(a.lead.creado_en).getTime() - new Date(b.lead.creado_en).getTime(),
     )
     .slice(0, cantidad);
+}
+
+// ---------------------------------------------------------------------------
+// Qué hacer hoy: UNA lista ordenada por urgencia (Fase D). El ejecutivo no
+// decide por dónde partir — la plataforma se lo dice. La razón viaja
+// estructurada para que el motor de IA (Fase C) pueda reemplazar el "por qué"
+// sin cambiar esta lógica.
+// ---------------------------------------------------------------------------
+export type RazonAccion =
+  | { tipo: "limite_vencido" }
+  | { tipo: "primer_contacto" }
+  | { tipo: "tarea_vencida" }
+  | { tipo: "agendada"; hora: string | null }
+  | { tipo: "sin_contacto"; dias: number };
+
+export interface SeguimientoResumen {
+  id: string;
+  nombre: string;
+  cuenta_id: string;
+  monto: number;
+  moneda: Moneda;
+  dias_sin_contacto: number;
+  alerta: NivelAlerta;
+  cuenta?: { razon_social: string } | null;
+}
+
+type LeadResumen = Pick<Lead, "id" | "nombre" | "empresa" | "atributos">;
+type ActividadResumen = Pick<Actividad, "id" | "asunto" | "tipo" | "fecha_programada"> & {
+  cuenta?: { razon_social: string } | null;
+};
+
+export interface AccionDeHoy<TA extends ActividadResumen = ActividadResumen> {
+  clave: string;
+  titulo: string;
+  detalle: string | null;
+  razon: RazonAccion;
+  urgente: boolean;
+  ruta: string | null;
+  hacer:
+    | { tipo: "completar"; actividad: TA }
+    | { tipo: "gestionar_lead"; lead: { id: string; nombre: string } }
+    | {
+        tipo: "gestionar_oportunidad";
+        oportunidad: { id: string; nombre: string; cuenta_id: string };
+      };
+}
+
+/**
+ * Prioridad (de más a menos grave): límite de primer contacto vencido →
+ * tareas vencidas → seguimientos críticos → proyectos asignados pendientes →
+ * agenda de hoy → leads nuevos → seguimientos en atención.
+ */
+export function accionesDeHoy<TA extends ActividadResumen>(
+  datos: {
+    vencidas: TA[];
+    agendaPendiente: TA[];
+    prioritarios: LeadPriorizado<LeadResumen & Pick<Lead, "estado" | "creado_en">>[];
+    leadsNuevos: LeadResumen[];
+    seguimientos: SeguimientoResumen[];
+  },
+  limite = 6,
+): AccionDeHoy<TA>[] {
+  const acciones: AccionDeHoy<TA>[] = [];
+
+  const deLead = (lead: LeadResumen, razon: RazonAccion, urgente: boolean): AccionDeHoy<TA> => {
+    const info = infoAsignacionLead(lead);
+    return {
+      clave: `lead-${lead.id}`,
+      titulo: info?.proyecto_nombre ?? lead.nombre,
+      detalle: lead.empresa ?? null,
+      razon,
+      urgente,
+      ruta: `/leads/${lead.id}`,
+      hacer: { tipo: "gestionar_lead", lead: { id: lead.id, nombre: lead.nombre } },
+    };
+  };
+  const deActividad = (a: TA, razon: RazonAccion, urgente: boolean): AccionDeHoy<TA> => ({
+    clave: `act-${a.id}`,
+    titulo: a.asunto,
+    detalle: a.cuenta?.razon_social ?? null,
+    razon,
+    urgente,
+    ruta: null,
+    hacer: { tipo: "completar", actividad: a },
+  });
+  const deSeguimiento = (s: SeguimientoResumen, urgente: boolean): AccionDeHoy<TA> => ({
+    clave: `seg-${s.id}`,
+    titulo: s.nombre,
+    detalle: [s.cuenta?.razon_social, formatearMonto(s.monto, s.moneda)]
+      .filter(Boolean)
+      .join(" · "),
+    razon: { tipo: "sin_contacto", dias: s.dias_sin_contacto },
+    urgente,
+    ruta: `/empresas/${s.cuenta_id}`,
+    hacer: {
+      tipo: "gestionar_oportunidad",
+      oportunidad: { id: s.id, nombre: s.nombre, cuenta_id: s.cuenta_id },
+    },
+  });
+
+  const porDias = (a: SeguimientoResumen, b: SeguimientoResumen) =>
+    b.dias_sin_contacto - a.dias_sin_contacto;
+
+  for (const p of datos.prioritarios.filter((x) => x.limiteVencido)) {
+    acciones.push(deLead(p.lead, { tipo: "limite_vencido" }, true));
+  }
+  for (const a of datos.vencidas) {
+    acciones.push(deActividad(a, { tipo: "tarea_vencida" }, true));
+  }
+  for (const s of datos.seguimientos.filter((x) => x.alerta === "critico").sort(porDias)) {
+    acciones.push(deSeguimiento(s, true));
+  }
+  for (const p of datos.prioritarios.filter((x) => !x.limiteVencido)) {
+    acciones.push(deLead(p.lead, { tipo: "primer_contacto" }, false));
+  }
+  const agenda = [...datos.agendaPendiente].sort((a, b) =>
+    (a.fecha_programada ?? "").localeCompare(b.fecha_programada ?? ""),
+  );
+  for (const a of agenda) {
+    acciones.push(
+      deActividad(
+        a,
+        {
+          tipo: "agendada",
+          hora: a.fecha_programada ? formatearHora(a.fecha_programada) : null,
+        },
+        false,
+      ),
+    );
+  }
+  for (const l of datos.leadsNuevos) {
+    acciones.push(deLead(l, { tipo: "primer_contacto" }, false));
+  }
+  for (const s of datos.seguimientos.filter((x) => x.alerta === "atencion").sort(porDias)) {
+    acciones.push(deSeguimiento(s, false));
+  }
+
+  // Sin repetidos (un lead prioritario también llega en leadsNuevos)
+  const vistas = new Set<string>();
+  return acciones
+    .filter((a) => (vistas.has(a.clave) ? false : (vistas.add(a.clave), true)))
+    .slice(0, limite);
 }
 
 // ---------------------------------------------------------------------------

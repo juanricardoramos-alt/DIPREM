@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { es, itemsParaRol, type RolUsuario } from "@diprem/core";
+import { es, itemsParaRol, rutaActiva, type RolUsuario } from "@diprem/core";
 import { ICONOS_RUTA } from "@/components/shell/iconos-navegacion";
 
 /** Sidebar de escritorio: azul oscuro, colapsable, con estado activo. */
 export function BarraLateral({ rol }: { rol: RolUsuario }) {
   const pathname = usePathname();
   const items = itemsParaRol(rol);
+  const activa = rutaActiva(pathname, items);
   const [colapsada, setColapsada] = useState(false);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function BarraLateral({ rol }: { rol: RolUsuario }) {
       <nav className="mt-2 flex-1 space-y-1 px-3">
         {items.map((item) => {
           const Icono = ICONOS_RUTA[item.ruta];
-          const activo = pathname.startsWith(item.ruta);
+          const activo = item.ruta === activa;
           return (
             <Link
               key={item.ruta}
