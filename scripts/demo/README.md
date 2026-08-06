@@ -56,3 +56,10 @@ Los datos nunca se mezclan: son ramas de base de datos distintas.
 | Rodrigo Vega | Bajo y no registra: 25% cobertura, tasa "s/registro" | Cuadro: no anotar también se ve |
 
 Reporte diario: `/control/diario` — pensado para el celular, sin zoom.
+
+## Migraciones nuevas y la rama demo
+
+Cada migración nueva debe aplicarse DOS veces: con la `DATABASE_URL` de la rama
+`dev` y con la de la rama `demo` (mismo comando `pnpm db:migrate`; el runner
+solo aplica lo pendiente en cada una). Si la rama demo se borra y se recrea
+desde dev, nace ya migrada y este paso no hace falta.

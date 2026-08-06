@@ -51,31 +51,31 @@ comprobar() { # comprobar <descripcion> <esperado> <consulta>
 }
 
 echo "— Estructura y seguridad base…"
-comprobar "28 tablas en public (27 app + _migraciones)" 28 \
+comprobar "29 tablas en public (28 app + _migraciones)" 29 \
   "select count(*) from pg_tables where schemaname='public'"
-comprobar "RLS habilitado en las 28 tablas (incluida _migraciones)" 28 \
+comprobar "RLS habilitado en las 29 tablas (incluida _migraciones)" 29 \
   "select count(*) from pg_tables where schemaname='public' and rowsecurity"
 comprobar "_migraciones sin grants a authenticated/anonymous" 0 \
   "select count(*) from information_schema.role_table_grants
     where table_name='_migraciones' and grantee in ('authenticated','anonymous')"
-comprobar "99 políticas RLS (F1 + 0014 + 0015)" 99 \
+comprobar "102 políticas RLS (F1 + 0014 + 0015 + 0023)" 102 \
   "select count(*) from pg_policies where schemaname='public'"
-comprobar "las 27 tablas de app tienen política" 27 \
+comprobar "las 28 tablas de app tienen política" 28 \
   "select count(distinct tablename) from pg_policies where schemaname='public'"
 comprobar "anonymous: cero privilegios sobre tablas" 0 \
   "select count(*) from pg_tables where schemaname='public'
     and has_table_privilege('anonymous', format('%I.%I', schemaname, tablename),
                             'select,insert,update,delete')"
 # contactos ya no cuenta: su select es por COLUMNA (PII revocada) → 26 de 27
-comprobar "authenticated: select de tabla completa en 26 (contactos por columna)" 26 \
+comprobar "authenticated: select de tabla completa en 27 (contactos por columna)" 27 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'select')"
-comprobar "authenticated: insert/update en 25 (sin auditoria ni lecturas_sensibles)" 25 \
+comprobar "authenticated: insert/update en 26 (sin auditoria ni lecturas_sensibles)" 26 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'insert,update')"
-comprobar "authenticated: delete en 23 (sin auditoria/importaciones/limites/lecturas)" 23 \
+comprobar "authenticated: delete en 24 (sin auditoria/importaciones/limites/lecturas)" 24 \
   "select count(*) from pg_tables
     where schemaname='public' and tablename <> '_migraciones'
       and has_table_privilege('authenticated', format('%I.%I', schemaname, tablename), 'delete')"
@@ -186,6 +186,16 @@ comprobar "v_contactos_puerta con grant (0019)" 1 \
     where grantee='authenticated' and privilege_type='SELECT'
       and table_name='v_contactos_puerta'"
 
+echo "— Ecosistema del proyecto (0023)…"
+comprobar "empresas_del_proyecto ejecutable (RPC)" t \
+  "select has_function_privilege('authenticated','public.empresas_del_proyecto(uuid)','execute')"
+comprobar "contactos_del_proyecto ejecutable (RPC)" t \
+  "select has_function_privilege('authenticated','public.contactos_del_proyecto(uuid)','execute')"
+comprobar "derivar_mandante_proyecto NO ejecutable por clientes" f \
+  "select has_function_privilege('authenticated','public.derivar_mandante_proyecto()','execute')"
+comprobar "proyecto_empresas sin update para clientes" f \
+  "select has_table_privilege('authenticated','public.proyecto_empresas','update')"
+
 echo "— Perímetro 0015: estructura…"
 comprobar "limites_rol: 4 filas (80/25 ejecutivo aprobado)" 1 \
   "select count(*) from limites_rol
@@ -259,9 +269,22 @@ do $$ begin
     raise exception 'FALLO: email_normalizado';
   end if;
 end $$;
+-- 0023: al crear un proyecto con cuenta, el mandante se deriva solo
+insert into proyectos_mercado (nombre, empresa, etapa, cuenta_id, importado_por)
+  select 'Proyecto Con Mandante', 'ACME S.A.', 'factibilidad', id,
+         '00000000-0000-4000-8000-000000000001'
+    from cuentas where razon_social='ACME S.A.';
+do $$ begin
+  if (select count(*) from proyecto_empresas pe
+        join proyectos_mercado p on p.id = pe.proyecto_id
+       where p.nombre='Proyecto Con Mandante'
+         and pe.rol_vinculo='mandante' and pe.fuente='derivado') <> 1 then
+    raise exception 'FALLO: trigger de mandante derivado (0023)';
+  end if;
+end $$;
 rollback;
 SQL
-echo "  ✔ triggers de etapa, normalización y clasificación"
+echo "  ✔ triggers de etapa, normalización, clasificación y mandante derivado"
 
 comprobar "el rollback no dejó rastro (solo queda el usuario de sistema)" 1 \
   "select count(*) from usuarios"
@@ -391,6 +414,12 @@ insert into contactos (id, cuenta_id, nombre, cargo, telefono, email, es_princip
    'Contacto Dos', 'Jefe de Contratos', null, 'dos@minera.cl', false),
   ('a0000000-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000013',
    'Contacto Tres', null, '+56933333333', null, false);
+-- 0023: proyecto con mandante del pool (el trigger deriva el vínculo)
+insert into proyectos_mercado (id, nombre, empresa, etapa, cuenta_id, importado_por)
+  values ('b0000000-0000-4000-8000-000000000001', 'Proyecto Ecosistema',
+          'Energia Andina SA', 'construccion',
+          'c0000000-0000-4000-8000-000000000013',
+          '00000000-0000-4000-8000-0000000000a2');
 
 set local role authenticated;
 
@@ -593,6 +622,88 @@ do $$ begin perform set_config('diprem.prueba_sub', 'sub-intruso', true); end $$
 do $$ begin
   if (select count(*) from public.directorio_prospectos(p_incluir_proveedores => true)) <> 0
     then raise exception 'FALLO: intruso ve el directorio'; end if;
+end $$;
+
+-- 7) Ecosistema del proyecto (0023): DEFINER acotado por proyecto + permisos
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-ger', true); end $$;
+do $$
+declare v_proy uuid := 'b0000000-0000-4000-8000-000000000001';
+begin
+  -- mandante derivado por el trigger al sembrar
+  if (select count(*) from public.empresas_del_proyecto(v_proy)
+       where rol_vinculo = 'mandante' and fuente = 'derivado') <> 1 then
+    raise exception 'FALLO: mandante no derivado';
+  end if;
+  -- el gerente NO ve la cuenta pool por tabla…
+  if (select count(*) from contactos ct
+       where ct.cuenta_id = 'c0000000-0000-4000-8000-000000000013') <> 0 then
+    raise exception 'FALLO: gerente veía contactos del pool por tabla';
+  end if;
+  -- …pero SÍ el ecosistema acotado al proyecto (nombre/cargo, sin PII)
+  if (select count(*) from public.contactos_del_proyecto(v_proy)) <> 1 then
+    raise exception 'FALLO: contactos_del_proyecto sin el contacto del mandante';
+  end if;
+  -- vincular a mano (gerente puede) con creado_por sellado, y desvincular
+  insert into proyecto_empresas (proyecto_id, cuenta_id, rol_vinculo)
+    values (v_proy, 'c0000000-0000-4000-8000-000000000012', 'contratista');
+  if (select count(*) from public.empresas_del_proyecto(v_proy)) <> 2 then
+    raise exception 'FALLO: vínculo manual no quedó';
+  end if;
+  if (select pe.creado_por from proyecto_empresas pe
+       where pe.proyecto_id = v_proy
+         and pe.cuenta_id = 'c0000000-0000-4000-8000-000000000012')
+     <> '00000000-0000-4000-8000-0000000000b2' then
+    raise exception 'FALLO: creado_por no sellado con el gerente';
+  end if;
+  delete from proyecto_empresas pe
+   where pe.proyecto_id = v_proy
+     and pe.cuenta_id = 'c0000000-0000-4000-8000-000000000012';
+  if (select count(*) from public.empresas_del_proyecto(v_proy)) <> 1 then
+    raise exception 'FALLO: desvincular no borró';
+  end if;
+end $$;
+-- ejecutivo: ni la función ni el insert
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-eje', true); end $$;
+do $$ begin
+  begin
+    perform * from public.contactos_del_proyecto('b0000000-0000-4000-8000-000000000001');
+    raise exception 'FALLO: ejecutivo vio el ecosistema';
+  exception when others then
+    if sqlerrm not like '%gerencia%' then raise; end if;
+  end;
+  begin
+    insert into proyecto_empresas (proyecto_id, cuenta_id, rol_vinculo)
+      values ('b0000000-0000-4000-8000-000000000001',
+              'c0000000-0000-4000-8000-000000000011', 'epc');
+    raise exception 'FALLO: ejecutivo vinculó';
+  exception when others then
+    if sqlerrm like '%FALLO%' then raise; end if;
+  end;
+end $$;
+-- revisor: consulta sí, tocar no
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-rev', true); end $$;
+do $$ begin
+  if (select count(*) from public.empresas_del_proyecto('b0000000-0000-4000-8000-000000000001')) <> 1 then
+    raise exception 'FALLO: revisor debía ver el ecosistema';
+  end if;
+  begin
+    insert into proyecto_empresas (proyecto_id, cuenta_id, rol_vinculo)
+      values ('b0000000-0000-4000-8000-000000000001',
+              'c0000000-0000-4000-8000-000000000012', 'epc');
+    raise exception 'FALLO: revisor vinculó';
+  exception when others then
+    if sqlerrm like '%FALLO%' then raise; end if;
+  end;
+end $$;
+-- lectura: la función también le niega el ecosistema
+do $$ begin perform set_config('diprem.prueba_sub', 'sub-lec', true); end $$;
+do $$ begin
+  begin
+    perform * from public.contactos_del_proyecto('b0000000-0000-4000-8000-000000000001');
+    raise exception 'FALLO: lectura vio el ecosistema';
+  exception when others then
+    if sqlerrm not like '%gerencia%' then raise; end if;
+  end;
 end $$;
 
 rollback;

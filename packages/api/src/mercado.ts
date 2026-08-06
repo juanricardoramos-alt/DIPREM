@@ -152,6 +152,90 @@ export async function listarContactosPuerta(
 }
 
 /** Ejecutivos a los que se puede asignar (la RLS de usuarios limita al equipo del gerente). */
+// ---------------------------------------------------------------------------
+// Ficha del proyecto (Fase B): ecosistema mandante + EPC + contratistas
+// ---------------------------------------------------------------------------
+
+export async function obtenerProyectoMercado(
+  sb: SupabaseClient,
+  id: string,
+): Promise<ProyectoMercado | null> {
+  const { data, error } = await sb
+    .from("proyectos_mercado")
+    .select(SELECT_PROYECTO)
+    .eq("id", id)
+    .maybeSingle();
+  lanzar(error);
+  return data as unknown as ProyectoMercado | null;
+}
+
+export interface EmpresaDelProyecto {
+  vinculo_id: string;
+  cuenta_id: string;
+  razon_social: string;
+  rol_mercado: string | null;
+  rol_vinculo: "mandante" | "epc" | "contratista" | "proveedor";
+  fuente: "derivado" | "manual" | "sugerido_ia";
+  n_decisores: number;
+  n_gestores: number;
+  n_puertas: number;
+}
+
+export interface ContactoDelProyecto {
+  contacto_id: string;
+  cuenta_id: string;
+  empresa: string;
+  rol_vinculo: "mandante" | "epc" | "contratista" | "proveedor";
+  nombre: string;
+  cargo: string | null;
+  rol: string | null;
+  es_principal: boolean;
+}
+
+/** Empresas del ecosistema con conteos por bucket (RPC DEFINER, sin PII). */
+export async function listarEmpresasDelProyecto(
+  sb: SupabaseClient,
+  proyectoId: string,
+): Promise<EmpresaDelProyecto[]> {
+  const { data, error } = await sb.rpc("empresas_del_proyecto", {
+    p_proyecto_id: proyectoId,
+  });
+  lanzar(error);
+  return (data ?? []) as EmpresaDelProyecto[];
+}
+
+/** Contactos clave del ecosistema: nombre/cargo/bucket, jamás PII (RPC DEFINER). */
+export async function listarContactosDelProyecto(
+  sb: SupabaseClient,
+  proyectoId: string,
+): Promise<ContactoDelProyecto[]> {
+  const { data, error } = await sb.rpc("contactos_del_proyecto", {
+    p_proyecto_id: proyectoId,
+  });
+  lanzar(error);
+  return (data ?? []) as ContactoDelProyecto[];
+}
+
+export async function vincularEmpresaProyecto(
+  sb: SupabaseClient,
+  datos: {
+    proyecto_id: string;
+    cuenta_id: string;
+    rol_vinculo: "mandante" | "epc" | "contratista" | "proveedor";
+  },
+): Promise<void> {
+  const { error } = await sb.from("proyecto_empresas").insert(datos);
+  lanzar(error);
+}
+
+export async function desvincularEmpresaProyecto(
+  sb: SupabaseClient,
+  vinculoId: string,
+): Promise<void> {
+  const { error } = await sb.from("proyecto_empresas").delete().eq("id", vinculoId);
+  lanzar(error);
+}
+
 export async function listarEjecutivosAsignables(
   sb: SupabaseClient,
 ): Promise<{ id: string; nombre: string; rol: string }[]> {

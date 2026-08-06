@@ -425,6 +425,41 @@ export const es = {
     resultadoAsignacion: (asignados: number, omitidos: number) =>
       `${asignados} ${asignados === 1 ? "proyecto asignado" : "proyectos asignados"}.${omitidos > 0 ? ` ${omitidos} ya estaban asignados y se omitieron.` : ""}`,
     seleccionados: (n: number) => `${n} seleccionados`,
+    // Ficha del proyecto (Fase B): ecosistema mandante + EPC + contratistas
+    volverRadar: "← Radar de Proyectos",
+    proyectoNoEncontrado: "Proyecto no encontrado (o sin permiso para verlo)",
+    verFichaProyecto: "Ver ficha del proyecto",
+    ecosistemaTitulo: "Ecosistema del proyecto",
+    ecosistemaNota:
+      "Mandante, EPC y contratistas que participan, con sus contactos clave",
+    rolesVinculo: {
+      mandante: "Mandante",
+      epc: "EPC",
+      contratista: "Contratista",
+      proveedor: "Proveedor",
+    },
+    fuenteVinculo: {
+      derivado: "derivado de la carga",
+      manual: "vinculado a mano",
+      sugerido_ia: "sugerido por IA",
+    },
+    vincularTitulo: "Vincular empresa al proyecto",
+    vincularNota:
+      "¿Qué EPC ganó el contrato? ¿Qué contratistas están en obra? Ese conocimiento hoy no se guarda en ninguna parte — quédalo aquí.",
+    buscarEmpresaPlaceholder: "Busca por razón social (mínimo 2 letras)…",
+    vincular: "Vincular",
+    vinculada: "Empresa vinculada al proyecto ✓",
+    quitarVinculo: "Quitar",
+    vinculoQuitado: "Vínculo eliminado ✓",
+    confirmarQuitarVinculo: (empresa: string) =>
+      `¿Quitar "${empresa}" del proyecto?`,
+    sinVinculadas:
+      "Aún no hay EPC ni contratistas vinculados. Usa el buscador de arriba para agregar el primero.",
+    contactosClaveTitulo: "Contactos clave del ecosistema",
+    contactosClaveNota:
+      "Nombre y cargo, sin teléfonos ni correos: la PII sigue saliendo solo por revelación con cuota",
+    sinContactosEco: "Las empresas de este proyecto aún no tienen contactos registrados.",
+    contactoPrincipalMarca: "★ principal",
   },
   gestion: {
     titulo: "Análisis de gestión",

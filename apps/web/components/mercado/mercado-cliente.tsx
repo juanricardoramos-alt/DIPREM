@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { mensajeError,
@@ -310,7 +311,9 @@ export function MercadoCliente() {
                 <p className="min-w-0 font-semibold leading-snug">
                   {enVentanaCaliente(p.etapa) && "🔥 "}
                   {p.prioridad === "alta" && !p.etapa && "⚠️ "}
-                  {p.nombre}
+                  <Link href={`/mercado/${p.id}`} className="hover:text-primario hover:underline">
+                    {p.nombre}
+                  </Link>
                 </p>
                 <button
                   onClick={() => setDetalleScore(p)}
@@ -593,7 +596,13 @@ function FilaRadar({
           {proyecto.prioridad === "alta" && !proyecto.etapa && (
             <span title={ETIQUETAS_PRIORIDAD.alta}>⚠️ </span>
           )}
-          {proyecto.nombre}
+          <Link
+            href={`/mercado/${proyecto.id}`}
+            title={es.mercado.verFichaProyecto}
+            className="hover:text-primario hover:underline"
+          >
+            {proyecto.nombre}
+          </Link>
         </p>
         <p className="text-xs text-tinta-suave">
           {proyecto.empresa}
