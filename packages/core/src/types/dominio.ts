@@ -87,6 +87,8 @@ export interface Cuenta {
   creado_en: string;
   /** join opcional */
   propietario?: { nombre: string } | null;
+  /** join opcional: roles de contactos para chips/filtro por bucket (sin PII) */
+  contactos?: { rol: string | null }[] | null;
 }
 
 export interface Contacto {

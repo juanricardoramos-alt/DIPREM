@@ -41,6 +41,19 @@ function totalesPorMoneda(oportunidades: Oportunidad[]): string {
     .join(" · ");
 }
 
+/** Siguiente etapa natural del embudo (nunca la perdida; la ganada es el final). */
+function etapaSiguiente(
+  actual: EtapaEmbudo | undefined,
+  etapas: EtapaEmbudo[],
+): EtapaEmbudo | null {
+  if (!actual || actual.es_ganada || actual.es_perdida) return null;
+  return (
+    etapas
+      .filter((e) => !e.es_perdida && e.orden > actual.orden)
+      .sort((a, b) => a.orden - b.orden)[0] ?? null
+  );
+}
+
 export default function PaginaOportunidades() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
@@ -83,7 +96,25 @@ export default function PaginaOportunidades() {
     onError: (e: Error) => setError(mensajeError(e)),
   });
 
-  const etapasActivas = etapas?.filter((e) => e.activa) ?? [];
+  const etapasActivas = (etapas?.filter((e) => e.activa) ?? []).sort(
+    (a, b) => a.orden - b.orden,
+  );
+  const etapaPerdida = etapasActivas.find((e) => e.es_perdida) ?? null;
+
+  // Encabezado del dinero: abiertas, adjudicado y perdidas del mes
+  const mapaEtapas = new Map((etapas ?? []).map((e) => [e.id, e]));
+  const abiertas = (oportunidades ?? []).filter((o) => {
+    const e = mapaEtapas.get(o.etapa_id);
+    return e && !e.es_ganada && !e.es_perdida;
+  });
+  const ahora = new Date();
+  const prefijoMes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
+  const ganadasMes = (oportunidades ?? []).filter(
+    (o) => mapaEtapas.get(o.etapa_id)?.es_ganada && o.cerrada_en?.startsWith(prefijoMes),
+  );
+  const perdidasMes = (oportunidades ?? []).filter(
+    (o) => mapaEtapas.get(o.etapa_id)?.es_perdida && o.cerrada_en?.startsWith(prefijoMes),
+  );
 
   // Acción rápida del botón flotante: /oportunidades?crear=1 abre el formulario
   useEffect(() => {
@@ -116,6 +147,46 @@ export default function PaginaOportunidades() {
         }
       />
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+      {/* El dinero en juego, primero: para eso existe esta pantalla */}
+      {!isLoading && (
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <div className="rounded-xl border border-borde bg-superficie p-3.5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
+              {es.crm.dineroEnJuego}
+            </p>
+            <p className="mt-1 text-lg font-bold leading-tight">
+              {totalesPorMoneda(abiertas)}
+            </p>
+            <p className="text-xs text-tinta-suave">{es.crm.abiertasN(abiertas.length)}</p>
+          </div>
+          <div className="rounded-xl border border-borde bg-superficie p-3.5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
+              ✅ {es.crm.adjudicadoMes}
+            </p>
+            <p className="mt-1 text-lg font-bold leading-tight text-emerald-600 dark:text-emerald-400">
+              {totalesPorMoneda(ganadasMes)}
+            </p>
+            <p className="text-xs text-tinta-suave">
+              {es.crm.adjudicadasN(ganadasMes.length)} · {es.crm.perdidasMesN(perdidasMes.length)}
+            </p>
+          </div>
+          <div className="col-span-2 rounded-xl border border-borde bg-superficie p-3.5 shadow-sm lg:col-span-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-tinta-tenue">
+              {es.crm.embudo}
+            </p>
+            <p className="mt-1 text-xs text-tinta-suave">
+              {etapasActivas
+                .filter((e) => !e.es_ganada && !e.es_perdida)
+                .map((e) => {
+                  const n = abiertas.filter((o) => o.etapa_id === e.id).length;
+                  return `${e.nombre}: ${n}`;
+                })
+                .join(" · ")}
+            </p>
+          </div>
+        </div>
+      )}
 
       {isLoading && (
         <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
@@ -168,56 +239,100 @@ export default function PaginaOportunidades() {
               </div>
 
               <div className="min-h-24 space-y-2 p-3">
-                {deEtapa.map((op) => (
-                  <div
-                    key={op.id}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData("text/oportunidad", op.id);
-                      setArrastrando(op.id);
-                    }}
-                    onDragEnd={() => setArrastrando(null)}
-                    className="cursor-grab rounded-lg border border-borde bg-superficie p-3 shadow-sm hover:shadow"
-                  >
-                    <button
-                      className="text-left text-sm font-medium hover:text-primario"
-                      onClick={() => setEditando(op)}
-                    >
-                      {op.nombre}
-                    </button>
-                    <p className="mt-0.5 text-xs text-tinta-suave">
-                      {op.cuenta?.razon_social ?? "—"}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-tinta-suave">
-                      {formatearMonto(op.monto, op.moneda)}
-                    </p>
-                    <p className="text-xs text-tinta-tenue">
-                      {ETIQUETAS_MODALIDAD[op.modalidad_contrato]}
-                      {op.probabilidad != null && ` · ${op.probabilidad}%`}
-                      {op.propietario?.nombre && ` · ${op.propietario.nombre}`}
-                    </p>
-                    {/* Fallback accesible al drag&drop */}
-                    <Selector
-                      value=""
-                      onChange={(e) => {
-                        const etapaDestino = etapasActivas.find(
-                          (x) => x.id === e.target.value,
-                        );
-                        if (etapaDestino) soltarEn(etapaDestino, op.id);
+                {deEtapa.map((op) => {
+                  const siguiente = etapaSiguiente(etapa, etapasActivas);
+                  return (
+                    <div
+                      key={op.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("text/oportunidad", op.id);
+                        setArrastrando(op.id);
                       }}
-                      className="mt-2 w-full rounded border border-borde px-1 py-1 text-xs text-tinta-suave"
+                      onDragEnd={() => setArrastrando(null)}
+                      className="cursor-grab rounded-lg border border-borde bg-superficie p-3 shadow-sm hover:shadow"
                     >
-                      <option value="">{es.crm.moverA}</option>
-                      {etapasActivas
-                        .filter((x) => x.id !== op.etapa_id)
-                        .map((x) => (
-                          <option key={x.id} value={x.id}>
-                            {x.nombre}
-                          </option>
-                        ))}
-                    </Selector>
-                  </div>
-                ))}
+                      <div className="flex items-start justify-between gap-1">
+                        <button
+                          className="min-w-0 text-left text-sm font-medium hover:text-primario"
+                          onClick={() => setEditando(op)}
+                        >
+                          {op.nombre}
+                        </button>
+                        {/* Menú secundario: editar, mover a otra etapa, pérdida */}
+                        <details className="relative shrink-0">
+                          <summary
+                            className="cursor-pointer list-none rounded-md px-1.5 py-0.5 text-tinta-tenue hover:bg-superficie-2"
+                            aria-label={es.crm.masAcciones}
+                          >
+                            ⋯
+                          </summary>
+                          <div className="absolute right-0 z-10 mt-1 w-48 space-y-2 rounded-lg border border-borde bg-superficie p-2 shadow-lg">
+                            <button
+                              className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-superficie-2"
+                              onClick={() => setEditando(op)}
+                            >
+                              ✏️ {es.comunes.editar}
+                            </button>
+                            <Selector
+                              value=""
+                              onChange={(e) => {
+                                const etapaDestino = etapasActivas.find(
+                                  (x) => x.id === e.target.value,
+                                );
+                                if (etapaDestino) soltarEn(etapaDestino, op.id);
+                              }}
+                              className="w-full rounded border border-borde px-1 py-1 text-xs text-tinta-suave"
+                            >
+                              <option value="">{es.crm.moverA}</option>
+                              {etapasActivas
+                                .filter((x) => x.id !== op.etapa_id && !x.es_perdida)
+                                .map((x) => (
+                                  <option key={x.id} value={x.id}>
+                                    {x.nombre}
+                                  </option>
+                                ))}
+                            </Selector>
+                            {etapaPerdida && !etapa.es_perdida && !etapa.es_ganada && (
+                              <button
+                                className="block w-full rounded-md px-2 py-1.5 text-left text-sm text-red-600 hover:bg-superficie-2 dark:text-red-400"
+                                onClick={() =>
+                                  setPendientePerdida({ oportunidad: op, etapa: etapaPerdida })
+                                }
+                              >
+                                ❌ {es.crm.registrarPerdida}
+                              </button>
+                            )}
+                          </div>
+                        </details>
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-tinta-suave">
+                        {op.cuenta?.razon_social ?? "—"}
+                      </p>
+                      <p className="mt-1 text-base font-bold">
+                        {formatearMonto(op.monto, op.moneda)}
+                      </p>
+                      <p className="text-xs text-tinta-tenue">
+                        {ETIQUETAS_MODALIDAD[op.modalidad_contrato]}
+                        {op.probabilidad != null && ` · ${op.probabilidad}%`}
+                        {op.propietario?.nombre && ` · ${op.propietario.nombre}`}
+                      </p>
+                      {/* UNA acción principal: avanzar a la siguiente etapa */}
+                      {siguiente && (
+                        <Boton
+                          className="mt-2 w-full"
+                          variante={siguiente.es_ganada ? "primario" : "secundario"}
+                          onClick={() => soltarEn(siguiente, op.id)}
+                          disabled={mover.isPending}
+                        >
+                          {siguiente.es_ganada
+                            ? es.crm.adjudicar
+                            : es.crm.avanzarA(siguiente.nombre)}
+                        </Boton>
+                      )}
+                    </div>
+                  );
+                })}
                 {deEtapa.length === 0 && (
                   <p className="py-4 text-center text-xs text-tinta-tenue">
                     {es.crm.sinOportunidades}

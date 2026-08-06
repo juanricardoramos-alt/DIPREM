@@ -97,6 +97,17 @@ export const es = {
     descartado: "Prospecto descartado ✓",
     eliminado: "Eliminado ✓",
   },
+  // Filtro por perfil de contacto (bucket de cargo) — Empresas y, en Fase B,
+  // el detalle de proyecto del Mercado (mismo componente reutilizable)
+  filtroCargo: {
+    titulo: "Contactos clave",
+    todos: "Todos",
+    decisor_tecnico: "✅ Decisor técnico",
+    gestor_compra: "🛒 Gestor de compra",
+    puerta_entrada: "🚪 Puerta de entrada",
+    nota: "Muestra las empresas que ya tienen identificado ese perfil de contacto",
+    sinContactosClave: "Sin contactos clave",
+  },
   // Errores técnicos traducidos a español claro (ver lib/errores.ts)
   errores: {
     sinPermiso: "No tienes permiso para hacer esto. Si crees que deberías poder, habla con el administrador.",
@@ -181,6 +192,17 @@ export const es = {
     totalPipeline: "Total",
     adjudicada: "Adjudicada 🎉",
     embudo: "Embudo de ventas",
+    // Rediseño del embudo: una acción principal por tarjeta + dinero en juego
+    avanzarA: (etapa: string) => `Avanzar → ${etapa}`,
+    adjudicar: "✅ Adjudicar",
+    dineroEnJuego: "💰 Dinero en juego",
+    abiertasN: (n: number) =>
+      n === 1 ? "1 oportunidad abierta" : `${n} oportunidades abiertas`,
+    adjudicadoMes: "Adjudicado este mes",
+    adjudicadasN: (n: number) => (n === 1 ? "1 adjudicada" : `${n} adjudicadas`),
+    perdidasMesN: (n: number) => (n === 1 ? "1 perdida este mes" : `${n} perdidas este mes`),
+    masDetalles: "＋ Agregar pilar, servicio y fecha (opcional)",
+    menosDetalles: "− Ocultar detalles opcionales",
   },
   control: {
     titulo: "Panel de Control",

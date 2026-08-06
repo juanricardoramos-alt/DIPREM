@@ -44,6 +44,8 @@ export function FormularioOportunidad({
     oportunidad?.pilar_id?.toString() ?? "",
   );
   const [lineaId, setLineaId] = useState<string>(oportunidad?.linea_servicio_id ?? "");
+  // Al crear: solo los 4 campos esenciales; al editar: todo visible
+  const [masCampos, setMasCampos] = useState(Boolean(oportunidad));
 
   const { data: cuentas } = useQuery({
     queryKey: ["cuentas", ""],
@@ -165,53 +167,6 @@ export function FormularioOportunidad({
         </Campo>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <Campo etiqueta={`${es.crm.pilar} (${es.comunes.opcional})`}>
-            <Selector
-              value={pilarId}
-              onChange={(e) => {
-                setPilarId(e.target.value);
-                setLineaId("");
-              }}
-            >
-              <option value="">—</option>
-              {pilares?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  Pilar {p.numero}
-                </option>
-              ))}
-            </Selector>
-          </Campo>
-          <Campo etiqueta={es.crm.lineaServicio}>
-            <Selector
-              value={lineaId}
-              onChange={(e) => setLineaId(e.target.value)}
-              disabled={!pilarId}
-            >
-              <option value="">—</option>
-              {lineasDelPilar?.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.nombre}
-                </option>
-              ))}
-            </Selector>
-          </Campo>
-          <Campo etiqueta={es.crm.servicio}>
-            <Selector
-              name="servicio_id"
-              defaultValue={oportunidad?.servicio_id ?? ""}
-              disabled={!pilarId}
-            >
-              <option value="">—</option>
-              {serviciosDeLinea?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </Selector>
-          </Campo>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
           <Campo etiqueta={es.crm.monto}>
             <Entrada
               name="monto"
@@ -244,13 +199,73 @@ export function FormularioOportunidad({
           </Campo>
         </div>
 
-        <Campo etiqueta={`${es.crm.fechaCierre} (${es.comunes.opcional})`}>
-          <Entrada
-            name="fecha_cierre_estimada"
-            type="date"
-            defaultValue={oportunidad?.fecha_cierre_estimada ?? ""}
-          />
-        </Campo>
+        {/* Crear en 4 campos: lo demás es opcional y vive plegado */}
+        <button
+          type="button"
+          className="text-sm text-primario hover:underline"
+          onClick={() => setMasCampos((v) => !v)}
+        >
+          {masCampos ? es.crm.menosDetalles : es.crm.masDetalles}
+        </button>
+
+        {masCampos && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Campo etiqueta={`${es.crm.pilar} (${es.comunes.opcional})`}>
+                <Selector
+                  value={pilarId}
+                  onChange={(e) => {
+                    setPilarId(e.target.value);
+                    setLineaId("");
+                  }}
+                >
+                  <option value="">—</option>
+                  {pilares?.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      Pilar {p.numero}
+                    </option>
+                  ))}
+                </Selector>
+              </Campo>
+              <Campo etiqueta={es.crm.lineaServicio}>
+                <Selector
+                  value={lineaId}
+                  onChange={(e) => setLineaId(e.target.value)}
+                  disabled={!pilarId}
+                >
+                  <option value="">—</option>
+                  {lineasDelPilar?.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.nombre}
+                    </option>
+                  ))}
+                </Selector>
+              </Campo>
+              <Campo etiqueta={es.crm.servicio}>
+                <Selector
+                  name="servicio_id"
+                  defaultValue={oportunidad?.servicio_id ?? ""}
+                  disabled={!pilarId}
+                >
+                  <option value="">—</option>
+                  {serviciosDeLinea?.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
+                  ))}
+                </Selector>
+              </Campo>
+            </div>
+
+            <Campo etiqueta={`${es.crm.fechaCierre} (${es.comunes.opcional})`}>
+              <Entrada
+                name="fecha_cierre_estimada"
+                type="date"
+                defaultValue={oportunidad?.fecha_cierre_estimada ?? ""}
+              />
+            </Campo>
+          </>
+        )}
 
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 

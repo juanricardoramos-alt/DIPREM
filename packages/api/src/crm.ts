@@ -79,12 +79,27 @@ const SELECT_CUENTA =
 export async function listarCuentas(
   sb: SupabaseClient,
   busqueda?: string,
+  opciones?: {
+    /** incluir contactos(rol) para chips por bucket (sin PII) */
+    conContactos?: boolean;
+    /** solo empresas con al menos un contacto con alguno de estos roles */
+    rolesContacto?: string[];
+  },
 ): Promise<Cuenta[]> {
-  let query = sb.from("cuentas").select(SELECT_CUENTA).order("razon_social");
+  const filtraRoles = (opciones?.rolesContacto?.length ?? 0) > 0;
+  // "filtro:contactos!inner" acota las empresas; "contactos(rol)" trae los
+  // roles completos para los chips (la RLS decide qué filas de contactos ve
+  // cada rol; aquí jamás viaja PII — solo la columna rol)
+  const select =
+    SELECT_CUENTA +
+    (opciones?.conContactos || filtraRoles ? ", contactos(rol)" : "") +
+    (filtraRoles ? ", filtro:contactos!inner(rol)" : "");
+  let query = sb.from("cuentas").select(select).order("razon_social");
   if (busqueda?.trim()) query = query.ilike("razon_social", `%${busqueda.trim()}%`);
+  if (filtraRoles) query = query.in("filtro.rol", opciones!.rolesContacto!);
   const { data, error } = await query;
   lanzar(error);
-  return (data ?? []) as Cuenta[];
+  return (data ?? []) as unknown as Cuenta[];
 }
 
 export async function obtenerCuenta(sb: SupabaseClient, id: string): Promise<Cuenta | null> {

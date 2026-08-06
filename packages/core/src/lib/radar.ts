@@ -70,6 +70,42 @@ export function segmentoDelProyecto(
 }
 
 /** Buckets de rol de contacto (0016/0017) para lógica de UI. */
+/** Buckets accionables de contacto (clasificación DIPREM de cargos). */
+export type BucketContacto = "decisor_tecnico" | "gestor_compra" | "puerta_entrada";
+
+/**
+ * Inverso de bucketDeRol: qué valores del enum rol_decisor componen cada
+ * bucket. Única fuente para filtros por cargo (Empresas hoy; detalle de
+ * proyecto del Mercado en Fase B). Mantener en espejo con bucketDeRol().
+ */
+export const ROLES_POR_BUCKET: Record<BucketContacto, string[]> = {
+  decisor_tecnico: [
+    "gerente_proyecto",
+    "gerente_construccion",
+    "calidad_qaqc",
+    "hse",
+    "decisor_tecnico",
+  ],
+  gestor_compra: ["contratos_abastecimiento"],
+  puerta_entrada: ["puerta_entrada"],
+};
+
+/** Conteo de contactos por bucket a partir de sus roles (para chips de UI). */
+export function conteosPorBucket(
+  roles: (string | null | undefined)[],
+): Record<BucketContacto, number> {
+  const conteos: Record<BucketContacto, number> = {
+    decisor_tecnico: 0,
+    gestor_compra: 0,
+    puerta_entrada: 0,
+  };
+  for (const rol of roles) {
+    const bucket = bucketDeRol(rol);
+    if (bucket in conteos) conteos[bucket as BucketContacto]++;
+  }
+  return conteos;
+}
+
 export function bucketDeRol(rol: string | undefined | null): string {
   switch (rol) {
     case "gerente_proyecto":

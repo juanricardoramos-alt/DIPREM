@@ -6,10 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ETIQUETAS_ESTADO_CUENTA,
   ETIQUETAS_VERTICAL,
+  ROLES_POR_BUCKET,
   es,
+  type BucketContacto,
 } from "@diprem/core";
 import { listarCuentas } from "@diprem/api";
-import { useSupabase } from "@/lib/hooks";
+import { usePerfil, useSupabase } from "@/lib/hooks";
 import {
   Boton,
   EncabezadoPagina,
@@ -18,18 +20,28 @@ import {
   FilasEsqueleto,
   Insignia,
 } from "@/components/ui";
+import { ChipsContactos, FiltroCargo } from "@/components/filtro-cargo";
 import { FormularioCuenta } from "@/components/formulario-cuenta";
 
 const TONO_ESTADO = { prospecto: "ambar", activa: "verde", inactiva: "gris" } as const;
 
 export default function PaginaCuentas() {
   const supabase = useSupabase();
+  const { data: perfil } = usePerfil();
   const [busqueda, setBusqueda] = useState("");
+  const [bucket, setBucket] = useState<BucketContacto | "">("");
   const [formAbierto, setFormAbierto] = useState(false);
 
+  // Solo-lectura no ve filas de contactos (perímetro): sin chips ni filtro
+  const veContactos = perfil ? perfil.rol !== "lectura" : false;
+
   const { data: cuentas, isLoading } = useQuery({
-    queryKey: ["cuentas", busqueda],
-    queryFn: () => listarCuentas(supabase, busqueda),
+    queryKey: ["cuentas", busqueda, bucket, veContactos],
+    queryFn: () =>
+      listarCuentas(supabase, busqueda, {
+        conContactos: veContactos,
+        rolesContacto: bucket ? ROLES_POR_BUCKET[bucket] : undefined,
+      }),
   });
 
   return (
@@ -48,6 +60,13 @@ export default function PaginaCuentas() {
           </>
         }
       />
+
+      {/* Filtro por perfil de contacto (combinable con la búsqueda, sin PII) */}
+      {veContactos && (
+        <div className="mt-4">
+          <FiltroCargo valor={bucket} onCambiar={setBucket} />
+        </div>
+      )}
 
       {/* Móvil: tarjetas apiladas */}
       <div className="mt-6 space-y-2 md:hidden">
@@ -78,6 +97,11 @@ export default function PaginaCuentas() {
               {cuenta.pais ? ` · ${cuenta.pais}` : ""}
               {cuenta.propietario?.nombre ? ` · ${cuenta.propietario.nombre}` : ""}
             </p>
+            {veContactos && (
+              <p className="mt-1">
+                <ChipsContactos roles={(cuenta.contactos ?? []).map((c) => c.rol)} />
+              </p>
+            )}
           </Link>
         ))}
       </div>
@@ -89,15 +113,16 @@ export default function PaginaCuentas() {
           <thead className="bg-superficie-2 text-left text-xs uppercase text-tinta-suave">
             <tr>
               <th className="px-4 py-3">{es.crm.razonSocial}</th>
+              {veContactos && <th className="px-4 py-3">{es.filtroCargo.titulo}</th>}
               <th className="px-4 py-3">{es.crm.propietario}</th>
               <th className="px-4 py-3">{es.crm.estado}</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <FilasEsqueleto columnas={3} />}
+            {isLoading && <FilasEsqueleto columnas={veContactos ? 4 : 3} />}
             {!isLoading && (cuentas?.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={3} className="p-4">
+                <td colSpan={veContactos ? 4 : 3} className="p-4">
                   <EstadoVacio
                     titulo={es.crm.sinCuentas}
                     accion={
@@ -123,6 +148,11 @@ export default function PaginaCuentas() {
                     {cuenta.pais ? ` · ${cuenta.pais}` : ""}
                   </p>
                 </td>
+                {veContactos && (
+                  <td className="px-4 py-3">
+                    <ChipsContactos roles={(cuenta.contactos ?? []).map((c) => c.rol)} />
+                  </td>
+                )}
                 <td className="px-4 py-3">{cuenta.propietario?.nombre ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Insignia tono={TONO_ESTADO[cuenta.estado]}>
