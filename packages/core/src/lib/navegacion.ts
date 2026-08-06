@@ -14,7 +14,7 @@ const OPERATIVOS: readonly RolUsuario[] = ["ejecutivo", "gerente", "admin"];
 export const ITEMS_NAVEGACION: readonly ItemNavegacion[] = [
   { ruta: "/control", etiqueta: es.nav.control, roles: ["gerente", "admin", "revisor"] },
   { ruta: "/mi-dia", etiqueta: es.nav.miDia, roles: OPERATIVOS },
-  { ruta: "/cuentas", etiqueta: es.nav.cuentas, roles: TODOS },
+  { ruta: "/empresas", etiqueta: es.nav.cuentas, roles: TODOS },
   { ruta: "/leads", etiqueta: es.crm.leads, roles: OPERATIVOS },
   { ruta: "/oportunidades", etiqueta: es.nav.oportunidades, roles: TODOS },
   { ruta: "/actividades", etiqueta: es.nav.actividades, roles: [...OPERATIVOS, "revisor"] },

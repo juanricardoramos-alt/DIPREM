@@ -138,7 +138,7 @@ function TarjetaEjecutivo({ analisis }: { analisis: AnalisisEjecutivo }) {
               href={
                 contacto.entidad === "lead"
                   ? `/leads/${contacto.entidad_id}`
-                  : `/cuentas/${contacto.entidad_id}`
+                  : `/empresas/${contacto.entidad_id}`
               }
               className="min-w-0 truncate hover:text-primario hover:underline"
             >

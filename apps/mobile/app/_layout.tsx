@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { es } from "@diprem/core";
 import { ProveedorSesion, useSesion } from "@/lib/sesion";
 import "../global.css";
 
@@ -27,7 +28,7 @@ function NavegacionProtegida() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
         name="cuenta/[id]"
-        options={{ headerShown: true, headerTitle: "Cuenta", headerBackTitle: "Volver" }}
+        options={{ headerShown: true, headerTitle: es.crm.cuenta, headerBackTitle: "Volver" }}
       />
     </Stack>
   );

@@ -25,7 +25,7 @@ export const es = {
   nav: {
     control: "Control",
     miDia: "Mi Día",
-    cuentas: "Cuentas",
+    cuentas: "Empresas",
     oportunidades: "Oportunidades",
     actividades: "Actividades",
     propuestas: "Propuestas",
@@ -54,12 +54,12 @@ export const es = {
     accionOportunidad: "Nueva oportunidad",
   },
   buscador: {
-    placeholder: "Buscar cliente, lead, proyecto u oportunidad…",
+    placeholder: "Buscar empresa, lead, proyecto u oportunidad…",
     abrir: "Buscar",
     escribeParaBuscar: "Escribe al menos 2 letras para buscar en todo el CRM",
     sinResultados: (texto: string) => `Sin resultados para "${texto}"`,
     grupos: {
-      cuenta: "Cuentas",
+      cuenta: "Empresas",
       lead: "Leads",
       oportunidad: "Oportunidades",
       proyecto: "Proyectos del mercado",
@@ -85,8 +85,8 @@ export const es = {
     todos: "Todos",
   },
   crm: {
-    nuevaCuenta: "Nueva cuenta",
-    editarCuenta: "Editar cuenta",
+    nuevaCuenta: "Nueva empresa",
+    editarCuenta: "Editar empresa",
     razonSocial: "Razón social",
     taxId: "RUT / CUIT / Tax ID",
     vertical: "Vertical",
@@ -95,7 +95,7 @@ export const es = {
     sitioWeb: "Sitio web",
     estado: "Estado",
     propietario: "Ejecutivo",
-    sinCuentas: "Aún no tienes cuentas. Crea la primera o convierte un lead.",
+    sinCuentas: "Aún no tienes empresas. Crea la primera o convierte un lead.",
     contactos: "Contactos",
     nuevoContacto: "Nuevo contacto",
     editarContacto: "Editar contacto",
@@ -135,7 +135,7 @@ export const es = {
     calificacion: "Calificación",
     notas: "Notas",
     convertir: "Convertir",
-    convertirLead: "Convertir lead en cuenta + oportunidad",
+    convertirLead: "Convertir lead en empresa + oportunidad",
     convertido: "Convertido",
     descartarLead: "Descartar",
     sinLeads: "Sin leads por gestionar",
@@ -143,7 +143,7 @@ export const es = {
     nuevaOportunidad: "Nueva oportunidad",
     editarOportunidad: "Editar oportunidad",
     nombreOportunidad: "Nombre de la oportunidad",
-    cuenta: "Cuenta",
+    cuenta: "Empresa",
     monto: "Monto",
     moneda: "Moneda",
     modalidad: "Modalidad de contrato",
@@ -167,16 +167,16 @@ export const es = {
     descripcion:
       "Resultado, no actividad: cobertura de cartera, decisores conseguidos, embudo en movimiento y dónde intervenir hoy.",
     // Acaparador: arriba y en rojo, imposible de ignorar
-    acaparadorTitulo: "Cuentas reclamadas sin gestión",
+    acaparadorTitulo: "Empresas reclamadas sin gestión",
     acaparadorNota: (umbral: number) =>
       `Reclamadas hace más de ${umbral} días sin ninguna gestión — cartera acaparada, no trabajada`,
-    acaparadorVacio: "Ninguna cuenta reclamada supera el umbral. 🎉",
+    acaparadorVacio: "Ninguna empresa reclamada supera el umbral. 🎉",
     umbralDias: "Umbral",
     liberarAlPool: "Liberar al pool",
     liberando: "Liberando…",
-    liberada: "Cuenta devuelta al pool",
-    confirmarLiberar: (cuenta: string) =>
-      `¿Devolver "${cuenta}" al pool? El ejecutivo la perderá de su cartera.`,
+    liberada: "Empresa devuelta al pool",
+    confirmarLiberar: (empresa: string) =>
+      `¿Devolver "${empresa}" al pool? El ejecutivo la perderá de su cartera.`,
     // Cuadro por ejecutivo — RESULTADO (el peor de cobertura arriba)
     resultadoTitulo: "Resultado por ejecutivo (30 días)",
     resultadoNota:
@@ -191,8 +191,8 @@ export const es = {
     verDetalle: "Ver detalle",
     // Drill-down por ejecutivo
     detalleDe: (nombre: string) => `Detalle de ${nombre}`,
-    detalleCartera: (n: number, pct: string) => `Cartera: ${n} cuentas · cobertura ${pct}`,
-    detalleSinCriticas: "Sin cuentas críticas sobre el umbral.",
+    detalleCartera: (n: number, pct: string) => `Cartera: ${n} empresas · cobertura ${pct}`,
+    detalleSinCriticas: "Sin empresas críticas sobre el umbral.",
     detalleSinHuerfanas: "Sin oportunidades huérfanas. ✓",
     huerfanasTitulo: "Oportunidades huérfanas",
     huerfanasNota:
@@ -213,13 +213,13 @@ export const es = {
     diarioEmbudoTitulo: "📈 Embudo en movimiento",
     diarioAlertas: "🔴 Requiere tu intervención",
     diarioAcaparadas: (n: number, umbral: number) =>
-      `${n} cuenta(s) reclamadas con más de ${umbral} días sin gestión`,
+      `${n} empresa(s) reclamadas con más de ${umbral} días sin gestión`,
     diarioHuerfanas: (n: number) => `${n} oportunidad(es) sin próximo paso con fecha`,
     diarioSinAlertas: "Sin alertas hoy. 🎉",
     diarioVolverControl: "← Panel de Control",
     avancesTitulo: "Decisores conseguidos (30 días)",
     avancesNota:
-      "Cuentas que pasaron de solo-puerta a decisor técnico identificado — la métrica que importa",
+      "Empresas que pasaron de solo-puerta a decisor técnico identificado — la métrica que importa",
     sinAvances: "Nadie ha conseguido un decisor nuevo en 30 días.",
     embudoTitulo: "Movimiento de embudo (30 días)",
     retroceso: "retroceso",
@@ -330,9 +330,9 @@ export const es = {
     pedirDerivacion: "Pedir derivación",
     derivacionTitulo: "Pedir derivación al decisor técnico",
     derivacionNota:
-      "La cuenta tiene puerta de entrada pero ningún decisor técnico identificado. Llama al mejor contacto puerta y pide que te derive al gerente de proyecto / operaciones:",
+      "La empresa tiene puerta de entrada pero ningún decisor técnico identificado. Llama al mejor contacto puerta y pide que te derive al gerente de proyecto / operaciones:",
     derivacionSinPuerta:
-      "Sin contactos puerta en la cuenta: consigue el primer contacto por prospección directa.",
+      "Sin contactos puerta en la empresa: consigue el primer contacto por prospección directa.",
     filtroEjecutivo: "Ejecutivo",
     sinAsignarFiltro: "Sin asignar",
     recalcular: "Recalcular scores",
@@ -444,7 +444,7 @@ export const es = {
     editar: "Editar actividad",
     tipo: "Tipo",
     asunto: "Asunto",
-    cuenta: "Cuenta",
+    cuenta: "Empresa",
     oportunidad: "Oportunidad",
     contacto: "Contacto",
     fechaProgramada: "Fecha y hora",
@@ -552,7 +552,7 @@ export const es = {
     mezclaGestion: "Mezcla de gestión (90 días)",
     frecuenciaPromedio: (dias: number) => `Contacta a cada prospecto cada ~${dias} días`,
     sinFrecuencia: "Sin gestiones suficientes para calcular frecuencia",
-    sinContactosActivos: "Sin leads ni cuentas activas",
+    sinContactosActivos: "Sin leads ni empresas activas",
   },
   metasAdmin: {
     titulo: "Metas mensuales",
@@ -580,7 +580,7 @@ export const es = {
     bienvenida: "Bienvenido/a",
     descripcionMiDia:
       "Aquí verás tu agenda del día, seguimientos pendientes y avance de metas (Fase 2).",
-    descripcionCuentas: "Gestión de cuentas y contactos (Fase 1).",
+    descripcionCuentas: "Gestión de empresas y contactos (Fase 1).",
     descripcionOportunidades: "Embudo de ventas DIPREM en Kanban (Fase 1).",
     descripcionActividades: "Registro de llamadas, reuniones y visitas a terreno (Fase 2).",
     descripcionPropuestas: "Propuestas con versiones y aprobación gerencial (Fase 4).",

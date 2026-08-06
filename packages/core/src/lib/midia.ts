@@ -124,7 +124,7 @@ export function sugerenciasManana(
       texto: `Contactar ${s.cuenta?.razon_social ?? s.nombre} — ${
         s.dias_sin_contacto === 1 ? "1 día" : `${s.dias_sin_contacto} días`
       } sin contacto`,
-      ruta: `/cuentas/${s.cuenta_id}`,
+      ruta: `/empresas/${s.cuenta_id}`,
     });
   }
   for (const p of prioritarios) {

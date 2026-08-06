@@ -60,7 +60,7 @@ export function DialogoConvertirLead({
       void queryClient.invalidateQueries({ queryKey: ["oportunidades"] });
       setError(null);
       onCerrar();
-      router.push(`/cuentas/${resultado.cuenta_id}`);
+      router.push(`/empresas/${resultado.cuenta_id}`);
     },
     onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
   });

@@ -16,7 +16,7 @@ import {
 export const ICONOS_RUTA: Record<string, LucideIcon> = {
   "/control": LayoutDashboard,
   "/mi-dia": Sun,
-  "/cuentas": Building2,
+  "/empresas": Building2,
   "/leads": UserPlus,
   "/oportunidades": SquareKanban,
   "/actividades": CalendarCheck,

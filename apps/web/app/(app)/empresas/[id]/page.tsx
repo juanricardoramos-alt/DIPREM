@@ -182,7 +182,7 @@ export default function PaginaDetalleCuenta({
 
   return (
     <div>
-      <Link href="/cuentas" className="text-sm text-tinta-suave hover:underline">
+      <Link href="/empresas" className="text-sm text-tinta-suave hover:underline">
         ← {es.nav.cuentas}
       </Link>
 

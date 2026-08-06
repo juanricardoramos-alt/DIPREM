@@ -74,7 +74,7 @@ export default function PaginaFichaContacto({
       </p>
 
       <Link
-        href={`/cuentas/${contacto.cuenta_id}`}
+        href={`/empresas/${contacto.cuenta_id}`}
         className="text-sm text-tinta-suave hover:underline print:hidden"
       >
         ← {contacto.cuenta?.razon_social ?? es.nav.cuentas}

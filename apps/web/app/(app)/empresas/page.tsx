@@ -53,7 +53,7 @@ export default function PaginaCuentas() {
         {cuentas?.map((cuenta) => (
           <Link
             key={cuenta.id}
-            href={`/cuentas/${cuenta.id}`}
+            href={`/empresas/${cuenta.id}`}
             className="block rounded-xl border border-borde bg-superficie p-3.5 shadow-sm"
           >
             <div className="flex items-start justify-between gap-2">
@@ -105,7 +105,7 @@ export default function PaginaCuentas() {
               <tr key={cuenta.id} className="border-t border-borde hover:bg-superficie-2">
                 <td className="px-4 py-3">
                   <Link
-                    href={`/cuentas/${cuenta.id}`}
+                    href={`/empresas/${cuenta.id}`}
                     className="font-medium text-primario hover:underline"
                   >
                     {cuenta.razon_social}

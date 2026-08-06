@@ -519,7 +519,7 @@ export function ControlCliente() {
               >
                 <div className="min-w-0">
                   <Link
-                    href={`/cuentas/${a.cuenta_id}`}
+                    href={`/empresas/${a.cuenta_id}`}
                     className="truncate font-medium hover:underline"
                   >
                     {a.razon_social}
@@ -586,7 +586,7 @@ function FilaAcaparada({
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 dark:border-red-900 bg-superficie p-3">
       <div className="min-w-0">
         <Link
-          href={`/cuentas/${critica.cuenta_id}`}
+          href={`/empresas/${critica.cuenta_id}`}
           className="font-medium hover:underline"
         >
           {critica.razon_social}
@@ -651,7 +651,7 @@ function DetalleEjecutivo({
             <ul className="mt-1 space-y-1 text-sm">
               {criticas.slice(0, 6).map((c) => (
                 <li key={c.cuenta_id} className="flex justify-between gap-2">
-                  <Link href={`/cuentas/${c.cuenta_id}`} className="truncate hover:underline">
+                  <Link href={`/empresas/${c.cuenta_id}`} className="truncate hover:underline">
                     {c.razon_social}
                   </Link>
                   <span className="shrink-0 text-xs text-red-600 dark:text-red-400">
@@ -689,7 +689,7 @@ function DetalleEjecutivo({
             <ul className="mt-1 space-y-1 text-sm">
               {avances.slice(0, 6).map((a) => (
                 <li key={a.cuenta_id} className="flex justify-between gap-2">
-                  <Link href={`/cuentas/${a.cuenta_id}`} className="truncate hover:underline">
+                  <Link href={`/empresas/${a.cuenta_id}`} className="truncate hover:underline">
                     {a.razon_social}
                   </Link>
                   <span className="shrink-0 text-xs text-tinta-tenue">

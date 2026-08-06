@@ -70,7 +70,7 @@ export async function busquedaGlobal(
       id: c.id,
       titulo: c.razon_social,
       subtitulo: c.pais,
-      ruta: `/cuentas/${c.id}`,
+      ruta: `/empresas/${c.id}`,
     });
   }
   for (const l of filas<{ id: string; nombre: string; empresa: string | null }>(leads)) {
@@ -94,7 +94,7 @@ export async function busquedaGlobal(
       titulo: o.nombre,
       subtitulo: o.cuenta?.razon_social ?? null,
       // Sin página propia de oportunidad: se abre desde la cuenta
-      ruta: `/cuentas/${o.cuenta_id}`,
+      ruta: `/empresas/${o.cuenta_id}`,
     });
   }
   for (const p of filas<{ id: string; nombre: string; empresa: string }>(proyectos)) {
