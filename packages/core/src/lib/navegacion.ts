@@ -26,7 +26,6 @@ export const ITEMS_NAVEGACION: readonly ItemNavegacion[] = [
   { ruta: "/leads", etiqueta: es.crm.leads, roles: OPERATIVOS },
   { ruta: "/mercado", etiqueta: es.nav.mercado, roles: ["gerente", "admin", "revisor"] },
   { ruta: "/reportes", etiqueta: es.nav.reportes, roles: TODOS },
-  { ruta: "/propuestas", etiqueta: es.nav.propuestas, roles: TODOS },
   { ruta: "/admin", etiqueta: es.nav.admin, roles: ["admin"] },
 ] as const;
 

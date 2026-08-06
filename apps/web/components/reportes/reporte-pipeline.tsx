@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
-import {
+import { mensajeError,
   ETIQUETAS_VERTICAL,
   es,
   formatearMonto,
@@ -86,7 +86,7 @@ export function ReportePipeline() {
   );
 
   if (error) {
-    return <BannerError mensaje={(error as Error).message} onReintentar={() => void refetch()} />;
+    return <BannerError mensaje={mensajeError(error)} onReintentar={() => void refetch()} />;
   }
 
   return (

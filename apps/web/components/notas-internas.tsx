@@ -1,12 +1,13 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare, Trash2 } from "lucide-react";
-import { es, formatearFechaCorta, formatearHora, type EntidadNota } from "@diprem/core";
+import { mensajeError, es, formatearFechaCorta, formatearHora, type EntidadNota } from "@diprem/core";
 import { crearNota, eliminarNota, listarNotas } from "@diprem/api";
 import { usePerfil, useSupabase } from "@/lib/hooks";
-import { AreaTexto, Avatar, Boton, TarjetasEsqueleto } from "@/components/ui";
+import { AreaTexto, Avatar, Boton, EstadoVacio, TarjetasEsqueleto } from "@/components/ui";
 
 /**
  * Hilo de notas internas sobre un lead, oportunidad o cuenta.
@@ -25,6 +26,7 @@ export function NotasInternas({
 }) {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const { data: perfil } = usePerfil();
   const [contenido, setContenido] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,14 +51,17 @@ export function NotasInternas({
       void queryClient.invalidateQueries({ queryKey: ["notas", entidad, entidadId] });
       setContenido("");
       setError(null);
+      avisar(es.confirmaciones.notaAgregada);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const borrar = useMutation({
     mutationFn: (id: string) => eliminarNota(supabase, id),
-    onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: ["notas", entidad, entidadId] }),
+    onSuccess: () => {
+      avisar(es.confirmaciones.eliminado);
+      void queryClient.invalidateQueries({ queryKey: ["notas", entidad, entidadId] });
+    },
   });
 
   return (
@@ -96,9 +101,7 @@ export function NotasInternas({
       <div className="mt-3 space-y-2">
         {isLoading && <TarjetasEsqueleto cantidad={2} />}
         {!isLoading && (notas?.length ?? 0) === 0 && (
-          <p className="rounded-lg border border-dashed border-borde p-4 text-center text-sm text-tinta-tenue">
-            {es.notas.sinNotas}
-          </p>
+          <EstadoVacio titulo={es.notas.sinNotas} />
         )}
         {notas?.map((nota) => (
           <div

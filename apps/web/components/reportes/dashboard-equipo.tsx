@@ -18,7 +18,7 @@ import {
 } from "@diprem/core";
 import { listarAvanceMetas, listarPipelineDetalle, listarRanking } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Insignia } from "@/components/ui";
+import { COLOR_SEMAFORO, EstadoVacio, Insignia } from "@/components/ui";
 import { AnalisisEjecutivos } from "@/components/reportes/analisis-ejecutivos";
 
 function sumaPorMoneda(filas: { monto: number; moneda: Moneda }[]): string {
@@ -27,12 +27,6 @@ function sumaPorMoneda(filas: { monto: number; moneda: Moneda }[]): string {
   if (!sumas.size) return "—";
   return [...sumas.entries()].map(([m, t]) => formatearMonto(t, m)).join(" · ");
 }
-
-const PUNTO: Record<Semaforo, string> = {
-  verde: "bg-emerald-500",
-  ambar: "bg-amber-400",
-  rojo: "bg-red-500",
-};
 
 export function DashboardEquipo() {
   const supabase = useSupabase();
@@ -140,7 +134,7 @@ export function DashboardEquipo() {
                     <td className="px-4 py-3">
                       {semaforo ? (
                         <span className="flex items-center gap-2">
-                          <span className={`h-2.5 w-2.5 rounded-full ${PUNTO[semaforo]}`} />
+                          <span className={`h-2.5 w-2.5 rounded-full ${COLOR_SEMAFORO[semaforo]}`} />
                           {es.reportes.semaforo[semaforo]} · {pctProm}%
                         </span>
                       ) : (
@@ -166,9 +160,7 @@ export function DashboardEquipo() {
           </p>
           <div className="mt-3 space-y-2">
             {listaEstancadas.length === 0 && (
-              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-                {es.reportes.sinEstancadas}
-              </p>
+              <EstadoVacio titulo={es.reportes.sinEstancadas} />
             )}
             {listaEstancadas.map((f) => (
               <div

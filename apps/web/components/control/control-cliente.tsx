@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Target, TrendingUp, Users, Wallet } from "lucide-react";
-import {
+import { mensajeError,
   es,
   formatearFechaCorta,
   formatearMonto,
@@ -30,15 +30,9 @@ import {
   type FilaCritica,
 } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { BannerError, Boton, Esqueleto, Insignia } from "@/components/ui";
+import { BannerError, Boton, COLOR_SEMAFORO, EncabezadoPagina, Esqueleto, Insignia } from "@/components/ui";
 import { ProyectosSinGestion } from "@/components/control/proyectos-sin-gestion";
 import { HistorialAsignaciones } from "@/components/control/historial-asignaciones";
-
-const PUNTO: Record<Semaforo, string> = {
-  verde: "bg-emerald-500",
-  ambar: "bg-amber-400",
-  rojo: "bg-red-500",
-};
 
 function sumaPorMoneda(filas: { monto: number; moneda: Moneda }[]): string {
   const sumas = new Map<Moneda, number>();
@@ -111,7 +105,7 @@ export function ControlCliente() {
       void queryClient.invalidateQueries({ queryKey: ["control_cobertura"] });
       setMensaje(es.control.liberada);
     },
-    onError: (e: Error) => setMensaje(e.message),
+    onError: (e: Error) => setMensaje(mensajeError(e)),
   });
 
   // ---- Agregaciones por ejecutivo (30 días), en el cliente ----
@@ -187,24 +181,22 @@ export function ControlCliente() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{es.control.titulo}</h1>
-          <p className="mt-0.5 max-w-2xl text-sm text-tinta-suave">
-            {es.control.descripcion}
-          </p>
-        </div>
-        <Link
-          href="/control/diario"
-          className="rounded-md border border-borde bg-superficie px-3 py-2 text-sm hover:bg-superficie-2"
-        >
-          {es.control.diarioAbrir}
-        </Link>
-      </div>
+      <EncabezadoPagina
+        titulo={es.control.titulo}
+        descripcion={es.control.descripcion}
+        acciones={
+          <Link
+            href="/control/diario"
+            className="rounded-md border border-borde bg-superficie px-3 py-2 text-center text-sm hover:bg-superficie-2"
+          >
+            {es.control.diarioAbrir}
+          </Link>
+        }
+      />
 
       {errorCarga && (
         <BannerError
-          mensaje={(errorCarga as Error).message}
+          mensaje={mensajeError(errorCarga)}
           onReintentar={() => void refetch()}
         />
       )}
@@ -467,7 +459,7 @@ export function ControlCliente() {
                     <td className="px-4 py-3">
                       {semaforo ? (
                         <span className="flex items-center gap-2">
-                          <span className={`h-2.5 w-2.5 rounded-full ${PUNTO[semaforo]}`} />
+                          <span className={`h-2.5 w-2.5 rounded-full ${COLOR_SEMAFORO[semaforo]}`} />
                           {pctProm}%
                         </span>
                       ) : (

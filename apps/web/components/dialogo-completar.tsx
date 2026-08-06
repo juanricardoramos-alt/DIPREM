@@ -1,8 +1,9 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { es, type Actividad } from "@diprem/core";
+import { mensajeError, es, type Actividad } from "@diprem/core";
 import { completarActividad } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import { AreaTexto, Boton, Campo, Dialogo, Entrada } from "@/components/ui";
@@ -16,6 +17,7 @@ export function DialogoCompletar({
 }) {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const [error, setError] = useState<string | null>(null);
 
   const mutacion = useMutation({
@@ -27,6 +29,7 @@ export function DialogoCompletar({
       });
     },
     onSuccess: () => {
+      avisar(es.confirmaciones.completada);
       void queryClient.invalidateQueries({ queryKey: ["actividades"] });
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
       void queryClient.invalidateQueries({ queryKey: ["seguimientos"] });
@@ -36,7 +39,7 @@ export function DialogoCompletar({
       setError(null);
       onCerrar();
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   return (

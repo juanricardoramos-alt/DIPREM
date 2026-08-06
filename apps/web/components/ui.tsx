@@ -9,6 +9,49 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, Inbox, RefreshCw, X } from "lucide-react";
+import { es, type Semaforo } from "@diprem/core";
+
+/** Colores únicos del semáforo (verde/ámbar/rojo) — un solo lugar para toda la app. */
+export const COLOR_SEMAFORO: Record<Semaforo, string> = {
+  verde: "bg-emerald-500",
+  ambar: "bg-amber-400",
+  rojo: "bg-red-500",
+};
+
+/** Punto de semáforo estándar. */
+export function PuntoSemaforo({ tono }: { tono: Semaforo }) {
+  return <span className={`inline-block h-2.5 w-2.5 rounded-full ${COLOR_SEMAFORO[tono]}`} />;
+}
+
+/**
+ * Encabezado estándar de página: título + descripción + acciones a la derecha.
+ * Mismo patrón en todas las pantallas de lista.
+ */
+export function EncabezadoPagina({
+  titulo,
+  descripcion,
+  acciones,
+}: {
+  titulo: string;
+  descripcion?: string;
+  acciones?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold">{titulo}</h1>
+        {descripcion && (
+          <p className="mt-0.5 max-w-3xl text-sm text-tinta-suave">{descripcion}</p>
+        )}
+      </div>
+      {acciones && (
+        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+          {acciones}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Boton({
   variante = "primario",
@@ -104,7 +147,7 @@ export function Dialogo({
           <h2 className="text-lg font-semibold text-tinta">{titulo}</h2>
           <button
             onClick={onCerrar}
-            aria-label="Cerrar"
+            aria-label={es.comunes.cerrar}
             className="rounded-lg p-1 text-tinta-tenue transition-colors hover:bg-superficie-2 hover:text-tinta"
           >
             <X className="h-5 w-5" />
@@ -219,7 +262,7 @@ export function BannerError({
           onClick={onReintentar}
           className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 px-2.5 py-1 text-xs font-medium hover:bg-red-100 dark:border-red-800 dark:hover:bg-red-950"
         >
-          <RefreshCw className="h-3.5 w-3.5" /> Reintentar
+          <RefreshCw className="h-3.5 w-3.5" /> {es.comunes.reintentar}
         </button>
       )}
     </div>

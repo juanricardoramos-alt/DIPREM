@@ -1,8 +1,9 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_MODALIDAD,
   MONEDAS,
   es,
@@ -35,6 +36,7 @@ export function FormularioOportunidad({
 }) {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const { data: perfil } = usePerfil();
   const { data: equipo } = useEquipo(perfil?.equipo_id);
   const [error, setError] = useState<string | null>(null);
@@ -110,9 +112,10 @@ export function FormularioOportunidad({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["oportunidades"] });
       setError(null);
+      avisar(es.confirmaciones.guardado);
       onCerrar();
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const monedaDefault =

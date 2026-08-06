@@ -1,5 +1,6 @@
 "use client";
 
+import { EncabezadoPagina } from "@/components/ui";
 import { useState } from "react";
 import { es, type RolUsuario } from "@diprem/core";
 import { DashboardEquipo } from "@/components/reportes/dashboard-equipo";
@@ -37,9 +38,9 @@ export function ReportesCliente({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{es.nav.reportes}</h1>
-        {pestanas.length > 1 && (
+      <EncabezadoPagina
+        titulo={es.nav.reportes}
+        acciones={pestanas.length > 1 ? (
           <div className="flex max-w-full overflow-x-auto rounded-lg bg-superficie-2 p-1 print:hidden">
             {pestanas.map((p) => (
               <button
@@ -55,8 +56,8 @@ export function ReportesCliente({
               </button>
             ))}
           </div>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {pestana === "equipo" && veEquipo && <DashboardEquipo />}
       {pestana === "semanal" && veEquipo && <ReporteSemanal />}

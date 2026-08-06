@@ -1,9 +1,10 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_CALIFICACION,
   ETIQUETAS_ESTADO_LEAD,
   ETIQUETAS_FUENTE,
@@ -23,6 +24,7 @@ import {
   FilasEsqueleto,
   Insignia,
   Selector,
+  EncabezadoPagina,
 } from "@/components/ui";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
 import { DialogoConvertirLead } from "@/components/dialogo-convertir-lead";
@@ -37,6 +39,7 @@ const TONO_ESTADO_LEAD = {
 export default function PaginaLeads() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const { data: perfil } = usePerfil();
 
   const [busqueda, setBusqueda] = useState("");
@@ -86,20 +89,25 @@ export default function PaginaLeads() {
       invalidar();
       setLeadForm(null);
       setError(null);
+      avisar(es.confirmaciones.guardado);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const descartarLead = useMutation({
     mutationFn: (id: string) => actualizarLead(supabase, id, { estado: "descartado" }),
-    onSuccess: invalidar,
+    onSuccess: () => {
+      invalidar();
+      avisar(es.confirmaciones.descartado);
+    },
   });
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{es.crm.leads}</h1>
-        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+      <EncabezadoPagina
+        titulo={es.crm.leads}
+        acciones={
+          <>
           <Entrada
             placeholder={es.comunes.buscar}
             value={busqueda}
@@ -109,8 +117,9 @@ export default function PaginaLeads() {
           <Boton onClick={() => setLeadForm({ lead: null })}>
             + {es.crm.nuevoLead}
           </Boton>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">

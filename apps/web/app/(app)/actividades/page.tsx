@@ -15,7 +15,7 @@ import {
 } from "@diprem/core";
 import { cancelarActividad, listarActividades } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, EstadoVacio, FilasEsqueleto, Insignia, Selector } from "@/components/ui";
+import { Boton, EncabezadoPagina, EstadoVacio, FilasEsqueleto, Insignia, Selector } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
 
@@ -52,9 +52,10 @@ export default function PaginaActividades() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{es.nav.actividades}</h1>
-        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+      <EncabezadoPagina
+        titulo={es.nav.actividades}
+        acciones={
+          <>
           <Selector
             value={tipo}
             onChange={(e) => setTipo(e.target.value as TipoActividad | "")}
@@ -82,8 +83,9 @@ export default function PaginaActividades() {
           <Boton onClick={() => setFormulario({ actividad: null })}>
             + {es.actividades.nueva}
           </Boton>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-borde bg-superficie shadow-sm">
         <table className="w-full text-sm">

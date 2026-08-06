@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/cuentas", destination: "/empresas", permanent: true },
       { source: "/cuentas/:id", destination: "/empresas/:id", permanent: true },
+      // Propuestas (pantalla vacía) se eliminó; vuelve con la Fase 4
+      { source: "/propuestas", destination: "/oportunidades", permanent: false },
     ];
   },
 };

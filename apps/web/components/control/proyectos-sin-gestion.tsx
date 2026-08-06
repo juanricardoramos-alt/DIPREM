@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { BellRing } from "lucide-react";
-import {
+import { mensajeError,
   DIAS_PROYECTO_SIN_GESTION,
   ETIQUETAS_PRIORIDAD,
   es,
@@ -40,7 +40,7 @@ export function ProyectosSinGestion({
       setRecordados((prev) => new Set(prev).add(proyectoId));
       setError(null);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   return (

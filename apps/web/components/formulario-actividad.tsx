@@ -1,8 +1,9 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_TIPO_ACTIVIDAD,
   ICONOS_TIPO_ACTIVIDAD,
   aDatetimeLocal,
@@ -53,6 +54,7 @@ export function FormularioActividad({
 }) {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const { data: perfil } = usePerfil();
   const [error, setError] = useState<string | null>(null);
   const [tipo, setTipo] = useState<TipoActividad>(actividad?.tipo ?? tipoInicial);
@@ -116,6 +118,7 @@ export function FormularioActividad({
       });
     },
     onSuccess: () => {
+      avisar(es.confirmaciones.gestionRegistrada);
       void queryClient.invalidateQueries({ queryKey: ["actividades"] });
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
       void queryClient.invalidateQueries({ queryKey: ["seguimientos"] });
@@ -125,7 +128,7 @@ export function FormularioActividad({
       setError(null);
       onCerrar();
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const titulo = actividad

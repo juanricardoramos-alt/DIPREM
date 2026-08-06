@@ -28,7 +28,7 @@ function NavegacionProtegida() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
         name="cuenta/[id]"
-        options={{ headerShown: true, headerTitle: es.crm.cuenta, headerBackTitle: "Volver" }}
+        options={{ headerShown: true, headerTitle: es.crm.cuenta, headerBackTitle: es.comunes.volver }}
       />
     </Stack>
   );

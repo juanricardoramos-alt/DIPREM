@@ -7,16 +7,11 @@ import {
   semaforoMeta,
   type MetaAvance,
 } from "@diprem/core";
-
-const COLOR = {
-  verde: "bg-emerald-500",
-  ambar: "bg-amber-400",
-  rojo: "bg-red-500",
-} as const;
+import { COLOR_SEMAFORO } from "@/components/ui";
 
 export function BarraMeta({ meta }: { meta: MetaAvance }) {
   const pct = porcentajeMeta(meta);
-  const color = COLOR[semaforoMeta(meta)];
+  const color = COLOR_SEMAFORO[semaforoMeta(meta)];
   const esMonto = meta.tipo === "monto_adjudicado" && meta.moneda;
   const avanceTexto = esMonto
     ? formatearMonto(Number(meta.avance), meta.moneda!)

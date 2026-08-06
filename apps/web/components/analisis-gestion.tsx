@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_INTENSIDAD,
   ETIQUETAS_TIPO_ACTIVIDAD,
   ICONOS_TIPO_ACTIVIDAD,
@@ -19,7 +19,7 @@ import {
 } from "@diprem/core";
 import { actividadesDeEntidad } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, Insignia } from "@/components/ui";
+import { Boton, EstadoVacio, Insignia } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 
 const TONO_SEMAFORO = { ok: "verde", atencion: "ambar", critico: "rojo" } as const;
@@ -96,7 +96,7 @@ export function AnalisisGestion({
         </Boton>
       </div>
 
-      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{(error as Error).message}</p>}
+      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{mensajeError(error)}</p>}
       {isLoading && <p className="mt-3 text-sm text-tinta-tenue">{es.comunes.cargando}</p>}
 
       {!isLoading && !error && (
@@ -147,9 +147,7 @@ export function AnalisisGestion({
             {es.gestion.lineaTiempo}
           </h3>
           {historial.length === 0 ? (
-            <p className="mt-2 rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-              {es.gestion.sinGestiones}
-            </p>
+            <div className="mt-2"><EstadoVacio titulo={es.gestion.sinGestiones} /></div>
           ) : (
             <ol className="mt-2 space-y-0">
               {historial.map((actividad, i) => (

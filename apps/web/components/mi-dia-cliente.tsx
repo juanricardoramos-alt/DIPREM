@@ -39,7 +39,7 @@ import {
   oportunidadesAbiertas,
 } from "@diprem/api";
 import { usePerfil, useSupabase } from "@/lib/hooks";
-import { Boton, Insignia, TarjetasEsqueleto } from "@/components/ui";
+import { Boton, EstadoVacio, Insignia, TarjetasEsqueleto } from "@/components/ui";
 import { FormularioActividad } from "@/components/formulario-actividad";
 import { DialogoCompletar } from "@/components/dialogo-completar";
 import { EnlacesContacto } from "@/components/enlaces-contacto";
@@ -172,9 +172,9 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
             <TarjetasEsqueleto />
           </div>
         ) : acciones.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-            {es.miDia.sinAccionesHoy}
-          </p>
+          <div className="mt-3">
+            <EstadoVacio titulo={es.miDia.sinAccionesHoy} />
+          </div>
         ) : (
           <ol className="mt-3 space-y-2">
             {acciones.map((accion, indice) => (
@@ -370,9 +370,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           <div className="mt-3 space-y-2">
             {cargandoAgenda && <TarjetasEsqueleto />}
             {!cargandoAgenda && (agenda?.agenda.length ?? 0) === 0 && (
-              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-                {es.miDia.sinAgenda}
-              </p>
+              <EstadoVacio titulo={es.miDia.sinAgenda} />
             )}
             {agenda?.agenda.map((actividad) => (
               <TarjetaActividad
@@ -408,9 +406,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
           <div className="mt-3 space-y-2">
             {cargandoSeguimientos && <TarjetasEsqueleto />}
             {!cargandoSeguimientos && seguimientos.length === 0 && (
-              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-                {es.miDia.sinSeguimientos}
-              </p>
+              <EstadoVacio titulo={es.miDia.sinSeguimientos} />
             )}
             {seguimientos.slice(0, 12).map((seguimiento) => (
               <div
@@ -467,7 +463,7 @@ export function MiDiaCliente({ nombre }: { nombre: string }) {
               href="/oportunidades"
               className="text-sm text-primario hover:underline"
             >
-              Ver embudo completo →
+              {es.miDia.verEmbudo}
             </Link>
           </p>
         </section>

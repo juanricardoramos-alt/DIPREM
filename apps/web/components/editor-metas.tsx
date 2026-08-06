@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   MONEDAS,
   TIPOS_META,
   ETIQUETAS_TIPO_META,
@@ -83,7 +83,7 @@ export function EditorMetas() {
       setError(null);
       setTimeout(() => setGuardado(null), 2000);
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   if (errorVistas) {

@@ -1,8 +1,9 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_MODALIDAD,
   es,
   formatearMonto,
@@ -24,6 +25,7 @@ import {
   Dialogo,
   Esqueleto,
   Selector,
+  EncabezadoPagina,
 } from "@/components/ui";
 import { FormularioOportunidad } from "@/components/formulario-oportunidad";
 
@@ -42,6 +44,7 @@ function totalesPorMoneda(oportunidades: Oportunidad[]): string {
 export default function PaginaOportunidades() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
 
   const [formAbierto, setFormAbierto] = useState(false);
   const [editando, setEditando] = useState<Oportunidad | null>(null);
@@ -75,8 +78,9 @@ export default function PaginaOportunidades() {
       void queryClient.invalidateQueries({ queryKey: ["oportunidades"] });
       setPendientePerdida(null);
       setError(null);
+      avisar(es.confirmaciones.etapaMovida);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const etapasActivas = etapas?.filter((e) => e.activa) ?? [];
@@ -103,15 +107,15 @@ export default function PaginaOportunidades() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{es.crm.embudo}</h1>
-          {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
-        </div>
-        <Boton onClick={() => setFormAbierto(true)}>
-          + {es.crm.nuevaOportunidad}
-        </Boton>
-      </div>
+      <EncabezadoPagina
+        titulo={es.crm.embudo}
+        acciones={
+          <Boton onClick={() => setFormAbierto(true)}>
+            + {es.crm.nuevaOportunidad}
+          </Boton>
+        }
+      />
+      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {isLoading && (
         <div className="mt-6 flex gap-4 overflow-x-auto pb-4">

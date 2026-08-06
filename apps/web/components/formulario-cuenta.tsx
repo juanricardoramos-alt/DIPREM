@@ -1,8 +1,9 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_ESTADO_CUENTA,
   ETIQUETAS_VERTICAL,
   es,
@@ -26,6 +27,7 @@ export function FormularioCuenta({
 }) {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const { data: perfil } = usePerfil();
   const [error, setError] = useState<string | null>(null);
 
@@ -55,10 +57,11 @@ export function FormularioCuenta({
       void queryClient.invalidateQueries({ queryKey: ["cuentas"] });
       void queryClient.invalidateQueries({ queryKey: ["cuenta"] });
       setError(null);
+      avisar(es.confirmaciones.guardado);
       onCerrar();
       if (creada && onCreada) onCreada(creada);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   return (

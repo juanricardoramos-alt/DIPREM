@@ -1,5 +1,6 @@
 "use client";
 
+import { EncabezadoPagina } from "@/components/ui";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { es, rutaInicial } from "@diprem/core";
@@ -21,9 +22,7 @@ export default function PaginaAdmin() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-bold">{es.nav.admin}</h1>
-      </div>
+      <EncabezadoPagina titulo={es.nav.admin} />
       <EditorMetas />
       <EditorEtapas />
       <PantallaPlaceholder

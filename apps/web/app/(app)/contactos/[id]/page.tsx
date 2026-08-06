@@ -4,7 +4,7 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Clock, Linkedin, Lock, Printer, Unlock } from "lucide-react";
-import {
+import { mensajeError,
   ETIQUETAS_CANAL,
   enlaceLinkedIn,
   es,
@@ -52,7 +52,7 @@ export default function PaginaFichaContacto({
           : null,
       );
     },
-    onError: (e: Error) => setErrorRevelado(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setErrorRevelado(mensajeError(e)),
   });
 
   if (isLoading) {

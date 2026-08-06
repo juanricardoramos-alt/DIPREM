@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_ETAPA_PROYECTO,
   ETIQUETAS_PRIORIDAD,
   ORDEN_SEGMENTOS,
@@ -37,6 +37,7 @@ import {
   FilasEsqueleto,
   Insignia,
   Selector,
+  EncabezadoPagina,
 } from "@/components/ui";
 import { ImportadorMercado } from "@/components/mercado/importador";
 
@@ -165,7 +166,7 @@ export function MercadoCliente() {
       setMensaje(es.mercado.etapaActualizada);
       setError(null);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const asignar = useMutation({
@@ -187,20 +188,16 @@ export function MercadoCliente() {
       setAsignando(false);
       setError(null);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{es.mercado.titulo}</h1>
-          <p className="mt-0.5 max-w-2xl text-sm text-tinta-suave">
-            {es.mercado.descripcion}
-          </p>
-        </div>
-        <Boton onClick={() => setImportando(true)}>📥 {es.mercado.importar}</Boton>
-      </div>
+      <EncabezadoPagina
+        titulo={es.mercado.titulo}
+        descripcion={es.mercado.descripcion}
+        acciones={<Boton onClick={() => setImportando(true)}>📥 {es.mercado.importar}</Boton>}
+      />
 
       {mensaje && (
         <p className="mt-4 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 text-sm text-emerald-800 dark:text-emerald-300">
@@ -427,7 +424,7 @@ export function MercadoCliente() {
               <tr>
                 <td colSpan={10} className="p-4">
                   <BannerError
-                    mensaje={(errorCarga as Error).message}
+                    mensaje={mensajeError(errorCarga)}
                     onReintentar={() => void refetch()}
                   />
                 </td>

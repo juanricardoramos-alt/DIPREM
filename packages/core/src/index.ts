@@ -16,3 +16,4 @@ export * from "./lib/control";
 export * from "./lib/radar";
 export * from "./lib/midia";
 export * from "./lib/reportes";
+export * from "./lib/errores";

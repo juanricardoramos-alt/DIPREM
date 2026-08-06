@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   es,
   parsearCSV,
   validarProyectos,
@@ -65,7 +65,7 @@ export function ImportadorMercado({
       const celdas = await leerArchivo(archivo);
       setValidacion(validarProyectos(celdas));
     } catch (e) {
-      setError((e as Error).message || es.comunes.errorGenerico);
+      setError(mensajeError(e));
     } finally {
       setAnalizando(false);
     }
@@ -84,7 +84,7 @@ export function ImportadorMercado({
       setValidacion(null);
       setError(null);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   return (
@@ -184,7 +184,7 @@ export function ImportadorMercado({
 
         <div className="flex justify-end gap-2 pt-2">
           <Boton type="button" variante="secundario" onClick={cerrar}>
-            {resultado ? "Cerrar" : es.comunes.cancelar}
+            {resultado ? es.comunes.cerrar : es.comunes.cancelar}
           </Boton>
           {validacion && validacion.validos.length > 0 && (
             <Boton onClick={() => importar.mutate()} disabled={importar.isPending}>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_TIPO_ACTIVIDAD,
   diasSinActividad,
   es,
@@ -82,7 +82,7 @@ export function Exportes() {
       ]);
       descargar(`gestion-${periodo}.csv`, csv);
     } catch (e) {
-      setAviso((e as Error).message);
+      setAviso(mensajeError(e));
     } finally {
       setOcupado(null);
     }
@@ -125,7 +125,7 @@ export function Exportes() {
       ]);
       descargar(`pipeline-${periodo}.csv`, csv);
     } catch (e) {
-      setAviso((e as Error).message);
+      setAviso(mensajeError(e));
     } finally {
       setOcupado(null);
     }

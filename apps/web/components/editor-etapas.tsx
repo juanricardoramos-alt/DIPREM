@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { es, type EtapaEmbudo } from "@diprem/core";
+import { mensajeError, es, type EtapaEmbudo } from "@diprem/core";
 import { guardarEtapa, intercambiarOrdenEtapas, listarEtapas } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
 import {
@@ -53,7 +53,7 @@ export function EditorEtapas() {
       setEditando(null);
       setError(null);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   const intercambiar = useMutation({

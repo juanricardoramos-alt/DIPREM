@@ -1,9 +1,10 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { use, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_CANAL,
   ETIQUETAS_ESTADO_CUENTA,
   ETIQUETAS_MODALIDAD,
@@ -36,6 +37,7 @@ import {
   Entrada,
   Insignia,
   Selector,
+  EstadoVacio,
 } from "@/components/ui";
 import { FormularioCuenta } from "@/components/formulario-cuenta";
 import { FormularioOportunidad } from "@/components/formulario-oportunidad";
@@ -51,6 +53,7 @@ export default function PaginaDetalleCuenta({
   const { id } = use(params);
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
 
   const [editando, setEditando] = useState(false);
   const [contactoForm, setContactoForm] = useState<
@@ -102,14 +105,17 @@ export default function PaginaDetalleCuenta({
       void queryClient.invalidateQueries({ queryKey: ["contactos", id] });
       setContactoForm(null);
       setErrorContacto(null);
+      avisar(es.confirmaciones.guardado);
     },
-    onError: (e: Error) => setErrorContacto(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setErrorContacto(mensajeError(e)),
   });
 
   const borrarContacto = useMutation({
     mutationFn: (contactoId: string) => eliminarContacto(supabase, contactoId),
-    onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: ["contactos", id] }),
+    onSuccess: () => {
+      avisar(es.confirmaciones.eliminado);
+      void queryClient.invalidateQueries({ queryKey: ["contactos", id] });
+    },
   });
 
   // Perímetro 0015: la PII (tel/correo/LinkedIn) no viene en el listado;
@@ -126,7 +132,7 @@ export default function PaginaDetalleCuenta({
           : null,
       );
     },
-    onError: (e: Error) => setAvisoRevelado(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setAvisoRevelado(mensajeError(e)),
   });
   const revelado = Object.keys(pii).length > 0;
 
@@ -150,7 +156,7 @@ export default function PaginaDetalleCuenta({
       setPii((prev) => ({ ...prev, [c.id]: c }));
       setAvisoRevelado(null);
     },
-    onError: (e: Error) => setAvisoRevelado(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setAvisoRevelado(mensajeError(e)),
   });
 
   // Editar exige la PII actual (el formulario la trae precargada): si aún no
@@ -286,9 +292,7 @@ export default function PaginaDetalleCuenta({
           )}
           <div className="mt-3 space-y-2">
             {(contactos?.length ?? 0) === 0 && (
-              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-                {es.crm.sinContactos}
-              </p>
+              <EstadoVacio titulo={es.crm.sinContactos} />
             )}
             {contactos?.map((contacto) => {
               const revContacto = pii[contacto.id];
@@ -396,9 +400,7 @@ export default function PaginaDetalleCuenta({
           </div>
           <div className="mt-3 space-y-2">
             {(oportunidades?.length ?? 0) === 0 && (
-              <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue">
-                {es.crm.sinOportunidades}
-              </p>
+              <EstadoVacio titulo={es.crm.sinOportunidades} />
             )}
             {oportunidades?.map((op) => (
               <div

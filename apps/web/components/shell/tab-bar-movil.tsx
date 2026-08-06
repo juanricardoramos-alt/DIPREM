@@ -65,7 +65,7 @@ export function TabBarMovil({ rol }: { rol: RolUsuario }) {
               <p className="text-sm font-semibold text-tinta">{es.shell.menuCompleto}</p>
               <button
                 onClick={() => setMasAbierto(false)}
-                aria-label="Cerrar"
+                aria-label={es.comunes.cerrar}
                 className="rounded-lg p-1 text-tinta-tenue hover:bg-superficie-2"
               >
                 <X className="h-5 w-5" />

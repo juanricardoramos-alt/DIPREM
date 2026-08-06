@@ -1,9 +1,10 @@
 "use client";
 
+import { useAvisar } from "@/components/avisos";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_MODALIDAD,
   ETIQUETAS_VERTICAL,
   es,
@@ -24,6 +25,7 @@ export function DialogoConvertirLead({
 }) {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
@@ -59,10 +61,11 @@ export function DialogoConvertirLead({
       void queryClient.invalidateQueries({ queryKey: ["cuentas"] });
       void queryClient.invalidateQueries({ queryKey: ["oportunidades"] });
       setError(null);
+      avisar(es.confirmaciones.convertido);
       onCerrar();
       router.push(`/empresas/${resultado.cuenta_id}`);
     },
-    onError: (e: Error) => setError(e.message || es.comunes.errorGenerico),
+    onError: (e: Error) => setError(mensajeError(e)),
   });
 
   return (

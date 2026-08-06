@@ -10,7 +10,14 @@ import {
 } from "@diprem/core";
 import { listarCuentas } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Boton, Entrada, EstadoVacio, FilasEsqueleto, Insignia } from "@/components/ui";
+import {
+  Boton,
+  EncabezadoPagina,
+  Entrada,
+  EstadoVacio,
+  FilasEsqueleto,
+  Insignia,
+} from "@/components/ui";
 import { FormularioCuenta } from "@/components/formulario-cuenta";
 
 const TONO_ESTADO = { prospecto: "ambar", activa: "verde", inactiva: "gris" } as const;
@@ -27,18 +34,20 @@ export default function PaginaCuentas() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{es.nav.cuentas}</h1>
-        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
-          <Entrada
-            placeholder={es.comunes.buscar}
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="sm:w-56 rounded-md border border-borde px-3 py-2 text-sm"
-          />
-          <Boton onClick={() => setFormAbierto(true)}>+ {es.crm.nuevaCuenta}</Boton>
-        </div>
-      </div>
+      <EncabezadoPagina
+        titulo={es.nav.cuentas}
+        acciones={
+          <>
+            <Entrada
+              placeholder={es.comunes.buscar}
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="sm:w-56 rounded-md border border-borde px-3 py-2 text-sm"
+            />
+            <Boton onClick={() => setFormAbierto(true)}>+ {es.crm.nuevaCuenta}</Boton>
+          </>
+        }
+      />
 
       {/* Móvil: tarjetas apiladas */}
       <div className="mt-6 space-y-2 md:hidden">

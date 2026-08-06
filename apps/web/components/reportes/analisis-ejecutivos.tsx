@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
+import { mensajeError,
   ETIQUETAS_TIPO_ACTIVIDAD,
   ICONOS_TIPO_ACTIVIDAD,
   analizarEjecutivos,
@@ -12,7 +12,7 @@ import {
 } from "@diprem/core";
 import { listarDistribucionGestion, listarGestionContactos } from "@diprem/api";
 import { useSupabase } from "@/lib/hooks";
-import { Insignia } from "@/components/ui";
+import { EstadoVacio, Insignia } from "@/components/ui";
 
 /**
  * Panel del gerente/dueño: cobertura de gestión de la cartera por ejecutivo.
@@ -38,7 +38,7 @@ export function AnalisisEjecutivos() {
       <section>
         <h2 className="text-lg font-semibold">{es.reportes.analisisEjecutivos}</h2>
         <p className="mt-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-800 dark:text-amber-300">
-          ⚠️ {(error as Error).message}
+          ⚠️ {mensajeError(error)}
         </p>
       </section>
     );
@@ -53,9 +53,7 @@ export function AnalisisEjecutivos() {
 
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         {analisis.length === 0 && (
-          <p className="rounded-lg border border-dashed border-borde p-6 text-center text-sm text-tinta-tenue lg:col-span-2">
-            {es.reportes.sinContactosActivos}
-          </p>
+          <div className="lg:col-span-2"><EstadoVacio titulo={es.reportes.sinContactosActivos} /></div>
         )}
         {analisis.map((ejecutivo) => (
           <TarjetaEjecutivo key={ejecutivo.propietario_id} analisis={ejecutivo} />
