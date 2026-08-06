@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { mensajeError,
+import { formatearMUSD, mensajeError,
   ETIQUETAS_ETAPA_PROYECTO,
   ETIQUETAS_PRIORIDAD,
   ORDEN_SEGMENTOS,
@@ -335,7 +335,7 @@ export function MercadoCliente() {
               </p>
               <p className="mt-1.5 text-xs text-tinta-suave">
                 {p.capex_musd != null && (
-                  <>💰 {Number(p.capex_musd).toLocaleString("es-CL")} MUSD · </>
+                  <>💰 {formatearMUSD(Number(p.capex_musd))} MUSD · </>
                 )}
                 🏗 {p.inicio_construccion ? formatearFechaCorta(p.inicio_construccion) : "—"} · ▶{" "}
                 {p.puesta_en_marcha ? formatearFechaCorta(p.puesta_en_marcha) : "—"}
@@ -624,7 +624,7 @@ function FilaRadar({
         </select>
       </td>
       <td className="px-3 py-3 text-right tabular-nums">
-        {proyecto.capex_musd != null ? Number(proyecto.capex_musd).toLocaleString("es-CL") : "—"}
+        {proyecto.capex_musd != null ? formatearMUSD(Number(proyecto.capex_musd)) : "—"}
       </td>
       <td className="px-3 py-3 text-xs">
         <p>

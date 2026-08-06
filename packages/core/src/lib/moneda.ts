@@ -14,3 +14,13 @@ export function formatearMonto(monto: number, moneda: Moneda): string {
     maximumFractionDigits: moneda === "CLP" ? 0 : 2,
   }).format(monto);
 }
+
+/**
+ * CAPEX en MUSD con formato ÚNICO en toda la app: entero con separador de
+ * miles ("3.300", "544"); bajo 1 MUSD se muestra "<1" (los decimales no
+ * aportan a esta escala y hacían bailar la lista).
+ */
+export function formatearMUSD(musd: number): string {
+  if (musd > 0 && musd < 1) return "<1";
+  return Math.round(musd).toLocaleString("es-CL");
+}

@@ -32,6 +32,8 @@ import {
 import { useSupabase } from "@/lib/hooks";
 import { BannerError, Boton, COLOR_SEMAFORO, EncabezadoPagina, Esqueleto, Insignia } from "@/components/ui";
 import { ProyectosSinGestion } from "@/components/control/proyectos-sin-gestion";
+import { ListaAcaparadas } from "@/components/control/acaparadas";
+import { useAvisar } from "@/components/avisos";
 import { HistorialAsignaciones } from "@/components/control/historial-asignaciones";
 
 function sumaPorMoneda(filas: { monto: number; moneda: Moneda }[]): string {
@@ -46,6 +48,7 @@ const HACE_30D = () => new Date(Date.now() - 30 * 86400_000).toISOString();
 export function ControlCliente() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const avisar = useAvisar();
   const periodo = periodoActual();
 
   const [umbral, setUmbral] = useState(14);
@@ -98,12 +101,16 @@ export function ControlCliente() {
     retry: false,
   });
 
+  // Libera 1 o varias (acción masiva por grupo): secuencial, un RPC por cuenta
   const liberar = useMutation({
-    mutationFn: (cuentaId: string) => liberarCuenta(supabase, cuentaId),
-    onSuccess: () => {
+    mutationFn: async (cuentaIds: string[]) => {
+      for (const cuentaId of cuentaIds) await liberarCuenta(supabase, cuentaId);
+      return cuentaIds.length;
+    },
+    onSuccess: (n) => {
       void queryClient.invalidateQueries({ queryKey: ["control_criticas"] });
       void queryClient.invalidateQueries({ queryKey: ["control_cobertura"] });
-      setMensaje(es.control.liberada);
+      avisar(n === 1 ? es.control.liberada : es.control.liberadasN(n));
     },
     onError: (e: Error) => setMensaje(mensajeError(e)),
   });
@@ -241,24 +248,11 @@ export function ControlCliente() {
         {acaparadas.length === 0 ? (
           <p className="mt-3 text-sm text-tinta-suave">{es.control.acaparadorVacio}</p>
         ) : (
-          <div className="mt-3 space-y-1.5">
-            {acaparadas.slice(0, 10).map((c) => (
-              <FilaAcaparada
-                key={c.cuenta_id}
-                critica={c}
-                liberando={liberar.isPending}
-                onLiberar={() => {
-                  if (confirm(es.control.confirmarLiberar(c.razon_social)))
-                    liberar.mutate(c.cuenta_id);
-                }}
-              />
-            ))}
-            {acaparadas.length > 10 && (
-              <p className="text-xs text-tinta-tenue">
-                +{acaparadas.length - 10}…
-              </p>
-            )}
-          </div>
+          <ListaAcaparadas
+            acaparadas={acaparadas}
+            liberando={liberar.isPending}
+            onLiberar={(ids) => liberar.mutate(ids)}
+          />
         )}
       </section>
 
@@ -561,46 +555,6 @@ export function ControlCliente() {
       {/* Proyectos sin gestión + Historial (se mantienen) */}
       <ProyectosSinGestion proyectos={proyectos ?? []} cargando={cargandoProyectos} />
       <HistorialAsignaciones />
-    </div>
-  );
-}
-
-function FilaAcaparada({
-  critica,
-  liberando,
-  onLiberar,
-}: {
-  critica: FilaCritica;
-  liberando: boolean;
-  onLiberar: () => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 dark:border-red-900 bg-superficie p-3">
-      <div className="min-w-0">
-        <Link
-          href={`/empresas/${critica.cuenta_id}`}
-          className="font-medium hover:underline"
-        >
-          {critica.razon_social}
-        </Link>
-        <p className="text-xs text-tinta-suave">
-          {critica.ejecutivo}
-          {critica.n_proyectos > 0 &&
-            ` · ${critica.n_proyectos} proyecto(s)${
-              critica.capex_max != null
-                ? ` · máx ${Number(critica.capex_max).toLocaleString("es-CL")} MUSD`
-                : ""
-            }`}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <Insignia tono="rojo">
-          {es.reportes.diasSinActividad(critica.dias_sin_gestion)}
-        </Insignia>
-        <Boton variante="secundario" disabled={liberando} onClick={onLiberar}>
-          {liberando ? es.control.liberando : es.control.liberarAlPool}
-        </Boton>
-      </div>
     </div>
   );
 }

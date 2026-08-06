@@ -216,9 +216,23 @@ export const es = {
     umbralDias: "Umbral",
     liberarAlPool: "Liberar al pool",
     liberando: "Liberando…",
-    liberada: "Empresa devuelta al pool",
+    liberada: "Empresa devuelta al pool ✓",
     confirmarLiberar: (empresa: string) =>
       `¿Devolver "${empresa}" al pool? El ejecutivo la perderá de su cartera.`,
+    // Lista agrupada por ejecutivo (la pregunta es "quién acapara")
+    acaparadasDe: (n: number) =>
+      n === 1 ? "1 empresa acaparada" : `${n} empresas acaparadas`,
+    verMasAcaparadas: (n: number) => `Ver ${n} más ▾`,
+    verMenosAcaparadas: "Ver menos ▴",
+    seleccionarEmpresa: "Seleccionar para liberar",
+    liberarSeleccionadas: (n: number) =>
+      n === 1 ? "Liberar 1 seleccionada" : `Liberar ${n} seleccionadas`,
+    confirmarLiberarVarias: (n: number, ejecutivo: string) =>
+      `¿Devolver ${n === 1 ? "1 empresa" : `${n} empresas`} de ${ejecutivo} al pool? Las perderá de su cartera.`,
+    liberadasN: (n: number) =>
+      n === 1 ? "1 empresa devuelta al pool ✓" : `${n} empresas devueltas al pool ✓`,
+    nProyectosCorto: (n: number) => (n === 1 ? "1 proyecto" : `${n} proyectos`),
+    capexMaxCorto: (v: string) => `máx ${v} MUSD`,
     // Cuadro por ejecutivo — RESULTADO (el peor de cobertura arriba)
     resultadoTitulo: "Resultado por ejecutivo (30 días)",
     resultadoNota:

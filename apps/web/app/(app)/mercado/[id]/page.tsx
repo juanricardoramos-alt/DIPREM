@@ -18,6 +18,7 @@ import {
   conteosPorBucket,
   es,
   formatearFechaCorta,
+  formatearMUSD,
   mensajeError,
   rutaInicial,
   type BucketContacto,
@@ -200,7 +201,7 @@ export default function PaginaFichaProyecto() {
               )}
               {proyecto.capex_musd != null && (
                 <Insignia tono="gris">
-                  {es.mercado.capexCorto}: {Number(proyecto.capex_musd).toLocaleString("es-CL")}
+                  {es.mercado.capexCorto}: {formatearMUSD(Number(proyecto.capex_musd))}
                 </Insignia>
               )}
               {proyecto.inicio_construccion && (
