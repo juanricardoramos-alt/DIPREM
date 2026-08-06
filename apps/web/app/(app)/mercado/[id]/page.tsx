@@ -83,15 +83,22 @@ export default function PaginaFichaProyecto() {
     queryFn: () => obtenerProyectoMercado(supabase, id),
     enabled: permitido,
   });
-  const { data: empresas, isLoading: cargandoEmpresas } = useQuery({
+  const {
+    data: empresas,
+    isLoading: cargandoEmpresas,
+    error: errorEmpresas,
+    refetch: recargarEmpresas,
+  } = useQuery({
     queryKey: ["proyecto_empresas", id],
     queryFn: () => listarEmpresasDelProyecto(supabase, id),
     enabled: permitido,
+    retry: false,
   });
-  const { data: contactos } = useQuery({
+  const { data: contactos, error: errorContactos } = useQuery({
     queryKey: ["proyecto_contactos", id],
     queryFn: () => listarContactosDelProyecto(supabase, id),
     enabled: permitido,
+    retry: false,
   });
   const { data: candidatas } = useQuery({
     queryKey: ["directorio_vincular", busqueda],
@@ -206,6 +213,16 @@ export default function PaginaFichaProyecto() {
         </div>
       )}
 
+      {/* Los errores de las consultas del ecosistema se MUESTRAN, no se
+          tragan: un fallo de la Data API no puede verse igual que "sin datos" */}
+      {(errorEmpresas || errorContactos) && (
+        <div className="mt-4">
+          <BannerError
+            mensaje={mensajeError(errorEmpresas ?? errorContactos)}
+            onReintentar={() => void recargarEmpresas()}
+          />
+        </div>
+      )}
       {error && (
         <div className="mt-4">
           <BannerError mensaje={error} />
@@ -217,9 +234,9 @@ export default function PaginaFichaProyecto() {
         <h2 className="text-lg font-semibold">{es.mercado.ecosistemaTitulo}</h2>
         <p className="text-sm text-tinta-suave">{es.mercado.ecosistemaNota}</p>
 
-        {cargandoEmpresas ? (
+        {cargandoEmpresas || errorEmpresas ? (
           <div className="mt-3">
-            <TarjetasEsqueleto cantidad={2} />
+            {cargandoEmpresas && <TarjetasEsqueleto cantidad={2} />}
           </div>
         ) : (
           <div className="mt-3 grid gap-2 lg:grid-cols-2">
@@ -317,7 +334,7 @@ export default function PaginaFichaProyecto() {
           <FiltroCargo valor={bucket} onCambiar={setBucket} conteos={conteos} />
         </div>
         <div className="mt-3 space-y-1.5">
-          {contactosFiltrados.length === 0 && (
+          {contactosFiltrados.length === 0 && !errorContactos && (
             <EstadoVacio titulo={es.mercado.sinContactosEco} />
           )}
           {contactosFiltrados.map((contacto) => (

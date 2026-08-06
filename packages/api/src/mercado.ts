@@ -11,14 +11,15 @@ import type {
  * Requiere haber corrido supabase/deploy/actualizacion_mercado.sql.
  */
 
-const AVISO_SCRIPT =
-  "Falta actualizar la base de datos: ejecuta supabase/deploy/actualizacion_mercado.sql " +
-  "en el SQL Editor de Supabase (ver docs/DEPLOY.md).";
+const AVISO_ESQUEMA =
+  "La API de datos aún no conoce una tabla o función nueva. Falta aplicar la " +
+  "migración pendiente (pnpm db:migrate) o recargar el esquema de la Data API " +
+  "en Neon: SQL Editor → NOTIFY pgrst, 'reload schema';";
 
 function lanzar(error: { message: string } | null): void {
   if (!error) return;
   if (/does not exist|schema cache/i.test(error.message)) {
-    throw new Error(AVISO_SCRIPT);
+    throw new Error(`${AVISO_ESQUEMA} — detalle: ${error.message}`);
   }
   throw new Error(error.message);
 }
